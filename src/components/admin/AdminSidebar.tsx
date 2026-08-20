@@ -61,6 +61,9 @@ const menuItems: MenuItem[] = [
 export default function AdminSidebar() {
   const router = useRouter();
   const pathname = usePathname();
+  const handlelogout = () => {
+    router.replace("/login")
+  }
 
   const handleNavigation = (route: MenuItem["route"]) => {
     // Don't navigate if we're already on the page.
@@ -181,9 +184,7 @@ export default function AdminSidebar() {
 
         <Pressable
           style={styles.logoutButton}
-          onPress={() => {
-            console.log("Logout");
-          }}
+          onPress={handlelogout}
         >
 
           <Text style={styles.logoutIcon}>
