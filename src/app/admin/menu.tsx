@@ -8,10 +8,16 @@ import {
 } from "react-native";
 
 import AdminSidebar from "../../components/admin/AdminSidebar";
+
 import AddMenuModal, {
   AddMenuData,
-} from "../../components/admin/AddMenuModal";
+} from "../../components/admin/modals/AddMenuModal";
 
+import EditMenuModal, {
+  EditMenuData,
+} from "../../components/admin/modals/EditMenuModal";
+
+import DeleteMenuModal from "@/components/admin/modals/DeleteMenuModal";
 import { menuStyles as styles } from "@/styles/admin/menu.styles";
 
 /* =====================================================
@@ -209,9 +215,28 @@ export default function MenuManagement() {
   const [menuItems, setMenuItems] =
     useState<MenuItem[]>(INITIAL_MENU_ITEMS);
 
+  /* ===================================================
+     ADD MODAL
+  =================================================== */
+
   const [showAddModal, setShowAddModal] =
     useState(false);
 
+  /* ===================================================
+     EDIT MODAL
+  =================================================== */
+
+  const [showEditModal, setShowEditModal] =
+    useState(false);
+
+  const [selectedMenuItem, setSelectedMenuItem] =
+    useState<MenuItem | null>(null);
+
+  const [showDeleteModal, setShowDeleteModal] =
+    useState(false);
+
+  const [itemToDelete, setItemToDelete] =
+    useState<MenuItem | null>(null);
   /* ===================================================
      AVAILABLE COUNT
   =================================================== */
@@ -249,10 +274,6 @@ export default function MenuManagement() {
 
       available: data.available,
 
-      /*
-        AddMenuData uses image.
-        If no image was selected, use a fallback image.
-      */
       image:
         data.image ||
         "https://images.unsplash.com/photo-1547592180-85f173990554",
@@ -264,6 +285,65 @@ export default function MenuManagement() {
     ]);
 
     setShowAddModal(false);
+  };
+
+  /* ===================================================
+     OPEN EDIT MODAL
+  =================================================== */
+
+  const handleOpenEdit = (
+    item: MenuItem
+  ) => {
+    setSelectedMenuItem(item);
+    setShowEditModal(true);
+  };
+
+  /* ===================================================
+     SAVE EDITED MENU ITEM
+  =================================================== */
+
+  const handleEditMenuItem = (
+    data: EditMenuData
+  ) => {
+    /*
+      Make sure the edited category
+      is still one of our valid categories.
+    */
+
+    if (!isCategory(data.category)) {
+      return;
+    }
+
+    setMenuItems((currentItems) =>
+      currentItems.map((item) =>
+        item.id === data.id
+          ? {
+              ...item,
+              name: data.name,
+              category: data.category,
+              price: data.price,
+              available: data.available,
+              image: data.image,
+            }
+          : item
+      )
+    );
+
+    /*
+      Close modal after saving.
+    */
+
+    setShowEditModal(false);
+    setSelectedMenuItem(null);
+  };
+
+  /* ===================================================
+     CLOSE EDIT MODAL
+  =================================================== */
+
+  const handleCloseEdit = () => {
+    setShowEditModal(false);
+    setSelectedMenuItem(null);
   };
 
   /* ===================================================
@@ -289,13 +369,33 @@ export default function MenuManagement() {
      DELETE ITEM
   =================================================== */
 
-  const deleteItem = (id: number) => {
+  const handleDeleteItem = (
+    item: MenuItem
+  ) => {
+    setItemToDelete(item);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteItem = () => {
+    if (!itemToDelete) {
+      return;
+    }
+
     setMenuItems((currentItems) =>
       currentItems.filter(
-        (item) => item.id !== id
+        (currentItem) =>
+          currentItem.id !== itemToDelete.id
       )
     );
-  };
+
+    setShowDeleteModal(false);
+    setItemToDelete(null);
+  }
+
+  const cancelDeleteItem = () => {
+    setShowDeleteModal(false);
+    setItemToDelete(null);
+  }
 
   /* ===================================================
      SCREEN
@@ -536,16 +636,16 @@ export default function MenuManagement() {
                     }
                   >
 
+                    {/* EDIT */}
+
                     <Pressable
                       style={
                         styles.editButton
                       }
-                      onPress={() => {
-                        // Edit functionality can
-                        // be added here later.
-                      }}
+                      onPress={() =>
+                        handleOpenEdit(item)
+                      }
                     >
-
                       <Text
                         style={
                           styles.editButtonText
@@ -553,20 +653,18 @@ export default function MenuManagement() {
                       >
                         Edit
                       </Text>
-
                     </Pressable>
 
+                    {/* DELETE */}
+
                     <Pressable
-                      onPress={() =>
-                        deleteItem(
-                          item.id
-                        )
-                      }
                       style={
                         styles.deleteButton
                       }
+                      onPress={() =>
+                        handleDeleteItem(item)
+                      }
                     >
-
                       <Text
                         style={
                           styles.deleteButtonText
@@ -574,7 +672,6 @@ export default function MenuManagement() {
                       >
                         Delete
                       </Text>
-
                     </Pressable>
 
                   </View>
@@ -603,6 +700,30 @@ export default function MenuManagement() {
         onSave={handleAddMenuItem}
       />
 
+      {/* =================================================
+          EDIT MENU MODAL
+      ================================================= */}
+
+      <EditMenuModal
+        visible={showEditModal}
+        item={selectedMenuItem}
+        onClose={handleCloseEdit}
+        onSave={handleEditMenuItem}
+      />
+
+      <DeleteMenuModal
+        visible={showDeleteModal}
+        item={
+          itemToDelete
+        ? {
+          id: itemToDelete.id,
+          name: itemToDelete.name,
+          } : null
+        }
+
+        onClose={cancelDeleteItem}
+        onConfirm={confirmDeleteItem}
+      />
     </View>
   );
 }

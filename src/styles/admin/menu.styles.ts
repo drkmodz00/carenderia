@@ -347,4 +347,153 @@ actionButtons: {
   alignItems: "center",
   gap: 8,
 },
+deleteOverlay: {
+  position: "absolute",
+
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+
+  backgroundColor: "rgba(0, 0, 0, 0.48)",
+
+  alignItems: "center",
+  justifyContent: "center",
+
+  paddingHorizontal: 25,
+
+  zIndex: 999,
+},
+
+deleteModal: {
+  width: "100%",
+  maxWidth: 420,
+
+  backgroundColor: "#FFFFFF",
+
+  borderRadius: 18,
+
+  padding: 28,
+
+  alignItems: "center",
+
+  shadowColor: "#000",
+  shadowOffset: {
+    width: 0,
+    height: 8,
+  },
+  shadowOpacity: 0.2,
+  shadowRadius: 20,
+
+  elevation: 15,
+},
+
+deleteIcon: {
+  width: 54,
+  height: 54,
+
+  borderRadius: 27,
+
+  backgroundColor: "#FFF0F0",
+
+  alignItems: "center",
+  justifyContent: "center",
+
+  marginBottom: 15,
+},
+
+deleteIconText: {
+  color: "#E53935",
+
+  fontSize: 28,
+  fontWeight: "700",
+},
+
+deleteTitle: {
+  color: "#171717",
+
+  fontSize: 21,
+  fontWeight: "700",
+
+  marginBottom: 10,
+},
+
+deleteMessage: {
+  color: "#6F625B",
+
+  fontSize: 15,
+
+  lineHeight: 22,
+
+  textAlign: "center",
+
+  maxWidth: 340,
+},
+
+deleteItemName: {
+  color: "#222222",
+  fontWeight: "700",
+},
+
+deleteWarning: {
+  color: "#A18F84",
+
+  fontSize: 13,
+
+  marginTop: 7,
+
+  textAlign: "center",
+},
+
+deleteActions: {
+  width: "100%",
+
+  flexDirection: "row",
+
+  gap: 12,
+
+  marginTop: 24,
+},
+
+deleteCancelButton: {
+  flex: 1,
+
+  height: 48,
+
+  borderRadius: 12,
+
+  backgroundColor: "#F3F1EF",
+
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+deleteCancelText: {
+  color: "#5E514A",
+
+  fontSize: 15,
+  fontWeight: "600",
+},
+
+deleteConfirmButton: {
+  flex: 1,
+
+  height: 48,
+
+  borderRadius: 12,
+
+  backgroundColor: "#E53935",
+
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+deleteConfirmText: {
+  color: "#FFFFFF",
+
+  fontSize: 15,
+  fontWeight: "700",
+},
+
 });
+

@@ -9,7 +9,7 @@ import {
 
 import {
   addMenuModalStyles as styles,
-} from "@/styles/admin/addMenuModal.styles";
+} from "@/styles/admin/modals/addMenuModal.styles";
 
 export type Category =
   | "Chicken"
