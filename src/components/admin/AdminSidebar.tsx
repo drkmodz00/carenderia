@@ -1,14 +1,31 @@
 import React from "react";
 import {
   Pressable,
-  StyleSheet,
   Text,
   View,
 } from "react-native";
-import { usePathname, useRouter } from "expo-router";
-import { sidebarStyles as styles } from "@/styles/components/admin/sidebar.styles";
+import {
+  usePathname,
+  useRouter,
+} from "expo-router";
 
-const menuItems = [
+import {
+  sidebarStyles as styles,
+} from "@/styles/components/admin/sidebar.styles";
+
+type MenuItem = {
+  label: string;
+  route:
+    | "/admin"
+    | "/admin/orders"
+    | "/admin/history"
+    | "/admin/menu"
+    | "/admin/sales"
+    | "/admin/settings";
+  icon: string;
+};
+
+const menuItems: MenuItem[] = [
   {
     label: "Dashboard",
     route: "/admin",
@@ -24,7 +41,6 @@ const menuItems = [
     route: "/admin/history",
     icon: "◷",
   },
-
   {
     label: "Menu Management",
     route: "/admin/menu",
@@ -46,8 +62,22 @@ export default function AdminSidebar() {
   const router = useRouter();
   const pathname = usePathname();
 
+  const handleNavigation = (route: MenuItem["route"]) => {
+    // Don't navigate if we're already on the page.
+    if (pathname === route) {
+      return;
+    }
+
+    router.push(route);
+  };
+
   return (
     <View style={styles.sidebar}>
+
+      {/* ==========================================
+          BRAND
+      ========================================== */}
+
       <View style={styles.brand}>
 
         <View style={styles.logo}>
@@ -67,6 +97,11 @@ export default function AdminSidebar() {
         </View>
 
       </View>
+
+      {/* ==========================================
+          NAVIGATION
+      ========================================== */}
+
       <View style={styles.navigation}>
 
         <Text style={styles.menuLabel}>
@@ -74,24 +109,27 @@ export default function AdminSidebar() {
         </Text>
 
         {menuItems.map((item) => {
-
           const isActive =
             pathname === item.route;
 
           return (
             <Pressable
               key={item.label}
-              onPress={() => router.push(item.route as any)}
+              onPress={() =>
+                handleNavigation(item.route)
+              }
               style={[
                 styles.menuItem,
-                isActive && styles.menuItemActive,
+                isActive &&
+                  styles.menuItemActive,
               ]}
             >
 
               <Text
                 style={[
                   styles.menuIcon,
-                  isActive && styles.menuIconActive,
+                  isActive &&
+                    styles.menuIconActive,
                 ]}
               >
                 {item.icon}
@@ -100,7 +138,8 @@ export default function AdminSidebar() {
               <Text
                 style={[
                   styles.menuText,
-                  isActive && styles.menuTextActive,
+                  isActive &&
+                    styles.menuTextActive,
                 ]}
               >
                 {item.label}
@@ -108,10 +147,13 @@ export default function AdminSidebar() {
 
             </Pressable>
           );
-
         })}
 
       </View>
+
+      {/* ==========================================
+          BOTTOM
+      ========================================== */}
 
       <View style={styles.bottomSection}>
 
@@ -137,14 +179,13 @@ export default function AdminSidebar() {
 
         </View>
 
-
         <Pressable
           style={styles.logoutButton}
           onPress={() => {
-            // Add logout logic later
             console.log("Logout");
           }}
         >
+
           <Text style={styles.logoutIcon}>
             ⇥
           </Text>
@@ -152,6 +193,7 @@ export default function AdminSidebar() {
           <Text style={styles.logoutText}>
             Logout
           </Text>
+
         </Pressable>
 
       </View>
@@ -159,5 +201,3 @@ export default function AdminSidebar() {
     </View>
   );
 }
-
-
