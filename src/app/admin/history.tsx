@@ -1,264 +1,106 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Pressable,
-  SafeAreaView,
   ScrollView,
-  StatusBar,
   Text,
   TextInput,
   View,
 } from "react-native";
-
-import AdminSidebar from "../../components/admin/AdminSidebar";
-
-import OrderHistoryModal, {
-  OrderHistoryData,
-} from "../../components/admin/OrderHistoryModal";
+import { useRouter } from "expo-router";
 
 import { historyStyles as styles } from "@/styles/admin/history.styles";
+import AdminBottomNav from "@/components/admin/AdminBottomNav";
 
-/* =====================================================
-   TYPES
-===================================================== */
-
-type OrderStatus = "Completed" | "Voided";
-
-type Filter = "All" | "Completed" | "Voided";
-
-type OrderItem = {
-  name: string;
+type SaleItem = {
+  product: string;
   quantity: number;
   price: number;
 };
 
-type Order = {
+type Sale = {
   id: string;
   date: string;
-  time: string;
-  items: string;
-  total: number;
-  staff: string;
-  status: OrderStatus;
-  orderItems: OrderItem[];
+  items: SaleItem[];
 };
 
-/* =====================================================
-   MOCK DATA
-===================================================== */
-
-const MOCK_ORDERS: Order[] = [
+const salesData: Sale[] = [
   {
-    id: "010",
-    date: "Aug 18, 2026",
-    time: "12:10 PM",
-    items: "Fried Chicken×1, Chopseuy×1, Steamed Rice...",
-    total: 160,
-    staff: "Maria",
-    status: "Completed",
-    orderItems: [
+    id: "TXN-0042",
+    date: "2026-08-22T12:34:00",
+    items: [
       {
-        name: "Fried Chicken",
+        product: "Pork Adobo",
         quantity: 1,
-        price: 55,
+        price: 100,
       },
       {
-        name: "Chopseuy",
-        quantity: 1,
-        price: 35,
-      },
-      {
-        name: "Steamed Rice",
-        quantity: 2,
-        price: 15,
-      },
-      {
-        name: "Softdrink",
-        quantity: 1,
-        price: 20,
-      },
-    ],
-  },
-
-  {
-    id: "009",
-    date: "Aug 18, 2026",
-    time: "11:32 AM",
-    items: "Chicken Adobo×1, Steamed Rice×2",
-    total: 80,
-    staff: "Admin",
-    status: "Completed",
-    orderItems: [
-      {
-        name: "Chicken Adobo",
+        product: "Kanin (Rice)",
         quantity: 1,
         price: 50,
       },
       {
-        name: "Steamed Rice",
-        quantity: 2,
-        price: 15,
-      },
-    ],
-  },
-
-  {
-    id: "008",
-    date: "Aug 18, 2026",
-    time: "10:47 AM",
-    items: "Chicken Tinola×1, Steamed Rice×1",
-    total: 60,
-    staff: "Jose",
-    status: "Completed",
-    orderItems: [
-      {
-        name: "Chicken Tinola",
-        quantity: 1,
-        price: 45,
-      },
-      {
-        name: "Steamed Rice",
-        quantity: 1,
-        price: 15,
-      },
-    ],
-  },
-
-  {
-    id: "007",
-    date: "Aug 18, 2026",
-    time: "10:05 AM",
-    items: "Pork Adobo×1, Steamed Rice×1, Bottled Water...",
-    total: 80,
-    staff: "Maria",
-    status: "Completed",
-    orderItems: [
-      {
-        name: "Pork Adobo",
-        quantity: 1,
-        price: 45,
-      },
-      {
-        name: "Steamed Rice",
-        quantity: 1,
-        price: 15,
-      },
-      {
-        name: "Bottled Water",
-        quantity: 1,
-        price: 20,
-      },
-    ],
-  },
-
-  {
-    id: "006",
-    date: "Aug 18, 2026",
-    time: "9:18 AM",
-    items: "Chicken Adobo×2, Steamed Rice×2",
-    total: 130,
-    staff: "Admin",
-    status: "Completed",
-    orderItems: [
-      {
-        name: "Chicken Adobo",
-        quantity: 2,
-        price: 50,
-      },
-      {
-        name: "Steamed Rice",
-        quantity: 2,
-        price: 15,
-      },
-    ],
-  },
-
-  {
-    id: "005",
-    date: "Aug 18, 2026",
-    time: "9:00 AM",
-    items: "Chopseuy×1, Steamed Rice×2, Softdrink×2",
-    total: 105,
-    staff: "Maria",
-    status: "Completed",
-    orderItems: [
-      {
-        name: "Chopseuy",
-        quantity: 1,
-        price: 35,
-      },
-      {
-        name: "Steamed Rice",
-        quantity: 2,
-        price: 15,
-      },
-      {
-        name: "Softdrink",
-        quantity: 2,
-        price: 20,
-      },
-    ],
-  },
-
-  {
-    id: "004",
-    date: "Aug 18, 2026",
-    time: "8:33 AM",
-    items: "Fried Fish×1, Steamed Rice×1",
-    total: 55,
-    staff: "Jose",
-    status: "Completed",
-    orderItems: [
-      {
-        name: "Fried Fish",
+        product: "Softdrink",
         quantity: 1,
         price: 40,
       },
+    ],
+  },
+
+  {
+    id: "TXN-0041",
+    date: "2026-08-22T11:58:00",
+    items: [
       {
-        name: "Steamed Rice",
+        product: "Sinigang na Baboy",
         quantity: 1,
-        price: 15,
+        price: 75,
+      },
+      {
+        product: "Kanin (Rice)",
+        quantity: 1,
+        price: 50,
       },
     ],
   },
 
   {
-    id: "003",
-    date: "Aug 17, 2026",
-    time: "5:42 PM",
-    items: "Pork Adobo×2, Steamed Rice×2",
-    total: 120,
-    staff: "Maria",
-    status: "Completed",
-    orderItems: [
+    id: "TXN-0040",
+    date: "2026-08-22T11:15:00",
+    items: [
       {
-        name: "Pork Adobo",
-        quantity: 2,
-        price: 45,
+        product: "Fried Chicken",
+        quantity: 1,
+        price: 100,
       },
       {
-        name: "Steamed Rice",
-        quantity: 2,
-        price: 15,
+        product: "Kanin (Rice)",
+        quantity: 1,
+        price: 50,
+      },
+      {
+        product: "Softdrink",
+        quantity: 1,
+        price: 105,
       },
     ],
   },
 
   {
-    id: "002",
-    date: "Aug 17, 2026",
-    time: "4:20 PM",
-    items: "Fried Chicken×1, Softdrink×1",
-    total: 75,
-    staff: "Admin",
-    status: "Voided",
-    orderItems: [
+    id: "TXN-0039",
+    date: "2026-08-22T10:42:00",
+    items: [
       {
-        name: "Fried Chicken",
+        product: "Bicol Express",
         quantity: 1,
-        price: 55,
+        price: 60,
       },
       {
-        name: "Softdrink",
+        product: "Garlic Rice",
+        quantity: 1,
+        price: 30,
+      },
+      {
+        product: "Tubig",
         quantity: 1,
         price: 20,
       },
@@ -266,551 +108,277 @@ const MOCK_ORDERS: Order[] = [
   },
 
   {
-    id: "001",
-    date: "Aug 17, 2026",
-    time: "3:15 PM",
-    items: "Chicken Tinola×1, Steamed Rice×1",
-    total: 60,
-    staff: "Jose",
-    status: "Completed",
-    orderItems: [
+    id: "TXN-0038",
+    date: "2026-08-21T13:05:00",
+    items: [
       {
-        name: "Chicken Tinola",
+        product: "Lechon Kawali",
         quantity: 1,
-        price: 45,
+        price: 120,
       },
       {
-        name: "Steamed Rice",
+        product: "Kanin (Rice)",
         quantity: 1,
-        price: 15,
+        price: 50,
+      },
+      {
+        product: "Halo-Halo",
+        quantity: 1,
+        price: 50,
       },
     ],
   },
 ];
 
-/* =====================================================
-   CURRENCY
-===================================================== */
-
-const formatCurrency = (amount: number): string => {
-  return `₱${amount.toLocaleString("en-PH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-};
-
-/* =====================================================
-   STATUS BADGE
-===================================================== */
-
-type StatusBadgeProps = {
-  status: OrderStatus;
-};
-
-const StatusBadge = ({ status }: StatusBadgeProps) => {
-  const isCompleted = status === "Completed";
-
-  return (
-    <View
-      style={[
-        styles.statusBadge,
-        isCompleted
-          ? styles.completedBadge
-          : styles.voidedBadge,
-      ]}
-    >
-      <Text
-        style={[
-          styles.statusText,
-          isCompleted
-            ? styles.completedText
-            : styles.voidedText,
-        ]}
-      >
-        {status}
-      </Text>
-    </View>
+const getSaleTotal = (sale: Sale) => {
+  return sale.items.reduce(
+    (total, item) =>
+      total + item.quantity * item.price,
+    0
   );
 };
 
-/* =====================================================
-   MAIN SCREEN
-===================================================== */
+const formatCurrency = (amount: number) => {
+  return `₱${amount.toFixed(2)}`;
+};
 
-export default function OrderHistoryScreen() {
-  /* ===================================================
-     SEARCH
-  =================================================== */
+const formatDate = (date: string) => {
+  return new Date(date).toLocaleDateString(
+    "en-US",
+    {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+    }
+  );
+};
 
-  const [search, setSearch] = useState<string>("");
+const formatTime = (date: string) => {
+  return new Date(date).toLocaleTimeString(
+    "en-US",
+    {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    }
+  );
+};
 
-  /* ===================================================
-     FILTER
-  =================================================== */
+const getItemsPreview = (sale: Sale) => {
+  return sale.items
+    .map((item) => item.product)
+    .join(", ");
+};
 
-  const [filter, setFilter] = useState<Filter>("All");
+export default function History() {
+  const router = useRouter();
 
-  const [showFilter, setShowFilter] =
-    useState<boolean>(false);
+  const [search, setSearch] = useState("");
 
-  /* ===================================================
-     MODAL
-  =================================================== */
+  const filteredSales = useMemo(() => {
+    const query = search.trim().toLowerCase();
 
-  const [selectedOrder, setSelectedOrder] =
-    useState<OrderHistoryData | null>(null);
+    if (!query) {
+      return salesData;
+    }
 
-  const [showOrderModal, setShowOrderModal] =
-    useState<boolean>(false);
+    return salesData.filter((sale) => {
+      const items = getItemsPreview(sale).toLowerCase();
 
-  /* ===================================================
-     FILTER OPTIONS
-  =================================================== */
-
-  const filterOptions: Filter[] = [
-    "All",
-    "Completed",
-    "Voided",
-  ];
-
-  /* ===================================================
-     FILTER + SEARCH
-  =================================================== */
-
-  const filteredOrders = useMemo(() => {
-    const searchValue = search
-      .trim()
-      .toLowerCase();
-
-    return MOCK_ORDERS.filter((order: Order) => {
-      const matchesFilter =
-        filter === "All" ||
-        order.status === filter;
-
-      const matchesSearch =
-        searchValue === "" ||
-        order.id
-          .toLowerCase()
-          .includes(searchValue) ||
-        order.staff
-          .toLowerCase()
-          .includes(searchValue) ||
-        order.items
-          .toLowerCase()
-          .includes(searchValue);
-
-      return matchesFilter && matchesSearch;
+      return (
+        sale.id.toLowerCase().includes(query) ||
+        items.includes(query)
+      );
     });
-  }, [search, filter]);
+  }, [search]);
 
-  /* ===================================================
-     OPEN MODAL
-  =================================================== */
+  const handleViewReceipt = (sale: Sale) => {
+    const total = getSaleTotal(sale);
 
-  const handleViewOrder = (order: Order): void => {
-    const modalOrder: OrderHistoryData = {
-      id: order.id,
-      date: order.date,
-      time: order.time,
-      staff: order.staff,
-      total: order.total,
-      items: order.orderItems,
-    };
+    const firstItem = sale.items[0];
 
-    setSelectedOrder(modalOrder);
-    setShowOrderModal(true);
+    router.push({
+      pathname: "/admin/receipt",
+      params: {
+        transactionId: sale.id,
+        itemName: firstItem?.product ?? "Item",
+        quantity: String(
+          firstItem?.quantity ?? 1
+        ),
+        itemPrice: String(
+          firstItem?.price ?? 0
+        ),
+        total: String(total),
+        cash: String(total),
+      },
+    });
   };
-
-  /* ===================================================
-     CLOSE MODAL
-  =================================================== */
-
-  const handleCloseModal = (): void => {
-    setShowOrderModal(false);
-    setSelectedOrder(null);
-  };
-
-  /* ===================================================
-     SCREEN
-  =================================================== */
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#F7F7F8"
-      />
+    <View style={styles.page}>
 
       {/* =================================================
-          MAIN LAYOUT
+          HEADER
       ================================================= */}
 
-      <View style={styles.container}>
+      <View style={styles.header}>
 
-        {/* =================================================
-            SIDEBAR
+        <Text style={styles.headerTitle}>
+          Sales History
+        </Text>
 
-            IMPORTANT:
-            Keep this OUTSIDE styles.main so it stays
-            on the left side just like your Orders page.
-        ================================================= */}
+        <Text style={styles.headerSubtitle}>
+          Lahat ng transaksyon
+        </Text>
 
-        <AdminSidebar />
-
-        {/* =================================================
-            MAIN CONTENT
-        ================================================= */}
-
-        <View style={styles.main}>
-
-          {/* ===============================================
-              HEADER
-          =============================================== */}
-
-          <View style={styles.topHeader}>
-
-            {/* TITLE */}
-
-            <View style={styles.headingContainer}>
-              <Text style={styles.title}>
-                Order History
-              </Text>
-
-              <Text style={styles.subtitle}>
-                {MOCK_ORDERS.length} total orders today
-              </Text>
-            </View>
-
-            {/* =============================================
-                SEARCH + FILTER
-            ============================================= */}
-
-            <View style={styles.controls}>
-
-              {/* SEARCH */}
-
-              <View style={styles.searchContainer}>
-                <TextInput
-                  value={search}
-                  onChangeText={setSearch}
-                  placeholder="Search orders..."
-                  placeholderTextColor="#9CA3AF"
-                  style={styles.searchInput}
-                  returnKeyType="search"
-                />
-              </View>
-
-              {/* FILTER */}
-
-              <View style={styles.filterWrapper}>
-
-                <Pressable
-                  onPress={() =>
-                    setShowFilter(
-                      (current: boolean) =>
-                        !current
-                    )
-                  }
-                  style={styles.filterSelect}
-                >
-                  <Text
-                    style={
-                      styles.filterSelectText
-                    }
-                  >
-                    {filter}
-                  </Text>
-
-                  <Text
-                    style={styles.filterArrow}
-                  >
-                    {showFilter ? "⌃" : "⌄"}
-                  </Text>
-                </Pressable>
-
-                {/* FILTER DROPDOWN */}
-
-                {showFilter && (
-                  <View
-                    style={styles.filterMenu}
-                  >
-                    {filterOptions.map(
-                      (option: Filter) => {
-                        const active =
-                          filter === option;
-
-                        return (
-                          <Pressable
-                            key={option}
-                            onPress={() => {
-                              setFilter(option);
-                              setShowFilter(false);
-                            }}
-                            style={[
-                              styles.filterOption,
-                              active &&
-                                styles.filterOptionActive,
-                            ]}
-                          >
-                            <Text
-                              style={[
-                                styles.filterOptionText,
-                                active &&
-                                  styles.filterOptionTextActive,
-                              ]}
-                            >
-                              {option}
-                            </Text>
-                          </Pressable>
-                        );
-                      }
-                    )}
-                  </View>
-                )}
-              </View>
-            </View>
-          </View>
-
-          {/* ===============================================
-              TABLE
-          =============================================== */}
-
-          <View style={styles.tableContainer}>
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-            >
-
-              {/* =========================================
-                  TABLE HEADER
-              ========================================= */}
-
-              <View style={styles.tableHeader}>
-
-                <View style={styles.orderColumn}>
-                  <Text style={styles.headerText}>
-                    ORDER #
-                  </Text>
-                </View>
-
-                <View style={styles.dateColumn}>
-                  <Text style={styles.headerText}>
-                    DATE
-                  </Text>
-                </View>
-
-                <View style={styles.timeColumn}>
-                  <Text style={styles.headerText}>
-                    TIME
-                  </Text>
-                </View>
-
-                <View style={styles.itemsColumn}>
-                  <Text style={styles.headerText}>
-                    ITEMS
-                  </Text>
-                </View>
-
-                <View style={styles.totalColumn}>
-                  <Text style={styles.headerText}>
-                    TOTAL
-                  </Text>
-                </View>
-
-                <View style={styles.staffColumn}>
-                  <Text style={styles.headerText}>
-                    STAFF
-                  </Text>
-                </View>
-
-                <View style={styles.statusColumn}>
-                  <Text style={styles.headerText}>
-                    STATUS
-                  </Text>
-                </View>
-
-                <View style={styles.actionColumn}>
-                  <Text style={styles.headerText}>
-                    ACTION
-                  </Text>
-                </View>
-              </View>
-
-              {/* =========================================
-                  TABLE BODY
-              ========================================= */}
-
-              {filteredOrders.length === 0 ? (
-                <View
-                  style={styles.emptyContainer}
-                >
-                  <Text
-                    style={styles.emptyTitle}
-                  >
-                    No orders found
-                  </Text>
-
-                  <Text
-                    style={styles.emptySubtitle}
-                  >
-                    Try changing your search or
-                    filter.
-                  </Text>
-
-                  {search.length > 0 && (
-                    <Pressable
-                      onPress={() =>
-                        setSearch("")
-                      }
-                      style={styles.clearButton}
-                    >
-                      <Text
-                        style={
-                          styles.clearButtonText
-                        }
-                      >
-                        Clear search
-                      </Text>
-                    </Pressable>
-                  )}
-                </View>
-              ) : (
-                filteredOrders.map(
-                  (order: Order) => (
-                    <View
-                      key={order.id}
-                      style={styles.tableRow}
-                    >
-
-                      {/* ORDER NUMBER */}
-
-                      <View
-                        style={styles.orderColumn}
-                      >
-                        <Text
-                          style={
-                            styles.orderNumber
-                          }
-                        >
-                          #{order.id}
-                        </Text>
-                      </View>
-
-                      {/* DATE */}
-
-                      <View
-                        style={styles.dateColumn}
-                      >
-                        <Text
-                          style={styles.cellText}
-                        >
-                          {order.date}
-                        </Text>
-                      </View>
-
-                      {/* TIME */}
-
-                      <View
-                        style={styles.timeColumn}
-                      >
-                        <Text
-                          style={styles.cellText}
-                        >
-                          {order.time}
-                        </Text>
-                      </View>
-
-                      {/* ITEMS */}
-
-                      <View
-                        style={styles.itemsColumn}
-                      >
-                        <Text
-                          style={styles.cellText}
-                          numberOfLines={1}
-                        >
-                          {order.items}
-                        </Text>
-                      </View>
-
-                      {/* TOTAL */}
-
-                      <View
-                        style={styles.totalColumn}
-                      >
-                        <Text
-                          style={styles.totalText}
-                        >
-                          {formatCurrency(
-                            order.total
-                          )}
-                        </Text>
-                      </View>
-
-                      {/* STAFF */}
-
-                      <View
-                        style={styles.staffColumn}
-                      >
-                        <Text
-                          style={styles.cellText}
-                        >
-                          {order.staff}
-                        </Text>
-                      </View>
-
-                      {/* STATUS */}
-
-                      <View
-                        style={styles.statusColumn}
-                      >
-                        <StatusBadge
-                          status={order.status}
-                        />
-                      </View>
-
-                      {/* ACTION */}
-
-                      <View
-                        style={styles.actionColumn}
-                      >
-                        <Pressable
-                          onPress={() =>
-                            handleViewOrder(
-                              order
-                            )
-                          }
-                          style={styles.viewButton}
-                        >
-                          <Text
-                            style={
-                              styles.viewButtonText
-                            }
-                          >
-                            View
-                          </Text>
-                        </Pressable>
-                      </View>
-
-                    </View>
-                  )
-                )
-              )}
-            </ScrollView>
-          </View>
-        </View>
       </View>
 
       {/* =================================================
-          ORDER HISTORY MODAL
-          
-          This stays exactly as your existing modal.
+          SEARCH
       ================================================= */}
 
-      <OrderHistoryModal
-        visible={showOrderModal}
-        order={selectedOrder}
-        onClose={handleCloseModal}
-      />
-    </SafeAreaView>
+      <View style={styles.searchContainer}>
+
+
+        <TextInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Maghanap ng transaksyon..."
+          placeholderTextColor="#A79F99"
+          style={styles.searchInput}
+        />
+
+      </View>
+
+      {/* =================================================
+          HISTORY LIST
+      ================================================= */}
+
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+
+        {filteredSales.map((sale) => {
+
+          const total = getSaleTotal(sale);
+
+          const items = getItemsPreview(sale);
+
+          return (
+            <View
+              key={sale.id}
+              style={styles.historyCard}
+            >
+
+              {/* ICON */}
+
+              <View style={styles.receiptIconContainer}>
+                <Text style={styles.receiptIcon}>
+                  🧾
+                </Text>
+              </View>
+
+              {/* DETAILS */}
+
+              <View style={styles.transactionInfo}>
+
+                <Text style={styles.transactionId}>
+                  {sale.id}
+                </Text>
+
+                <Text style={styles.transactionDate}>
+                  {formatDate(sale.date)}
+                  {" · "}
+                  {formatTime(sale.date)}
+                </Text>
+
+                <Text
+                  style={styles.itemsText}
+                  numberOfLines={1}
+                >
+                  {items}
+                </Text>
+
+              </View>
+
+              {/* RIGHT SIDE */}
+
+              <View style={styles.rightSide}>
+
+                <Text style={styles.amount}>
+                  {formatCurrency(total)}
+                </Text>
+
+                <Pressable
+                  style={styles.viewButton}
+                  onPress={() =>
+                    handleViewReceipt(sale)
+                  }
+                >
+
+
+                  <Text style={styles.viewText}>
+                    View
+                  </Text>
+
+                </Pressable>
+
+              </View>
+
+            </View>
+          );
+        })}
+
+        {filteredSales.length === 0 && (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>
+              Walang transaction na nakita.
+            </Text>
+          </View>
+        )}
+
+      </ScrollView>
+
+      {/* =================================================
+          BOTTOM NAV
+      ================================================= */}
+
+      <View style={styles.bottomNav}>
+
+        {/* DASHBOARD */}
+
+        <Pressable
+          style={styles.navItem}
+          onPress={() =>
+            router.replace("/admin/sales")
+          }
+        >
+
+          <Text style={styles.navText}>
+            Dashboard
+          </Text>
+
+        </Pressable>
+
+        {/* HISTORY */}
+
+        <Pressable
+          style={[
+            styles.navItem,
+            styles.activeNavItem,
+          ]}
+        >
+
+          <Text style={styles.activeNavText}>
+            History
+          </Text>
+
+        </Pressable>
+
+      </View>
+      <AdminBottomNav/>
+    </View>
   );
 }

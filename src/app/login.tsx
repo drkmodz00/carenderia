@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+
 import {
   View,
   Text,
@@ -8,6 +9,7 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
+
 import { useRouter } from "expo-router";
 
 import { loginStyles as styles } from "@/styles/admin/login.styles";
@@ -15,10 +17,14 @@ import { loginStyles as styles } from "@/styles/admin/login.styles";
 export default function Login() {
   const router = useRouter();
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] =
+    useState("");
 
-  const [error, setError] = useState("");
+  const [password, setPassword] =
+    useState("");
+
+  const [error, setError] =
+    useState("");
 
   const [showPassword, setShowPassword] =
     useState(false);
@@ -26,55 +32,74 @@ export default function Login() {
   const [isLoading, setIsLoading] =
     useState(false);
 
+  /* =====================================================
+     LOGIN
+  ===================================================== */
+
   const handleLogin = () => {
     setError("");
 
-    /* ============================================
+    /* ================================
        VALIDATION
-    ============================================ */
+    ================================= */
 
     if (!username.trim()) {
-      setError("Please enter your username.");
+      setError(
+        "Please enter your username.",
+      );
+
       return;
     }
 
     if (!password.trim()) {
-      setError("Please enter your password.");
+      setError(
+        "Please enter your password.",
+      );
+
       return;
     }
 
     setIsLoading(true);
 
-    /*
-      FRONTEND ONLY LOGIN
-
-      Temporary credentials:
-
-      Username: admin
-      Password: admin123
-
-      Later replace this with your
-      backend authentication.
-    */
+    /* ================================
+       TEMPORARY LOGIN
+       
+       Username: admin
+       Password: admin123
+    ================================= */
 
     setTimeout(() => {
+      const validUsername =
+        username.trim().toLowerCase() ===
+        "admin";
+
+      const validPassword =
+        password === "admin123";
+
       if (
-        username.trim().toLowerCase() === "admin" &&
-        password === "admin123"
+        validUsername &&
+        validPassword
       ) {
         setIsLoading(false);
 
-        // Replace login page with admin dashboard
-        router.replace("/admin");
+        /*
+          Go directly to MENU
+        */
+
+        router.replace("/admin/orders");
       } else {
         setIsLoading(false);
 
         setError(
-          "Invalid username or password."
+          "Invalid username or password.",
         );
       }
-    }, 700);
+    }, 500);
   };
+
+  /* =====================================================
+     SCREEN
+  ===================================================== */
 
   return (
     <KeyboardAvoidingView
@@ -89,49 +114,46 @@ export default function Login() {
         contentContainerStyle={
           styles.scrollContent
         }
+        showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.loginContainer}>
+        <View style={styles.container}>
 
-          {/* ======================================
+          {/* ==========================================
               LOGO
-          ====================================== */}
+          =========================================== */}
 
           <View style={styles.logo}>
             <Text style={styles.logoText}>
-              C
+              🍽️
             </Text>
           </View>
 
-          {/* ======================================
+          {/* ==========================================
               BRAND
-          ====================================== */}
+          =========================================== */}
 
           <Text style={styles.brandName}>
-            Carenderia
+            Carenderia POS
           </Text>
 
           <Text style={styles.brandSubtitle}>
-            Management System
+            Mabilis · Madali · Maaasahan
           </Text>
 
-          {/* ======================================
+          {/* ==========================================
               LOGIN CARD
-          ====================================== */}
+          =========================================== */}
 
           <View style={styles.card}>
 
             <Text style={styles.title}>
-              Welcome Back
+              Mag-login
             </Text>
 
-            <Text style={styles.subtitle}>
-              Sign in to manage your carenderia
-            </Text>
-
-            {/* ==================================
+            {/* ======================================
                 ERROR
-            ================================== */}
+            ======================================= */}
 
             {error !== "" && (
               <View style={styles.errorBox}>
@@ -145,13 +167,13 @@ export default function Login() {
               </View>
             )}
 
-            {/* ==================================
+            {/* ======================================
                 USERNAME
-            ================================== */}
+            ======================================= */}
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
-                USERNAME
+                Username
               </Text>
 
               <TextInput
@@ -161,31 +183,38 @@ export default function Login() {
                   setError("");
                 }}
                 style={styles.input}
-                placeholder="Enter username"
+                placeholder="Ilagay ang username"
                 placeholderTextColor="#A98F79"
                 autoCapitalize="none"
                 autoCorrect={false}
+                returnKeyType="next"
               />
             </View>
 
-            {/* ==================================
+            {/* ======================================
                 PASSWORD
-            ================================== */}
+            ======================================= */}
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
-                PASSWORD
+                Password
               </Text>
 
-              <View style={styles.passwordContainer}>
+              <View
+                style={
+                  styles.passwordContainer
+                }
+              >
                 <TextInput
                   value={password}
                   onChangeText={(text) => {
                     setPassword(text);
                     setError("");
                   }}
-                  style={styles.passwordInput}
-                  placeholder="Enter password"
+                  style={
+                    styles.passwordInput
+                  }
+                  placeholder="Ilagay ang password"
                   placeholderTextColor="#A98F79"
                   secureTextEntry={
                     !showPassword
@@ -195,15 +224,19 @@ export default function Login() {
                   onSubmitEditing={
                     handleLogin
                   }
+                  returnKeyType="done"
                 />
 
                 <Pressable
                   onPress={() =>
                     setShowPassword(
-                      !showPassword
+                      (current) =>
+                        !current,
                     )
                   }
-                  style={styles.showButton}
+                  style={
+                    styles.showButton
+                  }
                 >
                   <Text
                     style={
@@ -218,9 +251,9 @@ export default function Login() {
               </View>
             </View>
 
-            {/* ==================================
+            {/* ======================================
                 LOGIN BUTTON
-            ================================== */}
+            ======================================= */}
 
             <Pressable
               onPress={handleLogin}
@@ -237,37 +270,37 @@ export default function Login() {
                 }
               >
                 {isLoading
-                  ? "Signing in..."
+                  ? "Nagla-login..."
                   : "Login"}
               </Text>
             </Pressable>
 
-            {/* ==================================
-                DEMO CREDENTIALS
-            ================================== */}
-
-            <View style={styles.demoBox}>
-              <Text style={styles.demoTitle}>
-                Demo Account
-              </Text>
-
-              <Text style={styles.demoText}>
-                Username: admin
-              </Text>
-
-              <Text style={styles.demoText}>
-                Password: admin123
-              </Text>
-            </View>
-
           </View>
 
-          {/* ======================================
+          {/* ==========================================
+              DEMO ACCOUNT
+          =========================================== */}
+
+          <View style={styles.demoBox}>
+            <Text style={styles.demoTitle}>
+              Demo Account
+            </Text>
+
+            <Text style={styles.demoText}>
+              Username: admin
+            </Text>
+
+            <Text style={styles.demoText}>
+              Password: admin123
+            </Text>
+          </View>
+
+          {/* ==========================================
               FOOTER
-          ====================================== */}
+          =========================================== */}
 
           <Text style={styles.footer}>
-            Carenderia Management System v1.0
+            Carenderia POS v1.0 · © 2026
           </Text>
 
         </View>

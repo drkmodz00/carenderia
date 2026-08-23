@@ -1,280 +1,93 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import {
-  View,
+  Pressable,
+  ScrollView,
+  Switch,
   Text,
   TextInput,
-  ScrollView,
-  Pressable,
-  Animated,
+  View,
 } from "react-native";
+import { useRouter } from "expo-router";
 
-import AdminSidebar from "@/components/admin/AdminSidebar";
 import { settingStyles as styles } from "@/styles/admin/settings.styles";
-
-type ToastType = "success" | "error";
+import AdminBottomNav from "@/components/admin/AdminBottomNav";
 
 export default function Settings() {
-  /* =========================================================
-     BUSINESS INFORMATION
-  ========================================================= */
+  const router = useRouter();
+
+  /* =====================================================
+     NEGOSYO
+  ====================================================== */
 
   const [carinderiaName, setCarinderiaName] = useState(
-    "Aling Nena's Carinderia"
+    "Carenderia ni Aling Rosa",
   );
 
   const [address, setAddress] = useState(
-    "123 Rizal St., Sta. Rosa, Laguna"
+    "123 Rizal St., Marikina City",
   );
 
-  const [contactNumber, setContactNumber] =
-    useState("0917-123-4567");
+  /* =====================================================
+     RESIBO
+  ====================================================== */
 
-  const [currency] = useState("PHP (₱)");
+  const [footerEnabled, setFooterEnabled] = useState(true);
 
-  /* =========================================================
-     ADMIN ACCOUNT
-  ========================================================= */
+  const [footerMessage, setFooterMessage] = useState(
+    "Salamat sa inyong...",
+  );
 
-  const [username, setUsername] = useState("admin");
+  /* =====================================================
+     PRINTER
+  ====================================================== */
 
-  const [newPassword, setNewPassword] = useState("");
+  const [printerEnabled, setPrinterEnabled] = useState(false);
 
-  /* =========================================================
-     TOAST
-  ========================================================= */
+  /* =====================================================
+     ACCOUNT
+  ====================================================== */
 
-  const [toastVisible, setToastVisible] =
-    useState(false);
+  const username = "admin";
 
-  const [toastMessage, setToastMessage] =
-    useState("");
+  const role = "Cashier / Admin";
 
-  const [toastType, setToastType] =
-    useState<ToastType>("success");
+  /* =====================================================
+     LOGOUT
+  ====================================================== */
 
-  const toastOpacity = useRef(
-    new Animated.Value(0)
-  ).current;
+  const handleLogout = () => {
+    /*
+      Return to login screen.
 
-  const toastTranslateY = useRef(
-    new Animated.Value(-20)
-  ).current;
+      router.replace() removes the current
+      admin page from the navigation history,
+      so the user cannot simply press Back
+      to return to Settings.
+    */
 
-  const toastTimer = useRef<
-    ReturnType<typeof setTimeout> | null
-  >(null);
-
-  /* =========================================================
-     SHOW TOAST
-  ========================================================= */
-
-  const showToast = (
-    message: string,
-    type: ToastType = "success"
-  ) => {
-    if (toastTimer.current) {
-      clearTimeout(toastTimer.current);
-    }
-
-    setToastMessage(message);
-    setToastType(type);
-    setToastVisible(true);
-
-    toastOpacity.setValue(0);
-    toastTranslateY.setValue(-20);
-
-    Animated.parallel([
-      Animated.timing(toastOpacity, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-
-      Animated.timing(toastTranslateY, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    toastTimer.current = setTimeout(() => {
-      Animated.parallel([
-        Animated.timing(toastOpacity, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-
-        Animated.timing(toastTranslateY, {
-          toValue: -20,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setToastVisible(false);
-      });
-    }, 3000);
+    router.replace("/");
   };
 
-  /* =========================================================
-     CLEANUP TOAST TIMER
-  ========================================================= */
-
-  useEffect(() => {
-    return () => {
-      if (toastTimer.current) {
-        clearTimeout(toastTimer.current);
-      }
-    };
-  }, []);
-
-  /* =========================================================
-     SAVE CHANGES
-  ========================================================= */
-
-  const handleSaveChanges = () => {
-    // Frontend only for now.
-    // Later this will save to your backend/database.
-
-    showToast(
-      "Business information saved successfully.",
-      "success"
-    );
-  };
-
-  /* =========================================================
-     CHANGE PASSWORD
-  ========================================================= */
-
-  const handleChangePassword = () => {
-    if (!newPassword.trim()) {
-      showToast(
-        "Please enter a new password.",
-        "error"
-      );
-
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      showToast(
-        "Password must be at least 6 characters.",
-        "error"
-      );
-
-      return;
-    }
-
-    // Frontend only for now.
-    // Later this will update the authenticated user.
-
-    setNewPassword("");
-
-    showToast(
-      "Password changed successfully.",
-      "success"
-    );
-  };
-
-  /* =========================================================
-     BACKUP DATA
-  ========================================================= */
-
-  const handleBackupData = () => {
-    showToast(
-      "Backup feature is not connected yet.",
-      "success"
-    );
-  };
-
-  /* =========================================================
-     RESTORE DATA
-  ========================================================= */
-
-  const handleRestoreData = () => {
-    showToast(
-      "Restore feature is not connected yet.",
-      "success"
-    );
-  };
-
-  /* =========================================================
-     CLEAR ORDERS
-  ========================================================= */
-
-  const handleClearOrders = () => {
-    showToast(
-      "Clear orders feature is not connected yet.",
-      "error"
-    );
-  };
-
-  /* =========================================================
+  /* =====================================================
      RENDER
-  ========================================================= */
+  ====================================================== */
 
   return (
     <View style={styles.page}>
 
-      {/* =====================================================
-          SIDEBAR
-      ===================================================== */}
+      {/* =================================================
+          HEADER
+      ================================================= */}
 
-      <AdminSidebar />
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>
+          Settings
+        </Text>
+      </View>
 
-      {/* =====================================================
-          TOAST
-      ===================================================== */}
-
-      {toastVisible && (
-        <Animated.View
-          style={[
-            styles.toast,
-            toastType === "success"
-              ? styles.toastSuccess
-              : styles.toastError,
-            {
-              opacity: toastOpacity,
-              transform: [
-                {
-                  translateY: toastTranslateY,
-                },
-              ],
-            },
-          ]}
-        >
-          <View
-            style={[
-              styles.toastIcon,
-              toastType === "success"
-                ? styles.toastIconSuccess
-                : styles.toastIconError,
-            ]}
-          >
-            <Text style={styles.toastIconText}>
-              {toastType === "success"
-                ? "✓"
-                : "!"}
-            </Text>
-          </View>
-
-          <View style={styles.toastContent}>
-            <Text style={styles.toastTitle}>
-              {toastType === "success"
-                ? "Success"
-                : "Something went wrong"}
-            </Text>
-
-            <Text style={styles.toastMessage}>
-              {toastMessage}
-            </Text>
-          </View>
-        </Animated.View>
-      )}
-
-      {/* =====================================================
-          MAIN CONTENT
-      ===================================================== */}
+      {/* =================================================
+          CONTENT
+      ================================================= */}
 
       <ScrollView
         style={styles.container}
@@ -282,252 +95,226 @@ export default function Settings() {
         showsVerticalScrollIndicator={false}
       >
 
-        {/* ===================================================
-            HEADER
-        =================================================== */}
+        {/* =================================================
+            NEGOSYO
+        ================================================= */}
 
-        <View style={styles.header}>
-          <Text style={styles.title}>
-            Settings
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>
+            NEGOSYO
           </Text>
 
-          <Text style={styles.subtitle}>
-            Manage your carinderia information and preferences
+          {/* NAME */}
+
+          <View style={styles.row}>
+            <Text style={styles.rowLabel}>
+              Pangalan
+            </Text>
+
+            <TextInput
+              value={carinderiaName}
+              onChangeText={setCarinderiaName}
+              style={styles.valueInput}
+              textAlign="right"
+              placeholder="Pangalan ng negosyo"
+              placeholderTextColor="#999"
+              numberOfLines={1}
+            />
+          </View>
+
+          <View style={styles.divider} />
+
+          {/* ADDRESS */}
+
+          <View style={styles.row}>
+            <Text style={styles.rowLabel}>
+              Address
+            </Text>
+
+            <TextInput
+              value={address}
+              onChangeText={setAddress}
+              style={styles.valueInput}
+              textAlign="right"
+              placeholder="Address"
+              placeholderTextColor="#999"
+              numberOfLines={1}
+            />
+          </View>
+        </View>
+
+        {/* =================================================
+            RESIBO
+        ================================================= */}
+
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>
+            RESIBO
           </Text>
-        </View>
 
-        {/* ===================================================
-            COLUMNS
-        =================================================== */}
+          {/* FOOTER SWITCH */}
 
-        <View style={styles.columns}>
+          <View style={styles.row}>
+            <Text style={styles.rowLabel}>
+              Ipakita ang footer message
+            </Text>
 
-          {/* =================================================
-              LEFT COLUMN
-          ================================================= */}
-
-          <View style={styles.leftColumn}>
-
-            <View style={styles.card}>
-
-              <Text style={styles.cardTitle}>
-                Business Information
-              </Text>
-
-              {/* CARINDERIA NAME */}
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>
-                  CARINDERIA NAME
-                </Text>
-
-                <TextInput
-                  value={carinderiaName}
-                  onChangeText={setCarinderiaName}
-                  style={styles.input}
-                  placeholder="Enter carinderia name"
-                  placeholderTextColor="#A98F79"
-                />
-              </View>
-
-              {/* ADDRESS */}
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>
-                  ADDRESS
-                </Text>
-
-                <TextInput
-                  value={address}
-                  onChangeText={setAddress}
-                  style={styles.input}
-                  placeholder="Enter address"
-                  placeholderTextColor="#A98F79"
-                />
-              </View>
-
-              {/* CONTACT NUMBER */}
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>
-                  CONTACT NUMBER
-                </Text>
-
-                <TextInput
-                  value={contactNumber}
-                  onChangeText={setContactNumber}
-                  style={styles.input}
-                  placeholder="Enter contact number"
-                  placeholderTextColor="#A98F79"
-                  keyboardType="phone-pad"
-                />
-              </View>
-
-              {/* CURRENCY */}
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>
-                  CURRENCY
-                </Text>
-
-                <View style={styles.disabledInput}>
-                  <Text style={styles.disabledInputText}>
-                    {currency}
-                  </Text>
-                </View>
-              </View>
-
-              {/* SAVE */}
-
-              <Pressable
-                style={styles.primaryButton}
-                onPress={handleSaveChanges}
-              >
-                <Text style={styles.primaryButtonText}>
-                  Save Changes
-                </Text>
-              </Pressable>
-
-            </View>
-
+            <Switch
+              value={footerEnabled}
+              onValueChange={setFooterEnabled}
+              trackColor={{
+                false: "#D4D4D4",
+                true: "#F45B00",
+              }}
+              thumbColor="#FFFFFF"
+              ios_backgroundColor="#D4D4D4"
+            />
           </View>
 
-          {/* =================================================
-              RIGHT COLUMN
-          ================================================= */}
+          <View style={styles.divider} />
 
-          <View style={styles.rightColumn}>
+          {/* FOOTER MESSAGE */}
 
-            {/* =================================================
-                ADMIN ACCOUNT
-            ================================================= */}
+          <View style={styles.row}>
+            <Text style={styles.rowLabel}>
+              Footer message
+            </Text>
 
-            <View style={styles.card}>
+            <TextInput
+              value={footerMessage}
+              onChangeText={setFooterMessage}
+              editable={footerEnabled}
+              style={[
+                styles.footerInput,
+                !footerEnabled &&
+                  styles.disabledText,
+              ]}
+              textAlign="right"
+              placeholder="Footer message"
+              placeholderTextColor="#999"
+              numberOfLines={1}
+            />
+          </View>
+        </View>
 
-              <Text style={styles.cardTitle}>
-                Admin Account
-              </Text>
+        {/* =================================================
+            PRINTER
+        ================================================= */}
 
-              {/* USERNAME */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>
+            PRINTER
+          </Text>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>
-                  USERNAME
-                </Text>
+          {/* BLUETOOTH PRINTER */}
 
-                <TextInput
-                  value={username}
-                  onChangeText={setUsername}
-                  style={styles.input}
-                  placeholder="Enter username"
-                  placeholderTextColor="#A98F79"
-                  autoCapitalize="none"
-                />
-              </View>
+          <View style={styles.row}>
+            <Text style={styles.rowLabel}>
+              Bluetooth Printer
+            </Text>
 
-              {/* NEW PASSWORD */}
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>
-                  NEW PASSWORD
-                </Text>
-
-                <TextInput
-                  value={newPassword}
-                  onChangeText={setNewPassword}
-                  style={styles.input}
-                  secureTextEntry
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <Pressable
-                style={styles.primaryButton}
-                onPress={handleChangePassword}
-              >
-                <Text style={styles.primaryButtonText}>
-                  Change Password
-                </Text>
-              </Pressable>
-
-            </View>
-
-            {/* =================================================
-                DATA MANAGEMENT
-            ================================================= */}
-
-            <View style={styles.card}>
-
-              <Text style={styles.cardTitle}>
-                Data Management
-              </Text>
-
-              <Pressable
-                style={styles.managementButton}
-                onPress={handleBackupData}
-              >
-                <Text style={styles.managementIcon}>
-                  📥
-                </Text>
-
-                <Text style={styles.managementText}>
-                  Backup Data
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={styles.managementButton}
-                onPress={handleRestoreData}
-              >
-                <Text style={styles.managementIcon}>
-                  📤
-                </Text>
-
-                <Text style={styles.managementText}>
-                  Restore Data
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={styles.dangerButton}
-                onPress={handleClearOrders}
-              >
-                <Text style={styles.dangerIcon}>
-                  🗑
-                </Text>
-
-                <Text style={styles.dangerText}>
-                  Clear All Orders
-                </Text>
-              </Pressable>
-
-            </View>
-
-            {/* =================================================
-                SYSTEM VERSION
-            ================================================= */}
-
-            <View style={styles.versionCard}>
-
-              <Text style={styles.versionTitle}>
-                System Version
-              </Text>
-
-              <Text style={styles.versionName}>
-                Carinderia Management System v1.0
-              </Text>
-
-              <Text style={styles.versionDate}>
-                Last updated: Aug 18, 2026
-              </Text>
-
-            </View>
-
+            <Switch
+              value={printerEnabled}
+              onValueChange={setPrinterEnabled}
+              trackColor={{
+                false: "#D4D4D4",
+                true: "#F45B00",
+              }}
+              thumbColor="#FFFFFF"
+              ios_backgroundColor="#D4D4D4"
+            />
           </View>
 
+          <View style={styles.divider} />
+
+          {/* STATUS */}
+
+          <View style={styles.row}>
+            <Text style={styles.rowLabel}>
+              Status
+            </Text>
+
+            <Text style={styles.statusText}>
+              {printerEnabled
+                ? "Connected"
+                : "Disconnected"}
+            </Text>
+          </View>
         </View>
+
+        {/* =================================================
+            ACCOUNT
+        ================================================= */}
+
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>
+            ACCOUNT
+          </Text>
+
+          {/* USERNAME */}
+
+          <View style={styles.row}>
+            <Text style={styles.rowLabel}>
+              Username
+            </Text>
+
+            <Text style={styles.accountValue}>
+              {username}
+            </Text>
+          </View>
+
+          <View style={styles.divider} />
+
+          {/* ROLE */}
+
+          <View style={styles.row}>
+            <Text style={styles.rowLabel}>
+              Role
+            </Text>
+
+            <Text style={styles.accountValue}>
+              {role}
+            </Text>
+          </View>
+        </View>
+
+        {/* =================================================
+            LOGOUT
+        ================================================= */}
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.logoutButton,
+            pressed &&
+              styles.logoutButtonPressed,
+          ]}
+          onPress={handleLogout}
+        >
+          <Text style={styles.logoutText}>
+            Mag-logout
+          </Text>
+        </Pressable>
+
+        {/* =================================================
+            VERSION
+        ================================================= */}
+
+        <Text style={styles.versionText}>
+          Carenderia POS v1.0 • © 2026
+        </Text>
+
+        {/* Extra space so content won't hide
+            behind bottom navigation */}
+        <View style={{ height: 80 }} />
 
       </ScrollView>
+
+      {/* =================================================
+          ADMIN BOTTOM NAVIGATION
+      ================================================= */}
+
+      <AdminBottomNav />
+
     </View>
   );
 }

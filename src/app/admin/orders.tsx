@@ -1,135 +1,200 @@
+import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
-  Image,
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from "react-native";
 
-import AdminSidebar from "../../components/admin/AdminSidebar";
-import SuccessToast from "@/components/admin/SuccessToast";
+import AdminBottomNav from "@/components/admin/AdminBottomNav";
 
-import { ordersStyles as styles } from "@/styles/admin/order.styles";
+import {
+  orderStyles as styles,
+} from "@/styles/admin/order.styles";
+
+/* =====================================================
+   TYPES
+===================================================== */
+
 type Category =
   | "All"
-  | "Rice Meals"
   | "Chicken"
   | "Pork"
+  | "Fish"
+  | "Rice Meals"
   | "Drinks";
+
+type ActualCategory = Exclude<Category, "All">;
 
 type MenuItem = {
   id: number;
   name: string;
+  category: ActualCategory;
   price: number;
-  category: Category;
-  image: string;
+  available: boolean;
+  image?: string;
+  icon?: string;
 };
 
 type OrderItem = MenuItem & {
   quantity: number;
 };
 
-const menuItems: MenuItem[] = [
+/* =====================================================
+   CATEGORIES
+===================================================== */
+
+const categories: Category[] = [
+  "All",
+  "Chicken",
+  "Pork",
+  "Fish",
+  "Rice Meals",
+  "Drinks",
+];
+
+/* =====================================================
+   MOCK MENU DATA
+===================================================== */
+
+const INITIAL_MENU_ITEMS: MenuItem[] = [
   {
     id: 1,
     name: "Chicken Adobo",
-    price: 70,
     category: "Chicken",
-    image: "https://images.unsplash.com/photo-1601050690597-df0568f70950",
+    price: 50,
+    available: true,
+    icon: "🍗",
   },
   {
     id: 2,
     name: "Fried Chicken",
-    price: 80,
     category: "Chicken",
-    image: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec",
+    price: 55,
+    available: true,
+    icon: "🍗",
   },
   {
     id: 3,
-    name: "Chicken Inasal",
-    price: 90,
-    category: "Chicken",
-    image: "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b",
+    name: "Pork Giniling",
+    category: "Pork",
+    price: 45,
+    available: true,
+    icon: "🥩",
   },
   {
     id: 4,
-    name: "Pork Sinigang",
-    price: 75,
+    name: "Pork Adobo",
     category: "Pork",
-    image: "https://images.unsplash.com/photo-1601050690117-94f5f6fa8bd7",
+    price: 50,
+    available: true,
+    icon: "🥩",
   },
   {
     id: 5,
-    name: "Pork Adobo",
-    price: 70,
-    category: "Pork",
-    image: "https://images.unsplash.com/photo-1547592180-85f173990554",
+    name: "Fried Fish",
+    category: "Fish",
+    price: 40,
+    available: true,
+    icon: "🐟",
   },
   {
     id: 6,
-    name: "Pork Steak",
-    price: 85,
+    name: "Sinigang na Baboy",
     category: "Pork",
-    image: "https://images.unsplash.com/photo-1544025162-d76694265947",
+    price: 80,
+    available: true,
+    icon: "🍲",
   },
   {
     id: 7,
     name: "Garlic Rice",
-    price: 20,
     category: "Rice Meals",
-    image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b",
+    price: 20,
+    available: true,
+    icon: "🍚",
   },
   {
     id: 8,
     name: "Plain Rice",
-    price: 15,
     category: "Rice Meals",
-    image: "https://images.unsplash.com/photo-1512058564366-18510be2db19",
+    price: 15,
+    available: true,
+    icon: "🍚",
   },
   {
     id: 9,
-    name: "Soft Drink",
-    price: 25,
+    name: "Softdrinks",
     category: "Drinks",
-    image: "https://images.unsplash.com/photo-1629203849820-fdd70d49c38e",
+    price: 25,
+    available: true,
+    icon: "🥤",
   },
   {
     id: 10,
-    name: "Bottled Water",
-    price: 20,
+    name: "Buko Juice",
     category: "Drinks",
-    image: "https://images.unsplash.com/photo-1548839140-29a749e1cf4d",
+    price: 30,
+    available: true,
+    icon: "🥥",
+  },
+  {
+    id: 11,
+    name: "Tubig (Water)",
+    category: "Drinks",
+    price: 15,
+    available: true,
+    icon: "💧",
+  },
+  {
+    id: 12,
+    name: "Halo-Halo",
+    category: "Drinks",
+    price: 55,
+    available: true,
+    icon: "🍧",
+  },
+  {
+    id: 13,
+    name: "Leche Flan",
+    category: "Drinks",
+    price: 40,
+    available: true,
+    icon: "🍮",
+  },
+  {
+    id: 14,
+    name: "Pancit Bihon",
+    category: "Rice Meals",
+    price: 55,
+    available: true,
+    icon: "🍜",
   },
 ];
 
-const categories: Category[] = [
-  "All",
-  "Rice Meals",
-  "Chicken",
-  "Pork",
-  "Drinks",
-];
+/* =====================================================
+   MAIN SCREEN
+===================================================== */
 
-export default function Orders() {
-    
-    const [showSuccess, setShowSuccess] = useState(false);
+export default function OrderScreen() {
+  const router = useRouter();
 
-    const [orderNumber, setSavedOrderNumber] = useState(372);
+  const [menuItems] = useState<MenuItem[]>(
+    INITIAL_MENU_ITEMS
+  );
 
+  const [
+    selectedCategory,
+    setSelectedCategory,
+  ] = useState<Category>("All");
 
-  const [selectedCategory, setSelectedCategory] =
-    useState<Category>("All");
+  const [orderItems, setOrderItems] =
+    useState<OrderItem[]>([]);
 
-  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
-
-  const [tableCustomer, setTableCustomer] =
-    useState("");
-
-  // ==========================================
-  // FILTER MENU
-  // ==========================================
+  /* ===================================================
+     FILTER MENU
+  =================================================== */
 
   const filteredItems = useMemo(() => {
     if (selectedCategory === "All") {
@@ -137,28 +202,64 @@ export default function Orders() {
     }
 
     return menuItems.filter(
-      (item) => item.category === selectedCategory
+      (item) =>
+        item.category === selectedCategory
     );
-  }, [selectedCategory]);
+  }, [menuItems, selectedCategory]);
 
-  // ==========================================
-  // ADD ITEM
-  // ==========================================
+  /* ===================================================
+     TOTAL
+  =================================================== */
 
-  const addItem = (item: MenuItem) => {
+  const orderTotal = useMemo(() => {
+    return orderItems.reduce(
+      (total, item) =>
+        total +
+        item.price * item.quantity,
+      0
+    );
+  }, [orderItems]);
+
+  /* ===================================================
+     COUNT
+  =================================================== */
+
+  const orderCount = useMemo(() => {
+    return orderItems.reduce(
+      (total, item) =>
+        total + item.quantity,
+      0
+    );
+  }, [orderItems]);
+
+  /* ===================================================
+     ADD ITEM
+  =================================================== */
+
+  const handleAddToOrder = (
+    item: MenuItem
+  ) => {
+    if (!item.available) {
+      return;
+    }
+
     setOrderItems((currentItems) => {
-      const existingItem = currentItems.find(
-        (orderItem) => orderItem.id === item.id
-      );
+      const existingItem =
+        currentItems.find(
+          (orderItem) =>
+            orderItem.id === item.id
+        );
 
       if (existingItem) {
-        return currentItems.map((orderItem) =>
-          orderItem.id === item.id
-            ? {
-                ...orderItem,
-                quantity: orderItem.quantity + 1,
-              }
-            : orderItem
+        return currentItems.map(
+          (orderItem) =>
+            orderItem.id === item.id
+              ? {
+                  ...orderItem,
+                  quantity:
+                    orderItem.quantity + 1,
+                }
+              : orderItem
         );
       }
 
@@ -172,404 +273,421 @@ export default function Orders() {
     });
   };
 
-  // ==========================================
-  // INCREASE QUANTITY
-  // ==========================================
+  /* ===================================================
+     INCREASE
+  =================================================== */
 
-  const increaseQuantity = (id: number) => {
+  const increaseQuantity = (
+    id: number
+  ) => {
     setOrderItems((currentItems) =>
       currentItems.map((item) =>
         item.id === id
           ? {
               ...item,
-              quantity: item.quantity + 1,
+              quantity:
+                item.quantity + 1,
             }
           : item
       )
     );
   };
 
-  // ==========================================
-  // DECREASE QUANTITY
-  // ==========================================
+  /* ===================================================
+     DECREASE
+  =================================================== */
 
-  const decreaseQuantity = (id: number) => {
+  const decreaseQuantity = (
+    id: number
+  ) => {
     setOrderItems((currentItems) =>
       currentItems
         .map((item) =>
           item.id === id
             ? {
                 ...item,
-                quantity: item.quantity - 1,
+                quantity:
+                  item.quantity - 1,
               }
             : item
         )
-        .filter((item) => item.quantity > 0)
+        .filter(
+          (item) =>
+            item.quantity > 0
+        )
     );
   };
 
-  // ==========================================
-  // TOTALS
-  // ==========================================
+  /* ===================================================
+     CLEAR
+  =================================================== */
 
-  const subtotal = orderItems.reduce(
-    (total, item) =>
-      total + item.price * item.quantity,
-    0
-  );
+  const clearOrder = () => {
+    setOrderItems([]);
+  };
 
-  const total = subtotal;
+  /* ===================================================
+     CHECKOUT → PAYMENT PAGE
+  =================================================== */
 
-  // ==========================================
-  // SAVE ORDER
-  // ==========================================
-
-  const saveOrder = () => {
+  const handleCheckout = () => {
     if (orderItems.length === 0) {
-      console.log("No items in order.");
       return;
     }
-    
-    console.log("Order saved:", {
-      tableCustomer,
-      items: orderItems,
-      subtotal,
-      total,
+
+    router.push({
+      pathname: "/admin/payment",
+      params: {
+        total: String(orderTotal),
+        order: JSON.stringify(
+          orderItems.map((item) => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            icon: item.icon || "🍽️",
+          }))
+        ),
+      },
     });
-
-    setShowSuccess(true);
-
-    setTimeout(() => {
-        setShowSuccess(false);
-    }, 3000);
-
   };
+
+  /* ===================================================
+     SCREEN
+  =================================================== */
 
   return (
     <View style={styles.container}>
 
-      {/* ========================================
-          SIDEBAR
-      ======================================== */}
+      {/* HEADER */}
 
-      <AdminSidebar />
-    
-      <SuccessToast 
-        visible={showSuccess}
-        orderNumber={orderNumber}
-      />
+      <View style={styles.orangeHeader}>
+        <View style={styles.headerLeft}>
+          <Text style={styles.storeTitle}>
+            Carenderia ni Aling Rosa
+          </Text>
 
-      {/* ========================================
-          MAIN AREA
-      ======================================== */}
+          <Text style={styles.dateText}>
+            Aug 23, 2026 · 08:57 AM
+          </Text>
+        </View>
 
-      <View style={styles.main}>
+        <View style={styles.cashierBox}>
+          <Text style={styles.cashierLabel}>
+            CASHIER
+          </Text>
 
+          <Text style={styles.cashierName}>
+            Maria
+          </Text>
+        </View>
+      </View>
 
+      {/* CATEGORIES */}
 
-        {/* ======================================
-            ORDER WORKSPACE
-        ====================================== */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.categoryScroll}
+        contentContainerStyle={
+          styles.categoryContent
+        }
+      >
+        {categories.map((category) => {
+          const active =
+            selectedCategory === category;
 
-        <View style={styles.workspace}>
-
-          {/* ====================================
-              LEFT SIDE - MENU
-          ==================================== */}
-
-            <View style={styles.menuSection}>
-
-            {/* TITLE */}
-            <View style={styles.pageHeading}>
-                <Text style={styles.pageTitle}>
-                New Order
-                </Text>
-
-                <Text style={styles.pageSubtitle}>
-                Click items to add to order
-                </Text>
-            </View>
-
-            {/* CATEGORIES */}
-            <View style={styles.categoryContainer}>
-                {categories.map((category) => {
-                const active = selectedCategory === category;
-
-                return (
-                    <Pressable
-                    key={category}
-                    onPress={() => setSelectedCategory(category)}
-                    style={[
-                        styles.categoryButton,
-                        active && styles.categoryButtonActive,
-                    ]}
-                    >
-                    <Text
-                        style={[
-                        styles.categoryText,
-                        active && styles.categoryTextActive,
-                        ]}
-                    >
-                        {category}
-                    </Text>
-                    </Pressable>
-                );
-                })}
-            </View>
-
-            {/* MENU ITEMS */}
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.menuGrid}
-            >
-                {filteredItems.map((item) => (
-                <Pressable
-                    key={item.id}
-                    onPress={() => addItem(item)}
-                    style={styles.menuCard}
-                >
-                    <Image
-                    source={{ uri: item.image }}
-                    style={styles.menuImage}
-                    resizeMode="cover"
-                    />
-
-                    <View style={styles.menuInfo}>
-                    <Text
-                        style={styles.menuItemName}
-                        numberOfLines={1}
-                    >
-                        {item.name}
-                    </Text>
-
-                    <Text style={styles.menuItemPrice}>
-                        ₱{item.price.toFixed(2)}
-                    </Text>
-                    </View>
-                </Pressable>
-                ))}
-            </ScrollView>
-
-            </View>
-
-
-          {/* ====================================
-              RIGHT SIDE - CURRENT ORDER
-          ==================================== */}
-
-          <View style={styles.orderSection}>
-
-            {/* ORDER HEADER */}
-
-            <View style={styles.orderHeader}>
-
-              <Text style={styles.orderTitle}>
-                Current Order
-              </Text>
-
-              <Text style={styles.orderSubtitle}>
-                New transaction
-              </Text>
-
-            </View>
-
-
-            {/* TABLE / CUSTOMER */}
-
-            <View style={styles.inputContainer}>
-
-              <Text style={styles.inputLabel}>
-                Table / Customer No.
-              </Text>
-
-              <TextInput
-                value={tableCustomer}
-                onChangeText={setTableCustomer}
-                placeholder="e.g. Table 3, Juan"
-                placeholderTextColor="#9CA3AF"
-                style={styles.input}
-              />
-
-            </View>
-
-
-            {/* ORDER ITEMS */}
-
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              style={styles.orderItemsScroll}
-              contentContainerStyle={
-                orderItems.length === 0
-                  ? styles.emptyOrderContainer
-                  : styles.orderItemsContainer
+          return (
+            <Pressable
+              key={category}
+              onPress={() =>
+                setSelectedCategory(
+                  category
+                )
               }
+              style={[
+                styles.categoryTab,
+                active &&
+                  styles.activeCategoryTab,
+              ]}
             >
-
-              {orderItems.length === 0 ? (
-
-                /* EMPTY STATE */
-
-                <View style={styles.emptyOrder}>
-
-                  <View style={styles.emptyIcon}>
-
-                    <Text style={styles.emptyIconText}>
-                      🍽
-                    </Text>
-
-                  </View>
-
-                  <Text style={styles.emptyTitle}>
-                    No items added yet
-                  </Text>
-
-                  <Text style={styles.emptySubtitle}>
-                    Click menu items to add
-                  </Text>
-
-                </View>
-
-              ) : (
-
-                /* ORDER ITEMS */
-
-                orderItems.map((item) => (
-
-                  <View
-                    key={item.id}
-                    style={styles.orderItem}
-                  >
-
-                    <View style={styles.orderItemInfo}>
-
-                      <Text
-                        style={styles.orderItemName}
-                        numberOfLines={1}
-                      >
-                        {item.name}
-                      </Text>
-
-                      <Text style={styles.orderItemPrice}>
-                        ₱{item.price.toFixed(2)}
-                      </Text>
-
-                    </View>
-
-
-                    {/* QUANTITY */}
-
-                    <View style={styles.quantityContainer}>
-
-                      <Pressable
-                        onPress={() =>
-                          decreaseQuantity(item.id)
-                        }
-                        style={styles.quantityButton}
-                      >
-                        <Text
-                          style={styles.quantityButtonText}
-                        >
-                          −
-                        </Text>
-                      </Pressable>
-
-                      <Text style={styles.quantityText}>
-                        {item.quantity}
-                      </Text>
-
-                      <Pressable
-                        onPress={() =>
-                          increaseQuantity(item.id)
-                        }
-                        style={styles.quantityButton}
-                      >
-                        <Text
-                          style={styles.quantityButtonText}
-                        >
-                          +
-                        </Text>
-                      </Pressable>
-
-                    </View>
-
-
-                    {/* ITEM TOTAL */}
-
-                    <Text style={styles.orderItemTotal}>
-                      ₱
-                      {(
-                        item.price * item.quantity
-                      ).toFixed(2)}
-                    </Text>
-
-                  </View>
-
-                ))
-
-              )}
-
-            </ScrollView>
-
-
-            {/* ==================================
-                ORDER SUMMARY
-            ================================== */}
-
-            <View style={styles.summary}>
-
-              <View style={styles.summaryRow}>
-
-                <Text style={styles.summaryLabel}>
-                  Subtotal
-                </Text>
-
-                <Text style={styles.summaryValue}>
-                  ₱{subtotal.toFixed(2)}
-                </Text>
-
-              </View>
-
-
-              <View style={styles.summaryDivider} />
-
-
-              <View style={styles.totalRow}>
-
-                <Text style={styles.totalLabel}>
-                  Total
-                </Text>
-
-                <Text style={styles.totalValue}>
-                  ₱{total.toFixed(2)}
-                </Text>
-
-              </View>
-
-
-              {/* SAVE ORDER */}
-
-              <Pressable
-                onPress={saveOrder}
+              <Text
                 style={[
-                  styles.saveButton,
-                  orderItems.length === 0 &&
-                    styles.saveButtonDisabled,
+                  styles.categoryTabText,
+                  active &&
+                    styles.activeCategoryTabText,
                 ]}
               >
+                {category === "All"
+                  ? "Lahat"
+                  : category ===
+                    "Rice Meals"
+                  ? "Rice"
+                  : category}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
 
-                <Text style={styles.saveButtonText}>
-                  Save Order
-                </Text>
+      {/* MENU */}
 
-              </Pressable>
-
+      <ScrollView
+        style={styles.menuScroll}
+        contentContainerStyle={
+          styles.menuGrid
+        }
+        showsVerticalScrollIndicator={false}
+      >
+        {filteredItems.map((item) => (
+          <View
+            key={item.id}
+            style={[
+              styles.menuCard,
+              !item.available &&
+                styles.unavailableCard,
+            ]}
+          >
+            <View
+              style={
+                styles.foodIconContainer
+              }
+            >
+              <Text
+                style={styles.foodIcon}
+              >
+                {item.icon || "🍽️"}
+              </Text>
             </View>
 
+            <Text
+              style={styles.foodName}
+              numberOfLines={2}
+            >
+              {item.name}
+            </Text>
+
+            <View
+              style={styles.cardBottom}
+            >
+              <Text
+                style={styles.foodPrice}
+              >
+                ₱{item.price}
+              </Text>
+
+              <Pressable
+                disabled={!item.available}
+                onPress={() =>
+                  handleAddToOrder(item)
+                }
+                style={[
+                  styles.plusButton,
+                  !item.available &&
+                    styles.disabledPlusButton,
+                ]}
+              >
+                <Text
+                  style={styles.plusText}
+                >
+                  +
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+
+      {/* CURRENT ORDER */}
+
+      {orderItems.length > 0 && (
+        <View style={styles.orderPanel}>
+
+          <View
+            style={styles.orderHeader}
+          >
+            <View>
+              <Text
+                style={styles.orderTitle}
+              >
+                Order ({orderCount} item
+                {orderCount !== 1
+                  ? "s"
+                  : ""})
+              </Text>
+            </View>
+
+            <Pressable
+              onPress={clearOrder}
+            >
+              <Text
+                style={styles.clearOrderText}
+              >
+                Clear
+              </Text>
+            </Pressable>
+          </View>
+
+          <ScrollView
+            style={styles.orderItems}
+            showsVerticalScrollIndicator={
+              false
+            }
+          >
+            {orderItems.map((item) => (
+              <View
+                key={item.id}
+                style={styles.orderItem}
+              >
+
+                <View
+                  style={
+                    styles.orderItemInfo
+                  }
+                >
+                  <Text
+                    style={
+                      styles.orderItemIcon
+                    }
+                  >
+                    {item.icon ||
+                      "🍽️"}
+                  </Text>
+
+                  <View
+                    style={
+                      styles.orderItemTextContainer
+                    }
+                  >
+                    <Text
+                      style={
+                        styles.orderItemName
+                      }
+                      numberOfLines={1}
+                    >
+                      {item.name}
+                    </Text>
+
+                    <Text
+                      style={
+                        styles.orderItemPrice
+                      }
+                    >
+                      ₱{item.price} ×{" "}
+                      {item.quantity}
+                    </Text>
+                  </View>
+                </View>
+
+                <View
+                  style={
+                    styles.quantityControls
+                  }
+                >
+                  <Pressable
+                    style={
+                      styles.quantityButton
+                    }
+                    onPress={() =>
+                      decreaseQuantity(
+                        item.id
+                      )
+                    }
+                  >
+                    <Text
+                      style={
+                        styles.quantityButtonText
+                      }
+                    >
+                      −
+                    </Text>
+                  </Pressable>
+
+                  <Text
+                    style={
+                      styles.quantityText
+                    }
+                  >
+                    {item.quantity}
+                  </Text>
+
+                  <Pressable
+                    style={
+                      styles.quantityButton
+                    }
+                    onPress={() =>
+                      increaseQuantity(
+                        item.id
+                      )
+                    }
+                  >
+                    <Text
+                      style={
+                        styles.quantityButtonText
+                      }
+                    >
+                      +
+                    </Text>
+                  </Pressable>
+                </View>
+
+                <Text
+                  style={
+                    styles.orderItemTotal
+                  }
+                >
+                  ₱
+                  {(
+                    item.price *
+                    item.quantity
+                  ).toFixed(2)}
+                </Text>
+
+              </View>
+            ))}
+          </ScrollView>
+
+          {/* TOTAL + CHECKOUT */}
+
+          <View
+            style={styles.orderFooter}
+          >
+            <View>
+              <Text
+                style={styles.totalLabel}
+              >
+                TOTAL
+              </Text>
+
+              <Text
+                style={styles.totalAmount}
+              >
+                ₱{orderTotal.toFixed(2)}
+              </Text>
+            </View>
+
+            <Pressable
+              style={
+                styles.checkoutButton
+              }
+              onPress={handleCheckout}
+            >
+              <Text
+                style={
+                  styles.checkoutButtonText
+                }
+              >
+                Checkout →
+              </Text>
+            </Pressable>
           </View>
 
         </View>
+      )}
 
-      </View>
+      {/* BOTTOM NAV */}
+
+      <AdminBottomNav />
 
     </View>
   );

@@ -1,499 +1,458 @@
 import { StyleSheet } from "react-native";
 
 export const menuStyles = StyleSheet.create({
-
-  /* =====================================================
-     MAIN LAYOUT
-  ===================================================== */
-
   container: {
     flex: 1,
-    flexDirection: "row",
-    backgroundColor: "#F7F7F8",
-  },
-
-  main: {
-    flex: 1,
-    minWidth: 0,
-  },
-
-  content: {
-    padding: 28,
-    paddingBottom: 40,
+    backgroundColor: "#FFF8EF",
   },
 
   /* =====================================================
      HEADER
   ===================================================== */
 
-  header: {
+  orangeHeader: {
+    height: 74,
+    backgroundColor: "#F45B00",
+    paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 28,
   },
 
-  headingContainer: {
-    flex: 1,
+  pageTitle: {
+    color: "#FFFFFF",
+    fontSize: 20,
+    fontWeight: "800",
   },
 
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#27211D",
-  },
-
-  subtitle: {
+  itemCount: {
+    color: "#FFE6D5",
     fontSize: 12,
-    color: "#9A8577",
-    marginTop: 5,
+    marginTop: 2,
   },
-
-  /* =====================================================
-     ADD BUTTON
-  ===================================================== */
 
   addButton: {
-    height: 42,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    backgroundColor: "#E77D00",
-    flexDirection: "row",
-    alignItems: "center",
+    height: 38,
+    paddingHorizontal: 15,
+    borderRadius: 10,
+    backgroundColor: "#EF813E",
     justifyContent: "center",
-  },
-
-  addButtonIcon: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "700",
-    marginRight: 7,
-    lineHeight: 20,
+    alignItems: "center",
   },
 
   addButtonText: {
     color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-
-  /* =====================================================
-     SEARCH
-  ===================================================== */
-
-  searchContainer: {
-    width: 280,
-    height: 42,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E8DED6",
-    borderRadius: 11,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    marginBottom: 14,
-  },
-
-  searchIcon: {
-    fontSize: 14,
-    marginRight: 8,
-  },
-
-  searchInput: {
-    flex: 1,
-    height: "100%",
-    fontSize: 12,
-    color: "#302A26",
-  },
-
-  /* =====================================================
-     TABLE
-  ===================================================== */
-
-  tableContainer: {
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E8DED6",
-    borderRadius: 16,
-    overflow: "hidden",
-  },
-
-  tableHeader: {
-    minHeight: 44,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FCFBFA",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E8DED6",
-  },
-
-  tableRow: {
-    minHeight: 65,
-    flexDirection: "row",
-    alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "#EFEAE6",
-  },
-
-  /* =====================================================
-     COLUMNS
-  ===================================================== */
-
-  itemColumn: {
-    flex: 3,
-    paddingHorizontal: 22,
-    justifyContent: "center",
-    minWidth: 250,
-  },
-
-  categoryColumn: {
-    flex: 1.45,
-    paddingHorizontal: 12,
-    justifyContent: "center",
-    minWidth: 130,
-  },
-
-  priceColumn: {
-    flex: 1,
-    paddingHorizontal: 12,
-    justifyContent: "center",
-    minWidth: 110,
-  },
-
-  statusColumn: {
-    flex: 1.4,
-    paddingHorizontal: 12,
-    justifyContent: "center",
-    minWidth: 150,
-  },
-
-  actionsColumn: {
-    flex: 1.65,
-    paddingHorizontal: 18,
-    justifyContent: "center",
-    minWidth: 180,
-  },
-
-  /* =====================================================
-     HEADER TEXT
-  ===================================================== */
-
-  headerText: {
-    fontSize: 10,
-    fontWeight: "600",
-    letterSpacing: 1,
-    color: "#8D7769",
-  },
-
-  /* =====================================================
-     ITEM
-  ===================================================== */
-
-  itemContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  itemImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 7,
-    backgroundColor: "#F3F4F6",
-    marginRight: 13,
-  },
-
-  itemName: {
-    flex: 1,
     fontSize: 13,
-    fontWeight: "500",
-    color: "#302A26",
+    fontWeight: "700",
+  },
+
+  /* =====================================================
+     ADD FORM
+  ===================================================== */
+
+  addForm: {
+    backgroundColor: "#FFF8EF",
+    paddingHorizontal: 16,
+    paddingTop: 13,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1D5BF",
+  },
+
+  addFormTitle: {
+    color: "#E95500",
+    fontSize: 14,
+    fontWeight: "700",
+    marginBottom: 9,
+  },
+
+  addInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  addIconBox: {
+    width: 48,
+    height: 40,
+    borderWidth: 1,
+    borderColor: "#E3DDD8",
+    borderRadius: 9,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  addFoodIcon: {
+    fontSize: 20,
+  },
+
+  addNameInput: {
+    flex: 1,
+    height: 40,
+    borderWidth: 1,
+    borderColor: "#E3DDD8",
+    borderRadius: 9,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 10,
+    color: "#222222",
+    fontSize: 12,
+  },
+
+  addPriceBox: {
+    width: 64,
+    height: 40,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E3DDD8",
+    borderRadius: 9,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 8,
+  },
+
+  pricePrefix: {
+    color: "#777777",
+    fontSize: 12,
+  },
+
+  addPriceInput: {
+    flex: 1,
+    padding: 0,
+    color: "#222222",
+    fontSize: 12,
   },
 
   /* =====================================================
      CATEGORY
   ===================================================== */
 
-  categoryBadge: {
-    alignSelf: "flex-start",
+  categoryList: {
+    gap: 6,
+    paddingVertical: 8,
+  },
+
+  categoryButton: {
+    height: 28,
     paddingHorizontal: 12,
-    height: 25,
-    borderRadius: 13,
-    backgroundColor: "#FFF0C7",
+    borderRadius: 15,
+    backgroundColor: "#EAE6E3",
     justifyContent: "center",
     alignItems: "center",
+  },
+
+  categoryButtonActive: {
+    backgroundColor: "#F45B00",
   },
 
   categoryText: {
-    fontSize: 10,
-    fontWeight: "500",
-    color: "#D86F00",
+    color: "#756D68",
+    fontSize: 11,
+  },
+
+  categoryTextActive: {
+    color: "#FFFFFF",
+    fontWeight: "700",
   },
 
   /* =====================================================
-     PRICE
+     FORM BUTTONS
   ===================================================== */
 
-  priceText: {
+  formActions: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 2,
+  },
+
+  cancelButton: {
+    flex: 0.4,
+    height: 38,
+    borderRadius: 9,
+    borderWidth: 1,
+    borderColor: "#DDDDDD",
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  cancelText: {
+    color: "#555555",
+    fontSize: 12,
+    fontWeight: "500",
+  },
+
+  saveButton: {
+    flex: 1,
+    height: 38,
+    borderRadius: 9,
+    backgroundColor: "#F45B00",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  saveText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  /* =====================================================
+     SCROLL
+  ===================================================== */
+
+  menuScroll: {
+    flex: 1,
+  },
+
+  menuContent: {
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 20,
+  },
+
+  /* =====================================================
+     SECTION
+  ===================================================== */
+
+  section: {
+    marginBottom: 9,
+  },
+
+  sectionTitle: {
+    color: "#776B63",
+    fontSize: 12,
+    fontWeight: "500",
+    marginHorizontal: 4,
+    marginBottom: 7,
+  },
+
+  /* =====================================================
+     MENU CARD
+  ===================================================== */
+
+  menuCard: {
+    minHeight: 58,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 13,
+    marginBottom: 7,
+    paddingHorizontal: 9,
+    paddingVertical: 7,
+    flexDirection: "row",
+    alignItems: "center",
+
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+
+    elevation: 1,
+  },
+
+  menuCardUnavailable: {
+    opacity: 0.65,
+  },
+
+  /* =====================================================
+     FOOD ICON
+  ===================================================== */
+
+  foodIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 9,
+    backgroundColor: "#FFF8F2",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 7,
+  },
+
+  foodIcon: {
+    fontSize: 20,
+  },
+
+  /* =====================================================
+     FOOD INFO
+  ===================================================== */
+
+  menuInfo: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: "center",
+  },
+
+  foodName: {
+    color: "#111111",
     fontSize: 12,
     fontWeight: "600",
-    color: "#302A26",
-  },
-
-  /* =====================================================
-     STATUS
-  ===================================================== */
-
-  statusBadge: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 13,
-    height: 25,
-    borderRadius: 13,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  availableBadge: {
-    backgroundColor: "#CFF7E5",
-  },
-
-  unavailableBadge: {
-    backgroundColor: "#F1F2F4",
-  },
-
-  statusText: {
-    fontSize: 10,
-    fontWeight: "500",
-  },
-
-  availableText: {
-    color: "#147A52",
   },
 
   unavailableText: {
-    color: "#6B7280",
+    color: "#999999",
+  },
+
+  foodPrice: {
+    color: "#F45B00",
+    fontSize: 11,
+    fontWeight: "500",
+    marginTop: 2,
   },
 
   /* =====================================================
      ACTIONS
   ===================================================== */
 
-  actionContainer: {
+  menuActions: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-  },
-
-  editButton: {
-    height: 29,
-    paddingHorizontal: 13,
-    borderRadius: 8,
-    backgroundColor: "#FFF1C8",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  editButtonText: {
-    fontSize: 10,
-    fontWeight: "600",
-    color: "#C96A00",
-  },
-
-  deleteButton: {
-    height: 29,
-    paddingHorizontal: 13,
-    borderRadius: 8,
-    backgroundColor: "#FFE1E1",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  deleteButtonText: {
-    fontSize: 10,
-    fontWeight: "600",
-    color: "#D14343",
+    gap: 6,
+    marginLeft: 6,
   },
 
   /* =====================================================
-     EMPTY
+     ON / OFF
   ===================================================== */
 
-  emptyContainer: {
-    paddingVertical: 60,
+  statusButton: {
+    minWidth: 34,
+    height: 30,
+    borderRadius: 7,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 7,
+  },
+
+  statusOn: {
+    backgroundColor: "#F0FFF6",
+    borderWidth: 1,
+    borderColor: "#5BDE92",
+  },
+
+  statusOff: {
+    backgroundColor: "#FFF2F2",
+    borderWidth: 1,
+    borderColor: "#FFAAAA",
+  },
+
+  statusText: {
+    fontSize: 9,
+    fontWeight: "700",
+  },
+
+  statusOnText: {
+    color: "#18B957",
+  },
+
+  statusOffText: {
+    color: "#E64A4A",
+  },
+
+  /* =====================================================
+     EDIT
+  ===================================================== */
+
+  editButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: "#FFF7F0",
     alignItems: "center",
     justifyContent: "center",
   },
 
-  emptyTitle: {
-    fontSize: 15,
+  editIcon: {
+    color: "#F45B00",
+    fontSize: 18,
     fontWeight: "600",
-    color: "#302A26",
   },
 
-  emptySubtitle: {
+  /* =====================================================
+     SAVE EDIT
+  ===================================================== */
+
+  saveEditButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: "#F45B00",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  saveEditIcon: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "800",
+  },
+
+  /* =====================================================
+     DELETE
+  ===================================================== */
+
+  deleteButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: "#FFF3F3",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  deleteIcon: {
+    fontSize: 14,
+    color: "#E53935",
+  },
+
+  /* =====================================================
+     INLINE EDIT
+  ===================================================== */
+
+  editInfo: {
+    flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 3,
+    justifyContent: "center",
+  },
+
+  inlineEditName: {
+    height: 30,
+    borderWidth: 1,
+    borderColor: "#F45B00",
+    borderRadius: 7,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 8,
+    color: "#222222",
     fontSize: 11,
-    color: "#9A8577",
-    marginTop: 5,
+    marginBottom: 3,
   },
-  foodImage: {
-  width: 48,
-  height: 48,
-  borderRadius: 10,
-  backgroundColor: "#F3F4F6",
-  marginRight: 12,
-},
 
-actionButtons: {
-  flexDirection: "row",
-  alignItems: "center",
-  gap: 8,
-},
-deleteOverlay: {
-  position: "absolute",
-
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-
-  backgroundColor: "rgba(0, 0, 0, 0.48)",
-
-  alignItems: "center",
-  justifyContent: "center",
-
-  paddingHorizontal: 25,
-
-  zIndex: 999,
-},
-
-deleteModal: {
-  width: "100%",
-  maxWidth: 420,
-
-  backgroundColor: "#FFFFFF",
-
-  borderRadius: 18,
-
-  padding: 28,
-
-  alignItems: "center",
-
-  shadowColor: "#000",
-  shadowOffset: {
-    width: 0,
-    height: 8,
+  inlinePriceRow: {
+    flexDirection: "row",
+    alignItems: "center",
   },
-  shadowOpacity: 0.2,
-  shadowRadius: 20,
 
-  elevation: 15,
-},
+  pesoSymbol: {
+    color: "#F45B00",
+    fontSize: 11,
+    marginRight: 2,
+  },
 
-deleteIcon: {
-  width: 54,
-  height: 54,
+  inlineEditPrice: {
+    width: 55,
+    height: 23,
+    padding: 0,
+    color: "#F45B00",
+    fontSize: 11,
+  },
 
-  borderRadius: 27,
+  /* =====================================================
+     BOTTOM
+  ===================================================== */
 
-  backgroundColor: "#FFF0F0",
-
-  alignItems: "center",
-  justifyContent: "center",
-
-  marginBottom: 15,
-},
-
-deleteIconText: {
-  color: "#E53935",
-
-  fontSize: 28,
-  fontWeight: "700",
-},
-
-deleteTitle: {
-  color: "#171717",
-
-  fontSize: 21,
-  fontWeight: "700",
-
-  marginBottom: 10,
-},
-
-deleteMessage: {
-  color: "#6F625B",
-
-  fontSize: 15,
-
-  lineHeight: 22,
-
-  textAlign: "center",
-
-  maxWidth: 340,
-},
-
-deleteItemName: {
-  color: "#222222",
-  fontWeight: "700",
-},
-
-deleteWarning: {
-  color: "#A18F84",
-
-  fontSize: 13,
-
-  marginTop: 7,
-
-  textAlign: "center",
-},
-
-deleteActions: {
-  width: "100%",
-
-  flexDirection: "row",
-
-  gap: 12,
-
-  marginTop: 24,
-},
-
-deleteCancelButton: {
-  flex: 1,
-
-  height: 48,
-
-  borderRadius: 12,
-
-  backgroundColor: "#F3F1EF",
-
-  alignItems: "center",
-  justifyContent: "center",
-},
-
-deleteCancelText: {
-  color: "#5E514A",
-
-  fontSize: 15,
-  fontWeight: "600",
-},
-
-deleteConfirmButton: {
-  flex: 1,
-
-  height: 48,
-
-  borderRadius: 12,
-
-  backgroundColor: "#E53935",
-
-  alignItems: "center",
-  justifyContent: "center",
-},
-
-deleteConfirmText: {
-  color: "#FFFFFF",
-
-  fontSize: 15,
-  fontWeight: "700",
-},
-
+  bottomSpacer: {
+    height: 20,
+  },
 });
-

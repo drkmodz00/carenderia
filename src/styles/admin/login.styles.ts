@@ -1,253 +1,326 @@
-import { StyleSheet } from "react-native";
+import {
+  StyleSheet,
+} from "react-native";
 
-const ORANGE = "#E47A00";
+export const loginStyles =
+  StyleSheet.create({
 
-export const loginStyles = StyleSheet.create({
-  /* ============================================
-     PAGE
-  ============================================ */
+    /* =================================================
+       PAGE
+    ================================================= */
 
-  page: {
-    flex: 1,
-    backgroundColor: "#FAF9F7",
-  },
-
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 50,
-    paddingHorizontal: 20,
-  },
-
-  loginContainer: {
-    width: "100%",
-    maxWidth: 460,
-    alignItems: "center",
-  },
-
-  /* ============================================
-     LOGO
-  ============================================ */
-
-  logo: {
-    width: 64,
-    height: 64,
-    borderRadius: 18,
-    backgroundColor: ORANGE,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 14,
-  },
-
-  logoText: {
-    color: "#FFFFFF",
-    fontSize: 32,
-    fontWeight: "800",
-  },
-
-  /* ============================================
-     BRAND
-  ============================================ */
-
-  brandName: {
-    fontSize: 26,
-    fontWeight: "800",
-    color: "#111111",
-  },
-
-  brandSubtitle: {
-    fontSize: 14,
-    color: "#9B8675",
-    marginTop: 3,
-    marginBottom: 28,
-  },
-
-  /* ============================================
-     CARD
-  ============================================ */
-
-  card: {
-    width: "100%",
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E9E0D7",
-    borderRadius: 20,
-    padding: 30,
-
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
+    page: {
+      flex: 1,
+      backgroundColor: "#FFE0B5",
     },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
-  },
 
-  title: {
-    fontSize: 25,
-    fontWeight: "800",
-    color: "#111111",
-    marginBottom: 7,
-  },
+    scrollContent: {
+      flexGrow: 1,
+      justifyContent: "center",
+      paddingVertical: 30,
+    },
 
-  subtitle: {
-    fontSize: 14,
-    color: "#9B8675",
-    marginBottom: 26,
-  },
+    container: {
+      width: "100%",
+      alignItems: "center",
+      paddingHorizontal: 10,
+    },
 
-  /* ============================================
-     ERROR
-  ============================================ */
+    /* =================================================
+       LOGO
+    ================================================= */
 
-  errorBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFF0F0",
-    borderWidth: 1,
-    borderColor: "#FFBABA",
-    borderRadius: 12,
-    paddingVertical: 11,
-    paddingHorizontal: 13,
-    marginBottom: 20,
-  },
+    logo: {
+      width: 80,
+      height: 80,
 
-  errorIcon: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: "#D64545",
-    color: "#FFFFFF",
-    textAlign: "center",
-    lineHeight: 22,
-    fontWeight: "800",
-    marginRight: 9,
-  },
+      borderRadius: 23,
 
-  errorText: {
-    flex: 1,
-    color: "#B82F2F",
-    fontSize: 13,
-    fontWeight: "600",
-  },
+      backgroundColor: "#F45B00",
 
-  /* ============================================
-     INPUTS
-  ============================================ */
+      alignItems: "center",
+      justifyContent: "center",
 
-  inputGroup: {
-    marginBottom: 19,
-  },
+      marginBottom: 17,
 
-  label: {
-    fontSize: 13,
-    fontWeight: "700",
-    letterSpacing: 0.8,
-    color: "#9B8675",
-    marginBottom: 8,
-  },
+      shadowColor: "#C94A00",
+      shadowOffset: {
+        width: 0,
+        height: 7,
+      },
+      shadowOpacity: 0.22,
+      shadowRadius: 10,
 
-  input: {
-    height: 53,
-    borderWidth: 1,
-    borderColor: "#E8DFD6",
-    borderRadius: 14,
-    backgroundColor: "#FBFAF8",
-    paddingHorizontal: 17,
-    fontSize: 16,
-    color: "#111111",
-  },
+      elevation: 6,
+    },
 
-  /* ============================================
-     PASSWORD
-  ============================================ */
+    logoText: {
+      fontSize: 38,
+    },
 
-  passwordContainer: {
-    height: 53,
-    borderWidth: 1,
-    borderColor: "#E8DFD6",
-    borderRadius: 14,
-    backgroundColor: "#FBFAF8",
-    flexDirection: "row",
-    alignItems: "center",
-  },
+    /* =================================================
+       BRAND
+    ================================================= */
 
-  passwordInput: {
-    flex: 1,
-    height: "100%",
-    paddingHorizontal: 17,
-    fontSize: 16,
-    color: "#111111",
-  },
+    brandName: {
+      color: "#111111",
+      fontSize: 26,
+      fontWeight: "800",
+      letterSpacing: -0.8,
+    },
 
-  showButton: {
-    paddingHorizontal: 15,
-  },
+    brandSubtitle: {
+      color: "#987C67",
+      fontSize: 13,
+      marginTop: 4,
+      marginBottom: 34,
+    },
 
-  showButtonText: {
-    color: ORANGE,
-    fontSize: 13,
-    fontWeight: "700",
-  },
+    /* =================================================
+       CARD
+    ================================================= */
 
-  /* ============================================
-     LOGIN BUTTON
-  ============================================ */
+    card: {
+      width: "100%",
+      maxWidth: 430,
 
-  loginButton: {
-    height: 53,
-    backgroundColor: ORANGE,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 4,
-  },
+      backgroundColor: "#FFFFFF",
 
-  loginButtonDisabled: {
-    opacity: 0.6,
-  },
+      borderRadius: 25,
 
-  loginButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "800",
-  },
+      paddingHorizontal: 24,
+      paddingTop: 27,
+      paddingBottom: 25,
 
-  /* ============================================
-     DEMO ACCOUNT
-  ============================================ */
+      shadowColor: "#A96B37",
+      shadowOffset: {
+        width: 0,
+        height: 5,
+      },
+      shadowOpacity: 0.12,
+      shadowRadius: 15,
 
-  demoBox: {
-    marginTop: 22,
-    padding: 15,
-    borderRadius: 12,
-    backgroundColor: "#FFF9E9",
-    borderWidth: 1,
-    borderColor: "#F3D98B",
-  },
+      elevation: 5,
+    },
 
-  demoTitle: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: "#B96800",
-    marginBottom: 5,
-  },
+    /* =================================================
+       TITLE
+    ================================================= */
 
-  demoText: {
-    fontSize: 12,
-    color: "#8D6B46",
-    marginTop: 2,
-  },
+    title: {
+      color: "#151515",
+      fontSize: 18,
+      fontWeight: "800",
+      marginBottom: 23,
+    },
 
-  /* ============================================
-     FOOTER
-  ============================================ */
+    /* =================================================
+       INPUT GROUP
+    ================================================= */
 
-  footer: {
-    marginTop: 22,
-    fontSize: 12,
-    color: "#A98F79",
-  },
-});
+    inputGroup: {
+      width: "100%",
+      marginBottom: 17,
+    },
+
+    label: {
+      color: "#3D3028",
+      fontSize: 12,
+      fontWeight: "500",
+      marginBottom: 8,
+    },
+
+    input: {
+      width: "100%",
+      height: 48,
+
+      borderWidth: 1,
+      borderColor: "#E1DDD9",
+
+      borderRadius: 11,
+
+      backgroundColor: "#FCFCFC",
+
+      paddingHorizontal: 14,
+
+      color: "#222222",
+      fontSize: 13,
+    },
+
+    /* =================================================
+       PASSWORD
+    ================================================= */
+
+    passwordContainer: {
+      width: "100%",
+      height: 48,
+
+      flexDirection: "row",
+      alignItems: "center",
+
+      borderWidth: 1,
+      borderColor: "#E1DDD9",
+
+      borderRadius: 11,
+
+      backgroundColor: "#FCFCFC",
+    },
+
+    passwordInput: {
+      flex: 1,
+      height: "100%",
+
+      paddingHorizontal: 14,
+
+      color: "#222222",
+      fontSize: 13,
+    },
+
+    showButton: {
+      height: "100%",
+
+      paddingHorizontal: 13,
+
+      justifyContent: "center",
+      alignItems: "center",
+    },
+
+    showButtonText: {
+      color: "#F45B00",
+      fontSize: 11,
+      fontWeight: "700",
+    },
+
+    /* =================================================
+       LOGIN BUTTON
+    ================================================= */
+
+    loginButton: {
+      width: "100%",
+      height: 52,
+
+      marginTop: 2,
+
+      borderRadius: 12,
+
+      backgroundColor: "#F45B00",
+
+      alignItems: "center",
+      justifyContent: "center",
+
+      shadowColor: "#E04D00",
+      shadowOffset: {
+        width: 0,
+        height: 5,
+      },
+      shadowOpacity: 0.22,
+      shadowRadius: 8,
+
+      elevation: 4,
+    },
+
+    loginButtonDisabled: {
+      backgroundColor: "#F59A69",
+    },
+
+    loginButtonText: {
+      color: "#FFFFFF",
+      fontSize: 14,
+      fontWeight: "800",
+    },
+
+    /* =================================================
+       ERROR
+    ================================================= */
+
+    errorBox: {
+      width: "100%",
+
+      flexDirection: "row",
+      alignItems: "center",
+
+      backgroundColor: "#FFF1F1",
+
+      borderWidth: 1,
+      borderColor: "#FFD0D0",
+
+      borderRadius: 9,
+
+      paddingHorizontal: 10,
+      paddingVertical: 9,
+
+      marginBottom: 15,
+    },
+
+    errorIcon: {
+      width: 20,
+      height: 20,
+
+      borderRadius: 10,
+
+      backgroundColor: "#E53935",
+
+      color: "#FFFFFF",
+
+      textAlign: "center",
+      lineHeight: 20,
+
+      fontSize: 12,
+      fontWeight: "800",
+
+      marginRight: 8,
+    },
+
+    errorText: {
+      flex: 1,
+
+      color: "#D32F2F",
+      fontSize: 11,
+    },
+
+    /* =================================================
+       DEMO
+    ================================================= */
+
+    demoBox: {
+      width: "100%",
+      maxWidth: 430,
+
+      marginTop: 15,
+
+      paddingVertical: 11,
+      paddingHorizontal: 15,
+
+      borderRadius: 10,
+
+      backgroundColor: "rgba(255,255,255,0.35)",
+    },
+
+    demoTitle: {
+      color: "#9B765A",
+      fontSize: 10,
+      fontWeight: "700",
+      marginBottom: 3,
+    },
+
+    demoText: {
+      color: "#A98F79",
+      fontSize: 10,
+      lineHeight: 16,
+    },
+
+    /* =================================================
+       FOOTER
+    ================================================= */
+
+    footer: {
+      color: "#B4967C",
+
+      fontSize: 10,
+
+      marginTop: 16,
+
+      textAlign: "center",
+    },
+  });
+  

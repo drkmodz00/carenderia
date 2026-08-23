@@ -2,428 +2,250 @@ import { StyleSheet } from "react-native";
 
 export const historyStyles = StyleSheet.create({
 
-  // ==========================================
-  // MAIN LAYOUT
-  // ==========================================
+  /* =====================================================
+     PAGE
+  ===================================================== */
 
-  safeArea: {
+  page: {
     flex: 1,
-    backgroundColor: "#F7F7F8",
+    backgroundColor: "#FFF8EF",
   },
 
-  container: {
-    flex: 1,
-    flexDirection: "row",
-    backgroundColor: "#F7F7F8",
+  /* =====================================================
+     HEADER
+  ===================================================== */
+
+  header: {
+    height: 65,
+    backgroundColor: "#F45B00",
+    paddingHorizontal: 16,
+    paddingTop: 11,
   },
 
-  main: {
-    flex: 1,
-    minWidth: 0,
-    padding: 0,
+  headerTitle: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "800",
   },
 
-
-  // ==========================================
-  // TOP HEADER
-  // ==========================================
-
-  topHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-
-    paddingHorizontal: 5,
-    paddingTop: 14,
-    paddingBottom: 24,
+  headerSubtitle: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    marginTop: 4,
   },
 
-  headingContainer: {
-    flex: 1,
-  },
-
-  title: {
-    fontSize: 23,
-    fontWeight: "700",
-    color: "#27211D",
-  },
-
-  subtitle: {
-    fontSize: 12,
-    color: "#8D8178",
-    marginTop: 5,
-  },
-
-
-  // ==========================================
-  // SEARCH + FILTER CONTROLS
-  // ==========================================
-
-  controls: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
+  /* =====================================================
+     SEARCH
+  ===================================================== */
 
   searchContainer: {
-    width: 220,
-    height: 42,
+    height: 48,
+    marginHorizontal: 16,
+    marginTop: 10,
+    marginBottom: 8,
 
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F3F3F3",
+    borderRadius: 13,
 
-    borderWidth: 1,
-    borderColor: "#E7DFD7",
+    flexDirection: "row",
+    alignItems: "center",
 
-    borderRadius: 12,
-
-    justifyContent: "center",
-
-    paddingHorizontal: 15,
+    paddingHorizontal: 13,
   },
 
   searchInput: {
     flex: 1,
+    height: 46,
 
-    fontSize: 12,
-    color: "#27211D",
+    color: "#222222",
+    fontSize: 13,
 
-    paddingVertical: 0,
+    marginLeft: 8,
   },
 
+  /* =====================================================
+     SCROLL
+  ===================================================== */
 
-  // ==========================================
-  // FILTER DROPDOWN
-  // ==========================================
-
-  filterWrapper: {
-    position: "relative",
-    zIndex: 100,
+  scroll: {
+    flex: 1,
   },
 
-  filterSelect: {
-    width: 125,
-    height: 42,
+  content: {
+    paddingHorizontal: 16,
+    paddingTop: 3,
+    paddingBottom: 20,
+  },
+
+  /* =====================================================
+     HISTORY CARD
+  ===================================================== */
+
+  historyCard: {
+    minHeight: 84,
 
     backgroundColor: "#FFFFFF",
+    borderRadius: 15,
 
-    borderWidth: 1,
-    borderColor: "#E7DFD7",
+    marginBottom: 9,
 
-    borderRadius: 12,
-
-    paddingHorizontal: 15,
+    paddingHorizontal: 14,
 
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-  },
-
-  filterSelectText: {
-    fontSize: 12,
-    color: "#27211D",
-  },
-
-  filterArrow: {
-    fontSize: 16,
-    color: "#27211D",
-    marginTop: -3,
-  },
-
-  filterMenu: {
-    position: "absolute",
-
-    top: 47,
-    left: 0,
-    right: 0,
-
-    backgroundColor: "#FFFFFF",
-
-    borderWidth: 1,
-    borderColor: "#E7DFD7",
-
-    borderRadius: 10,
-
-    overflow: "hidden",
-
-    zIndex: 999,
 
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 3,
+      height: 2,
     },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
 
-    elevation: 5,
+    elevation: 2,
   },
 
-  filterOption: {
-    height: 38,
+  /* =====================================================
+     RECEIPT ICON
+  ===================================================== */
 
+  receiptIconContainer: {
+    width: 40,
+    height: 40,
+
+    borderRadius: 12,
+
+    backgroundColor: "#FFF5EA",
+
+    alignItems: "center",
     justifyContent: "center",
 
-    paddingHorizontal: 14,
+    marginRight: 10,
   },
 
-  filterOptionActive: {
-    backgroundColor: "#FFF7E6",
+  receiptIcon: {
+    fontSize: 18,
   },
 
-  filterOptionText: {
-    fontSize: 12,
-    color: "#4B4038",
-  },
+  /* =====================================================
+     TRANSACTION DETAILS
+  ===================================================== */
 
-  filterOptionTextActive: {
-    color: "#E77D00",
-    fontWeight: "600",
-  },
-
-
-  // ==========================================
-  // TABLE
-  // ==========================================
-
-  tableContainer: {
+  transactionInfo: {
     flex: 1,
-
-    marginHorizontal: 5,
-
-    backgroundColor: "#FFFFFF",
-
-    borderWidth: 1,
-    borderColor: "#E7DFD7",
-
-    borderRadius: 15,
-
-    overflow: "hidden",
+    minWidth: 0,
   },
 
-
-  // ==========================================
-  // TABLE HEADER
-  // ==========================================
-
-  tableHeader: {
-    height: 44,
-
-    flexDirection: "row",
-    alignItems: "center",
-
-    backgroundColor: "#FCFBF9",
-
-    borderBottomWidth: 1,
-    borderBottomColor: "#E7DFD7",
-
-    paddingHorizontal: 20,
-  },
-
-  headerText: {
-    fontSize: 10,
-    fontWeight: "600",
-
-    color: "#8D8178",
-
-    letterSpacing: 1,
-  },
-
-
-  // ==========================================
-  // TABLE ROW
-  // ==========================================
-
-  tableRow: {
-    minHeight: 57,
-
-    flexDirection: "row",
-    alignItems: "center",
-
-    paddingHorizontal: 20,
-
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0EBE6",
-  },
-
-
-  // ==========================================
-  // TABLE COLUMNS
-  // ==========================================
-
-  orderColumn: {
-    width: "10%",
-    minWidth: 80,
-  },
-
-  dateColumn: {
-    width: "13%",
-    minWidth: 105,
-  },
-
-  timeColumn: {
-    width: "10%",
-    minWidth: 85,
-  },
-
-  itemsColumn: {
-    flex: 1,
-    minWidth: 240,
-    paddingRight: 15,
-  },
-
-  totalColumn: {
-    width: "10%",
-    minWidth: 90,
-  },
-
-  staffColumn: {
-    width: "9%",
-    minWidth: 75,
-  },
-
-  statusColumn: {
-    width: "12%",
-    minWidth: 100,
-  },
-
-  actionColumn: {
-    width: "8%",
-    minWidth: 65,
-
-    alignItems: "flex-start",
-  },
-
-
-  // ==========================================
-  // TABLE CELL TEXT
-  // ==========================================
-
-  orderNumber: {
-    fontSize: 12,
-    fontWeight: "600",
-
-    color: "#E77D00",
-  },
-
-  cellText: {
-    fontSize: 12,
-    color: "#4B4038",
-  },
-
-  totalText: {
-    fontSize: 12,
+  transactionId: {
+    color: "#222222",
+    fontSize: 13,
     fontWeight: "700",
-
-    color: "#27211D",
   },
 
-
-  // ==========================================
-  // STATUS
-  // ==========================================
-
-  statusBadge: {
-    alignSelf: "flex-start",
-
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-
-    borderRadius: 15,
-
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  completedBadge: {
-    backgroundColor: "#D1FAE5",
-  },
-
-  voidedBadge: {
-    backgroundColor: "#FEE2E2",
-  },
-
-  statusText: {
+  transactionDate: {
+    color: "#A09791",
     fontSize: 10,
-    fontWeight: "500",
+    marginTop: 4,
   },
 
-  completedText: {
-    color: "#047857",
+  itemsText: {
+    color: "#756B64",
+    fontSize: 10,
+    marginTop: 4,
+    paddingRight: 5,
   },
 
-  voidedText: {
-    color: "#B91C1C",
+  /* =====================================================
+     RIGHT SIDE
+  ===================================================== */
+
+  rightSide: {
+    width: 68,
+    alignItems: "flex-end",
+    marginLeft: 5,
   },
 
-
-  // ==========================================
-  // VIEW BUTTON
-  // ==========================================
+  amount: {
+    color: "#F45B00",
+    fontSize: 13,
+    fontWeight: "800",
+    marginBottom: 7,
+  },
 
   viewButton: {
-    minWidth: 50,
-    height: 29,
+    height: 28,
 
-    paddingHorizontal: 12,
-
-    borderRadius: 8,
-
-    backgroundColor: "#FFF0BD",
-
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  viewButtonText: {
-    fontSize: 10,
-    fontWeight: "600",
-
-    color: "#B56A00",
-  },
-
-
-  // ==========================================
-  // EMPTY STATE
-  // ==========================================
-
-  emptyContainer: {
-    minHeight: 350,
-
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  emptyTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#374151",
-  },
-
-  emptySubtitle: {
-    fontSize: 12,
-    color: "#9CA3AF",
-    marginTop: 5,
-  },
-
-  clearButton: {
-    marginTop: 15,
-
-    height: 36,
-
-    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: "#FFB77F",
 
     borderRadius: 8,
 
-    backgroundColor: "#E77D00",
+    paddingHorizontal: 8,
 
-    justifyContent: "center",
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+
+    gap: 4,
   },
 
-  clearButtonText: {
+  viewText: {
+    color: "#F45B00",
     fontSize: 11,
     fontWeight: "600",
-    color: "#FFFFFF",
   },
 
+  /* =====================================================
+     EMPTY
+  ===================================================== */
+
+  emptyContainer: {
+    alignItems: "center",
+    paddingTop: 50,
+  },
+
+  emptyText: {
+    color: "#A09791",
+    fontSize: 13,
+  },
+
+  /* =====================================================
+     BOTTOM NAV
+  ===================================================== */
+
+  bottomNav: {
+    height: 51,
+
+    backgroundColor: "#FFF8EF",
+
+    borderTopWidth: 1,
+    borderTopColor: "#EDE7DF",
+
+    flexDirection: "row",
+  },
+
+  navItem: {
+    flex: 1,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    borderTopWidth: 2,
+    borderTopColor: "transparent",
+  },
+
+  activeNavItem: {
+    borderTopColor: "#F45B00",
+  },
+
+  navText: {
+    color: "#A39A93",
+    fontSize: 12,
+  },
+
+  activeNavText: {
+    color: "#F45B00",
+    fontSize: 12,
+    fontWeight: "700",
+  },
 });

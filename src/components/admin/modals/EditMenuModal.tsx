@@ -30,7 +30,7 @@ export type EditMenuData = {
   category: EditMenuCategory;
   price: number;
   available: boolean;
-  image: string;
+  image?: string;
 };
 
 type EditMenuModalProps = {
@@ -85,7 +85,7 @@ export default function EditMenuModal({
     setCategory(item.category);
     setPrice(String(item.price));
     setAvailable(item.available);
-    setImage(item.image);
+    setImage(item.image ?? "");
   }, [item, visible]);
 
   /* ===================================================

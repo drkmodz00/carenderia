@@ -1,23 +1,14 @@
 import React, { useMemo, useState } from "react";
+
 import {
-  Image,
   Pressable,
   ScrollView,
   Text,
+  TextInput,
   View,
 } from "react-native";
 
-import AdminSidebar from "../../components/admin/AdminSidebar";
-
-import AddMenuModal, {
-  AddMenuData,
-} from "../../components/admin/modals/AddMenuModal";
-
-import EditMenuModal, {
-  EditMenuData,
-} from "../../components/admin/modals/EditMenuModal";
-
-import DeleteMenuModal from "@/components/admin/modals/DeleteMenuModal";
+import AdminBottomNav from "@/components/admin/AdminBottomNav";
 import { menuStyles as styles } from "@/styles/admin/menu.styles";
 
 /* =====================================================
@@ -25,19 +16,23 @@ import { menuStyles as styles } from "@/styles/admin/menu.styles";
 ===================================================== */
 
 type Category =
+  | "All"
   | "Chicken"
   | "Pork"
   | "Fish"
   | "Rice Meals"
   | "Drinks";
 
+type ActualCategory = Exclude<Category, "All">;
+
 type MenuItem = {
   id: number;
   name: string;
-  category: Category;
+  category: ActualCategory;
   price: number;
   available: boolean;
-  image: string;
+  image?: string;
+  icon?: string;
 };
 
 /* =====================================================
@@ -45,8 +40,8 @@ type MenuItem = {
 ===================================================== */
 
 const isCategory = (
-  value: string
-): value is Category => {
+  value: string,
+): value is ActualCategory => {
   return (
     value === "Chicken" ||
     value === "Pork" ||
@@ -57,153 +52,180 @@ const isCategory = (
 };
 
 /* =====================================================
-   MOCK MENU DATA
+   CATEGORY ICON
+===================================================== */
+
+const getCategoryIcon = (
+  category: ActualCategory,
+): string => {
+  switch (category) {
+    case "Chicken":
+      return "🍗";
+
+    case "Pork":
+      return "🍖";
+
+    case "Fish":
+      return "🐟";
+
+    case "Rice Meals":
+      return "🍚";
+
+    case "Drinks":
+      return "🥤";
+
+    default:
+      return "🍽️";
+  }
+};
+
+/* =====================================================
+   INITIAL MENU
 ===================================================== */
 
 const INITIAL_MENU_ITEMS: MenuItem[] = [
   {
     id: 1,
-    name: "Chicken Adobo",
-    category: "Chicken",
-    price: 50,
+    name: "Pork Adobo",
+    category: "Pork",
+    price: 65,
     available: true,
-    image:
-      "https://images.unsplash.com/photo-1601050690597-df0568f70950",
+    icon: "🍖",
   },
+
   {
     id: 2,
     name: "Fried Chicken",
     category: "Chicken",
-    price: 55,
+    price: 70,
     available: true,
-    image:
-      "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec",
+    icon: "🍗",
   },
+
   {
     id: 3,
-    name: "Pork Giniling",
+    name: "Lechon Kawali",
     category: "Pork",
-    price: 45,
+    price: 75,
     available: true,
-    image:
-      "https://images.unsplash.com/photo-1544025162-d76694265947",
+    icon: "🥩",
   },
+
   {
     id: 4,
-    name: "Pork Adobo",
+    name: "Mechado",
     category: "Pork",
-    price: 50,
+    price: 70,
     available: true,
-    image:
-      "https://images.unsplash.com/photo-1547592180-85f173990554",
+    icon: "🥘",
   },
+
   {
     id: 5,
-    name: "Fried Fish",
-    category: "Fish",
-    price: 40,
+    name: "Bicol Express",
+    category: "Pork",
+    price: 60,
     available: true,
-    image:
-      "https://images.unsplash.com/photo-1516685018646-549198525c1b",
+    icon: "🌶️",
   },
+
   {
     id: 6,
-    name: "Sinigang na Bangus",
-    category: "Fish",
-    price: 55,
-    available: false,
-    image:
-      "https://images.unsplash.com/photo-1547592180-85f173990554",
+    name: "Tinolang Manok",
+    category: "Chicken",
+    price: 70,
+    available: true,
+    icon: "🍲",
   },
+
   {
     id: 7,
+    name: "Sinigang na Baboy",
+    category: "Pork",
+    price: 80,
+    available: true,
+    icon: "🍲",
+  },
+
+  {
+    id: 8,
+    name: "Nilaga",
+    category: "Pork",
+    price: 70,
+    available: false,
+    icon: "🍲",
+  },
+
+  {
+    id: 9,
+    name: "Kanin",
+    category: "Rice Meals",
+    price: 15,
+    available: true,
+    icon: "🍚",
+  },
+
+  {
+    id: 10,
     name: "Garlic Rice",
     category: "Rice Meals",
     price: 20,
     available: true,
-    image:
-      "https://images.unsplash.com/photo-1603133872878-684f208fb84b",
+    icon: "🍚",
   },
+
   {
-    id: 8,
+    id: 11,
+    name: "Fried Fish",
+    category: "Fish",
+    price: 60,
+    available: true,
+    icon: "🐟",
+  },
+
+  {
+    id: 12,
+    name: "Sinigang na Bangus",
+    category: "Fish",
+    price: 80,
+    available: true,
+    icon: "🍲",
+  },
+
+  {
+    id: 13,
+    name: "Pancit Bihon",
+    category: "Rice Meals",
+    price: 55,
+    available: true,
+    icon: "🍜",
+  },
+
+  {
+    id: 14,
     name: "Plain Rice",
     category: "Rice Meals",
     price: 15,
     available: true,
-    image:
-      "https://images.unsplash.com/photo-1512058564366-18510be2db19",
+    icon: "🍚",
   },
-  {
-    id: 9,
-    name: "Soft Drink",
-    category: "Drinks",
-    price: 25,
-    available: true,
-    image:
-      "https://images.unsplash.com/photo-1629203849820-fdd70d49c38e",
-  },
-  {
-    id: 10,
-    name: "Bottled Water",
-    category: "Drinks",
-    price: 20,
-    available: true,
-    image:
-      "https://images.unsplash.com/photo-1548839140-29a749e1cf4d",
-  },
-  {
-    id: 11,
-    name: "Chicken Inasal",
-    category: "Chicken",
-    price: 90,
-    available: true,
-    image:
-      "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b",
-  },
-  {
-    id: 12,
-    name: "Pork Steak",
-    category: "Pork",
-    price: 85,
-    available: true,
-    image:
-      "https://images.unsplash.com/photo-1544025162-d76694265947",
-  },
-  {
-    id: 13,
-    name: "Fried Bangus",
-    category: "Fish",
-    price: 60,
-    available: true,
-    image:
-      "https://images.unsplash.com/photo-1516685018646-549198525c1b",
-  },
-  {
-    id: 14,
-    name: "Java Rice",
-    category: "Rice Meals",
-    price: 25,
-    available: true,
-    image:
-      "https://images.unsplash.com/photo-1603133872878-684f208fb84b",
-  },
+
   {
     id: 15,
-    name: "Iced Tea",
+    name: "Softdrinks",
     category: "Drinks",
-    price: 30,
+    price: 25,
     available: true,
-    image:
-      "https://images.unsplash.com/photo-1556679343-c7306c1976bc",
+    icon: "🥤",
   },
+
   {
     id: 16,
-    name: "Calamansi Juice",
+    name: "Buko Juice",
     category: "Drinks",
     price: 30,
     available: true,
-    image:
-      "https://images.unsplash.com/photo-1546173159-315724a31696",
+    icon: "🥥",
   },
 ];
 
@@ -212,138 +234,198 @@ const INITIAL_MENU_ITEMS: MenuItem[] = [
 ===================================================== */
 
 export default function MenuManagement() {
+  /* ===================================================
+     MENU STATE
+  =================================================== */
+
   const [menuItems, setMenuItems] =
-    useState<MenuItem[]>(INITIAL_MENU_ITEMS);
+    useState<MenuItem[]>(
+      INITIAL_MENU_ITEMS,
+    );
 
   /* ===================================================
-     ADD MODAL
+     ADD FORM
   =================================================== */
 
-  const [showAddModal, setShowAddModal] =
+  const [showAddForm, setShowAddForm] =
     useState(false);
+
+  const [newName, setNewName] =
+    useState("");
+
+  const [newPrice, setNewPrice] =
+    useState("");
+
+  const [newCategory, setNewCategory] =
+    useState<ActualCategory>("Pork");
 
   /* ===================================================
-     EDIT MODAL
+     EDIT STATE
   =================================================== */
 
-  const [showEditModal, setShowEditModal] =
-    useState(false);
+  const [editingId, setEditingId] =
+    useState<number | null>(null);
 
-  const [selectedMenuItem, setSelectedMenuItem] =
-    useState<MenuItem | null>(null);
+  const [editName, setEditName] =
+    useState("");
 
-  const [showDeleteModal, setShowDeleteModal] =
-    useState(false);
+  const [editPrice, setEditPrice] =
+    useState("");
 
-  const [itemToDelete, setItemToDelete] =
-    useState<MenuItem | null>(null);
   /* ===================================================
      AVAILABLE COUNT
   =================================================== */
 
   const availableCount = useMemo(() => {
     return menuItems.filter(
-      (item) => item.available
+      (item) => item.available,
     ).length;
   }, [menuItems]);
 
   /* ===================================================
-     ADD MENU ITEM
+     ADD ITEM
   =================================================== */
 
-  const handleAddMenuItem = (
-    data: AddMenuData
-  ) => {
-    /*
-      AddMenuModal returns category as string.
-      Convert it safely into our Category type.
-    */
+  const handleAdd = () => {
+    const name = newName.trim();
 
-    if (!isCategory(data.category)) {
+    const price = Number(newPrice);
+
+    if (!name) {
+      return;
+    }
+
+    if (
+      !newPrice ||
+      Number.isNaN(price) ||
+      price <= 0
+    ) {
       return;
     }
 
     const newItem: MenuItem = {
       id: Date.now(),
-
-      name: data.name,
-
-      category: data.category,
-
-      price: data.price,
-
-      available: data.available,
-
-      image:
-        data.image ||
-        "https://images.unsplash.com/photo-1547592180-85f173990554",
+      name,
+      category: newCategory,
+      price,
+      available: true,
+      icon: getCategoryIcon(newCategory),
     };
 
     setMenuItems((currentItems) => [
-      newItem,
       ...currentItems,
+      newItem,
     ]);
 
-    setShowAddModal(false);
+    /* Reset form */
+
+    setNewName("");
+
+    setNewPrice("");
+
+    setNewCategory("Pork");
+
+    /* Hide form after save */
+
+    setShowAddForm(false);
   };
 
   /* ===================================================
-     OPEN EDIT MODAL
+     CLEAR ADD FORM
   =================================================== */
 
-  const handleOpenEdit = (
-    item: MenuItem
-  ) => {
-    setSelectedMenuItem(item);
-    setShowEditModal(true);
+  const handleClearAddForm = () => {
+    setNewName("");
+
+    setNewPrice("");
+
+    setNewCategory("Pork");
   };
 
   /* ===================================================
-     SAVE EDITED MENU ITEM
+     START EDIT
   =================================================== */
 
-  const handleEditMenuItem = (
-    data: EditMenuData
+  const handleStartEdit = (
+    item: MenuItem,
   ) => {
-    /*
-      Make sure the edited category
-      is still one of our valid categories.
-    */
+    setEditingId(item.id);
 
-    if (!isCategory(data.category)) {
+    setEditName(item.name);
+
+    setEditPrice(String(item.price));
+  };
+
+  /* ===================================================
+     SAVE EDIT
+  =================================================== */
+
+  const handleSaveEdit = (
+    id: number,
+  ) => {
+    const name = editName.trim();
+
+    const price = Number(editPrice);
+
+    if (!name) {
+      return;
+    }
+
+    if (
+      !editPrice ||
+      Number.isNaN(price) ||
+      price <= 0
+    ) {
       return;
     }
 
     setMenuItems((currentItems) =>
       currentItems.map((item) =>
-        item.id === data.id
+        item.id === id
           ? {
               ...item,
-              name: data.name,
-              category: data.category,
-              price: data.price,
-              available: data.available,
-              image: data.image,
+              name,
+              price,
             }
-          : item
-      )
+          : item,
+      ),
     );
 
-    /*
-      Close modal after saving.
-    */
+    setEditingId(null);
 
-    setShowEditModal(false);
-    setSelectedMenuItem(null);
+    setEditName("");
+
+    setEditPrice("");
   };
 
   /* ===================================================
-     CLOSE EDIT MODAL
+     CANCEL EDIT
   =================================================== */
 
-  const handleCloseEdit = () => {
-    setShowEditModal(false);
-    setSelectedMenuItem(null);
+  const handleCancelEdit = () => {
+    setEditingId(null);
+
+    setEditName("");
+
+    setEditPrice("");
+  };
+
+  /* ===================================================
+     DELETE ITEM
+  =================================================== */
+
+  const handleDelete = (
+    id: number,
+  ) => {
+    setMenuItems((currentItems) =>
+      currentItems.filter(
+        (item) => item.id !== id,
+      ),
+    );
+
+    if (editingId === id) {
+      handleCancelEdit();
+    }
   };
 
   /* ===================================================
@@ -351,51 +433,289 @@ export default function MenuManagement() {
   =================================================== */
 
   const toggleAvailability = (
-    id: number
+    id: number,
   ) => {
     setMenuItems((currentItems) =>
       currentItems.map((item) =>
         item.id === id
           ? {
               ...item,
-              available: !item.available,
+              available:
+                !item.available,
             }
-          : item
-      )
+          : item,
+      ),
     );
   };
 
   /* ===================================================
-     DELETE ITEM
+     MENU SECTIONS
   =================================================== */
 
-  const handleDeleteItem = (
-    item: MenuItem
-  ) => {
-    setItemToDelete(item);
-    setShowDeleteModal(true);
-  };
-
-  const confirmDeleteItem = () => {
-    if (!itemToDelete) {
-      return;
-    }
-
-    setMenuItems((currentItems) =>
-      currentItems.filter(
-        (currentItem) =>
-          currentItem.id !== itemToDelete.id
-      )
+  const sections = useMemo(() => {
+    const ulam = menuItems.filter(
+      (item) =>
+        item.category === "Chicken" ||
+        item.category === "Pork" ||
+        item.category === "Fish",
     );
 
-    setShowDeleteModal(false);
-    setItemToDelete(null);
-  }
+    const sabaw = menuItems.filter(
+      (item) => {
+        const name =
+          item.name.toLowerCase();
 
-  const cancelDeleteItem = () => {
-    setShowDeleteModal(false);
-    setItemToDelete(null);
-  }
+        return (
+          name.includes("sinigang") ||
+          name.includes("tinola") ||
+          name.includes("nilaga")
+        );
+      },
+    );
+
+    const kanin = menuItems.filter(
+      (item) =>
+        item.category ===
+          "Rice Meals" &&
+        !item.name
+          .toLowerCase()
+          .includes("pancit"),
+    );
+
+    /* Remove soup items from ULAM */
+
+    const finalUlam = ulam.filter(
+      (item) => {
+        const name =
+          item.name.toLowerCase();
+
+        return (
+          !name.includes("sinigang") &&
+          !name.includes("tinola") &&
+          !name.includes("nilaga")
+        );
+      },
+    );
+
+    return [
+      {
+        title: "ULAM",
+        items: finalUlam,
+      },
+
+      {
+        title: "SABAW",
+        items: sabaw,
+      },
+
+      {
+        title: "KANIN",
+        items: kanin,
+      },
+    ];
+  }, [menuItems]);
+
+  /* ===================================================
+     RENDER MENU ITEM
+  =================================================== */
+
+  const renderMenuItem = (
+    item: MenuItem,
+  ) => {
+    const isEditing =
+      editingId === item.id;
+
+    return (
+      <View
+        key={item.id}
+        style={[
+          styles.menuCard,
+
+          !item.available &&
+            styles.menuCardUnavailable,
+        ]}
+      >
+        {/* ============================================
+            FOOD ICON
+        ============================================= */}
+
+        <View style={styles.foodIconBox}>
+          <Text style={styles.foodIcon}>
+            {item.icon || "🍽️"}
+          </Text>
+        </View>
+
+        {/* ============================================
+            EDITING MODE
+        ============================================= */}
+
+        {isEditing ? (
+          <View style={styles.editInfo}>
+            {/* NAME */}
+
+            <TextInput
+              value={editName}
+              onChangeText={setEditName}
+              style={styles.inlineEditName}
+              placeholder="Pangalan"
+              placeholderTextColor="#999"
+              autoCapitalize="words"
+              selectTextOnFocus
+            />
+
+            {/* PRICE */}
+
+            <View
+              style={styles.inlinePriceRow}
+            >
+              <Text
+                style={styles.pesoSymbol}
+              >
+                ₱
+              </Text>
+
+              <TextInput
+                value={editPrice}
+                onChangeText={
+                  setEditPrice
+                }
+                style={
+                  styles.inlineEditPrice
+                }
+                keyboardType="numeric"
+                placeholder="0"
+                placeholderTextColor="#999"
+              />
+            </View>
+          </View>
+        ) : (
+          /* ==========================================
+             NORMAL MODE
+          =========================================== */
+
+          <View style={styles.menuInfo}>
+            <Text
+              style={[
+                styles.foodName,
+
+                !item.available &&
+                  styles.unavailableText,
+              ]}
+              numberOfLines={1}
+            >
+              {item.name}
+            </Text>
+
+            <Text
+              style={styles.foodPrice}
+            >
+              ₱{item.price}
+            </Text>
+          </View>
+        )}
+
+        {/* ============================================
+            ACTIONS
+        ============================================= */}
+
+        <View
+          style={styles.menuActions}
+        >
+          {/* ==========================================
+              AVAILABILITY
+          =========================================== */}
+
+          <Pressable
+            onPress={() =>
+              toggleAvailability(
+                item.id,
+              )
+            }
+            style={[
+              styles.statusButton,
+
+              item.available
+                ? styles.statusOn
+                : styles.statusOff,
+            ]}
+          >
+            <Text
+              style={[
+                styles.statusText,
+
+                item.available
+                  ? styles.statusOnText
+                  : styles.statusOffText,
+              ]}
+            >
+              {item.available
+                ? "ON"
+                : "OFF"}
+            </Text>
+          </Pressable>
+
+          {/* ==========================================
+              EDIT / SAVE
+          =========================================== */}
+
+          {isEditing ? (
+            <Pressable
+              onPress={() =>
+                handleSaveEdit(
+                  item.id,
+                )
+              }
+              style={
+                styles.saveEditButton
+              }
+            >
+              <Text
+                style={
+                  styles.saveEditIcon
+                }
+              >
+                ✓
+              </Text>
+            </Pressable>
+          ) : (
+            <Pressable
+              onPress={() =>
+                handleStartEdit(
+                  item,
+                )
+              }
+              style={styles.editButton}
+            >
+              <Text
+                style={styles.editIcon}
+              >
+                ✎
+              </Text>
+            </Pressable>
+          )}
+
+          {/* ==========================================
+              DELETE
+          =========================================== */}
+
+          <Pressable
+            onPress={() =>
+              handleDelete(item.id)
+            }
+            style={
+              styles.deleteButton
+            }
+          >
+            <Text
+              style={styles.deleteIcon}
+            >
+              🗑
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  };
 
   /* ===================================================
      SCREEN
@@ -403,327 +723,303 @@ export default function MenuManagement() {
 
   return (
     <View style={styles.container}>
-
       {/* =================================================
-          SIDEBAR
+          HEADER
       ================================================= */}
 
-      <AdminSidebar />
+      <View style={styles.orangeHeader}>
+        {/* TITLE */}
 
-      {/* =================================================
-          MAIN
-      ================================================= */}
-
-      <View style={styles.main}>
-
-        {/* =================================================
-            HEADER
-        ================================================= */}
-
-        <View style={styles.header}>
-
-          <View>
-            <Text style={styles.title}>
-              Menu Management
-            </Text>
-
-            <Text style={styles.subtitle}>
-              {menuItems.length} items ·{" "}
-              {availableCount} available
-            </Text>
-          </View>
-
-          <Pressable
-            style={styles.addButton}
-            onPress={() =>
-              setShowAddModal(true)
-            }
+        <View>
+          <Text
+            style={styles.pageTitle}
           >
-            <Text
-              style={styles.addButtonText}
-            >
-              + Add Menu Item
-            </Text>
-          </Pressable>
+            Menu
+          </Text>
 
+          <Text
+            style={styles.itemCount}
+          >
+            {menuItems.length} pagkain
+          </Text>
         </View>
 
-        {/* =================================================
-            TABLE
-        ================================================= */}
+        {/* ADD BUTTON */}
 
-        <View style={styles.tableContainer}>
-
-          <ScrollView
-            showsVerticalScrollIndicator={false}
+        <Pressable
+          onPress={() =>
+            setShowAddForm(
+              (current) => !current,
+            )
+          }
+          style={styles.addButton}
+        >
+          <Text
+            style={styles.addButtonText}
           >
-
-            {/* =================================================
-                TABLE HEADER
-            ================================================= */}
-
-            <View style={styles.tableHeader}>
-
-              <View style={styles.itemColumn}>
-                <Text style={styles.headerText}>
-                  ITEM
-                </Text>
-              </View>
-
-              <View
-                style={styles.categoryColumn}
-              >
-                <Text style={styles.headerText}>
-                  CATEGORY
-                </Text>
-              </View>
-
-              <View style={styles.priceColumn}>
-                <Text style={styles.headerText}>
-                  PRICE
-                </Text>
-              </View>
-
-              <View
-                style={styles.statusColumn}
-              >
-                <Text style={styles.headerText}>
-                  STATUS
-                </Text>
-              </View>
-
-              <View
-                style={styles.actionsColumn}
-              >
-                <Text style={styles.headerText}>
-                  ACTIONS
-                </Text>
-              </View>
-
-            </View>
-
-            {/* =================================================
-                TABLE BODY
-            ================================================= */}
-
-            {menuItems.map((item) => (
-
-              <View
-                key={item.id}
-                style={styles.tableRow}
-              >
-
-                {/* =============================================
-                    ITEM
-                ============================================= */}
-
-                <View style={styles.itemColumn}>
-
-                  <Image
-                    source={{
-                      uri: item.image,
-                    }}
-                    style={styles.foodImage}
-                  />
-
-                  <Text
-                    style={styles.itemName}
-                    numberOfLines={1}
-                  >
-                    {item.name}
-                  </Text>
-
-                </View>
-
-                {/* =============================================
-                    CATEGORY
-                ============================================= */}
-
-                <View
-                  style={
-                    styles.categoryColumn
-                  }
-                >
-
-                  <View
-                    style={
-                      styles.categoryBadge
-                    }
-                  >
-
-                    <Text
-                      style={
-                        styles.categoryText
-                      }
-                    >
-                      {item.category}
-                    </Text>
-
-                  </View>
-
-                </View>
-
-                {/* =============================================
-                    PRICE
-                ============================================= */}
-
-                <View
-                  style={styles.priceColumn}
-                >
-
-                  <Text
-                    style={styles.priceText}
-                  >
-                    ₱{item.price.toFixed(2)}
-                  </Text>
-
-                </View>
-
-                {/* =============================================
-                    STATUS
-                ============================================= */}
-
-                <View
-                  style={
-                    styles.statusColumn
-                  }
-                >
-
-                  <Pressable
-                    onPress={() =>
-                      toggleAvailability(
-                        item.id
-                      )
-                    }
-                    style={[
-                      styles.statusBadge,
-                      item.available
-                        ? styles.availableBadge
-                        : styles.unavailableBadge,
-                    ]}
-                  >
-
-                    <Text
-                      style={[
-                        styles.statusText,
-                        item.available
-                          ? styles.availableText
-                          : styles.unavailableText,
-                      ]}
-                    >
-                      {item.available
-                        ? "Available"
-                        : "Unavailable"}
-                    </Text>
-
-                  </Pressable>
-
-                </View>
-
-                {/* =============================================
-                    ACTIONS
-                ============================================= */}
-
-                <View
-                  style={
-                    styles.actionsColumn
-                  }
-                >
-
-                  <View
-                    style={
-                      styles.actionButtons
-                    }
-                  >
-
-                    {/* EDIT */}
-
-                    <Pressable
-                      style={
-                        styles.editButton
-                      }
-                      onPress={() =>
-                        handleOpenEdit(item)
-                      }
-                    >
-                      <Text
-                        style={
-                          styles.editButtonText
-                        }
-                      >
-                        Edit
-                      </Text>
-                    </Pressable>
-
-                    {/* DELETE */}
-
-                    <Pressable
-                      style={
-                        styles.deleteButton
-                      }
-                      onPress={() =>
-                        handleDeleteItem(item)
-                      }
-                    >
-                      <Text
-                        style={
-                          styles.deleteButtonText
-                        }
-                      >
-                        Delete
-                      </Text>
-                    </Pressable>
-
-                  </View>
-
-                </View>
-
-              </View>
-
-            ))}
-
-          </ScrollView>
-
-        </View>
-
+            + Dagdag
+          </Text>
+        </Pressable>
       </View>
 
       {/* =================================================
-          ADD MENU MODAL
+          ADD FOOD FORM
+          ONLY VISIBLE WHEN + DAGDAG IS PRESSED
       ================================================= */}
 
-      <AddMenuModal
-        visible={showAddModal}
-        onClose={() =>
-          setShowAddModal(false)
-        }
-        onSave={handleAddMenuItem}
-      />
+      {showAddForm && (
+        <View style={styles.addForm}>
+          {/* TITLE */}
+
+          <Text
+            style={styles.addFormTitle}
+          >
+            Bagong Pagkain
+          </Text>
+
+          {/* INPUT ROW */}
+
+          <View
+            style={styles.addInputRow}
+          >
+            {/* ICON */}
+
+            <View
+              style={styles.addIconBox}
+            >
+              <Text
+                style={
+                  styles.addFoodIcon
+                }
+              >
+                {getCategoryIcon(
+                  newCategory,
+                )}
+              </Text>
+            </View>
+
+            {/* NAME */}
+
+            <TextInput
+              value={newName}
+              onChangeText={setNewName}
+              style={
+                styles.addNameInput
+              }
+              placeholder="Pangalan ng pagkain"
+              placeholderTextColor="#B7A9A0"
+              autoCapitalize="words"
+            />
+
+            {/* PRICE */}
+
+            <View
+              style={styles.addPriceBox}
+            >
+              <Text
+                style={styles.pricePrefix}
+              >
+                ₱
+              </Text>
+
+              <TextInput
+                value={newPrice}
+                onChangeText={
+                  setNewPrice
+                }
+                style={
+                  styles.addPriceInput
+                }
+                keyboardType="numeric"
+                placeholder="0"
+                placeholderTextColor="#B7A9A0"
+              />
+            </View>
+          </View>
+
+          {/* CATEGORY */}
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={
+              false
+            }
+            contentContainerStyle={
+              styles.categoryList
+            }
+          >
+            {(
+              [
+                "Pork",
+                "Chicken",
+                "Fish",
+                "Rice Meals",
+                "Drinks",
+              ] as ActualCategory[]
+            ).map((category) => (
+              <Pressable
+                key={category}
+                onPress={() =>
+                  setNewCategory(
+                    category,
+                  )
+                }
+                style={[
+                  styles.categoryButton,
+
+                  newCategory ===
+                    category &&
+                    styles.categoryButtonActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.categoryText,
+
+                    newCategory ===
+                      category &&
+                      styles.categoryTextActive,
+                  ]}
+                >
+                  {category}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+
+          {/* FORM ACTIONS */}
+
+          <View
+            style={styles.formActions}
+          >
+            {/* CANCEL */}
+
+            <Pressable
+              onPress={
+                handleClearAddForm
+              }
+              style={
+                styles.cancelButton
+              }
+            >
+              <Text
+                style={styles.cancelText}
+              >
+                Clear
+              </Text>
+            </Pressable>
+
+            {/* SAVE */}
+
+            <Pressable
+              onPress={handleAdd}
+              style={
+                styles.saveButton
+              }
+            >
+              <Text
+                style={styles.saveText}
+              >
+                I-save
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
 
       {/* =================================================
-          EDIT MENU MODAL
+          MENU LIST
       ================================================= */}
 
-      <EditMenuModal
-        visible={showEditModal}
-        item={selectedMenuItem}
-        onClose={handleCloseEdit}
-        onSave={handleEditMenuItem}
-      />
-
-      <DeleteMenuModal
-        visible={showDeleteModal}
-        item={
-          itemToDelete
-        ? {
-          id: itemToDelete.id,
-          name: itemToDelete.name,
-          } : null
+      <ScrollView
+        style={styles.menuScroll}
+        contentContainerStyle={
+          styles.menuContent
         }
+        showsVerticalScrollIndicator={
+          false
+        }
+      >
+        {/* =================================================
+            SECTIONS
+        ================================================= */}
 
-        onClose={cancelDeleteItem}
-        onConfirm={confirmDeleteItem}
-      />
+        {sections.map((section) => {
+          if (
+            section.items.length ===
+            0
+          ) {
+            return null;
+          }
+
+          return (
+            <View
+              key={section.title}
+              style={styles.section}
+            >
+              <Text
+                style={
+                  styles.sectionTitle
+                }
+              >
+                {section.title}
+              </Text>
+
+              {section.items.map(
+                renderMenuItem,
+              )}
+            </View>
+          );
+        })}
+
+        {/* =================================================
+            OTHER ITEMS
+        ================================================= */}
+
+        {menuItems.some(
+          (item) =>
+            item.category ===
+              "Drinks" ||
+            item.name ===
+              "Pancit Bihon",
+        ) && (
+          <View
+            style={styles.section}
+          >
+            <Text
+              style={
+                styles.sectionTitle
+              }
+            >
+              IBA PA
+            </Text>
+
+            {menuItems
+              .filter(
+                (item) =>
+                  item.category ===
+                    "Drinks" ||
+                  item.name ===
+                    "Pancit Bihon",
+              )
+              .map(
+                renderMenuItem,
+              )}
+          </View>
+        )}
+
+        {/* BOTTOM SPACE */}
+
+        <View
+          style={styles.bottomSpacer}
+        />
+      </ScrollView>
+
+      {/* =================================================
+          BOTTOM NAV
+      ================================================= */}
+
+      <AdminBottomNav />
     </View>
   );
 }

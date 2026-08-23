@@ -180,5 +180,43 @@ export const sidebarStyles = StyleSheet.create({
     fontSize: 13,
     color: "#6B7280",
   },
+bottomNav: {
+  height: 72,
+  backgroundColor: "#FFFFFF",
+  borderTopWidth: 1,
+  borderTopColor: "#E8E1DA",
 
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-around",
+
+  paddingBottom: 5,
+},
+
+bottomNavItem: {
+  flex: 1,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+bottomNavIcon: {
+  color: "#A5A5A5",
+  fontSize: 22,
+  lineHeight: 25,
+},
+
+bottomNavIconActive: {
+  color: "#F45B00",
+},
+
+bottomNavText: {
+  color: "#999999",
+  fontSize: 10,
+  fontWeight: "600",
+  marginTop: 3,
+},
+
+bottomNavTextActive: {
+  color: "#F45B00",
+},
 });

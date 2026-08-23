@@ -1,476 +1,282 @@
 import { StyleSheet } from "react-native";
 
-const ORANGE = "#E47A00";
-
 export const salesStyles = StyleSheet.create({
+
+  /* =====================================================
+     PAGE
+  ===================================================== */
+
   page: {
     flex: 1,
-    flexDirection: "row",
-    backgroundColor: "#FAF9F7",
+    backgroundColor: "#FFF8EF",
   },
 
   container: {
     flex: 1,
-    backgroundColor: "#FAF9F7",
+    backgroundColor: "#FFF8EF",
   },
 
   content: {
-    padding: 32,
-    paddingBottom: 60,
+    paddingBottom: 20,
   },
+
+  /* =====================================================
+     HEADER
+  ===================================================== */
 
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 34,
-  },
-
-  headerSmall: {
-    flexDirection: "column",
-    alignItems: "flex-start",
-    gap: 20,
+    height: 74,
+    backgroundColor: "#F45B00",
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    justifyContent: "flex-start",
   },
 
   title: {
-    fontSize: 30,
-    fontWeight: "800",
-    color: "#111111",
-    marginBottom: 8,
-  },
-
-  subtitle: {
-    fontSize: 16,
-    color: "#A28770",
-  },
-
-  periodContainer: {
-    flexDirection: "row",
-    gap: 10,
-  },
-
-  periodButton: {
-    paddingHorizontal: 22,
-    paddingVertical: 14,
-    borderRadius: 17,
-    borderWidth: 1,
-    borderColor: "#E7DED4",
-    backgroundColor: "#FFFFFF",
-  },
-
-  periodButtonActive: {
-    backgroundColor: ORANGE,
-    borderColor: ORANGE,
-  },
-
-  periodText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#433A33",
-  },
-
-  periodTextActive: {
     color: "#FFFFFF",
+    fontSize: 20,
+    fontWeight: "800",
   },
 
-  /* SUMMARY */
+  date: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    marginTop: 4,
+  },
 
-  summaryGrid: {
+  /* =====================================================
+     SUMMARY
+  ===================================================== */
+
+  summaryRow: {
     flexDirection: "row",
-    gap: 20,
-    marginBottom: 30,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 1,
+    gap: 8,
   },
 
-  summaryGridSmall: {
-    flexDirection: "column",
-  },
-
-  card: {
+  summaryCard: {
     flex: 1,
-    minHeight: 156,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E9E0D7",
-    borderRadius: 20,
-    padding: 24,
+    height: 92,
+    borderRadius: 16,
+    alignItems: "center",
     justifyContent: "center",
   },
 
-  cardLabel: {
-    fontSize: 14,
-    fontWeight: "700",
-    letterSpacing: 1.2,
-    color: "#9B8675",
-    marginBottom: 20,
+  salesCard: {
+    backgroundColor: "#FFF3E6",
   },
 
-  salesValue: {
-    fontSize: 34,
-    fontWeight: "800",
-    color: ORANGE,
+  transactionCard: {
+    backgroundColor: "#F5F0FF",
   },
 
-  numberValue: {
-    fontSize: 36,
-    fontWeight: "800",
-    color: "#111111",
+  averageCard: {
+    backgroundColor: "#EEF9FF",
   },
 
-  bestItem: {
-    fontSize: 30,
-    fontWeight: "800",
-    color: "#111111",
-    marginBottom: 5,
+  summaryIcon: {
+    fontSize: 20,
+    marginBottom: 3,
   },
 
-  smallText: {
-    fontSize: 14,
-    color: "#9B8675",
-  },
-
-  /* CHARTS */
-
-  chartRow: {
-    flexDirection: "row",
-    gap: 24,
-    marginBottom: 26,
-  },
-
-  chartRowSmall: {
-    flexDirection: "column",
-  },
-
-  chartCard: {
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E9E0D7",
-    borderRadius: 20,
-    padding: 26,
-  },
-
-  hourChartCard: {
-    flex: 2,
-    minHeight: 365,
-  },
-
-  donutCard: {
-    flex: 1,
-    minHeight: 365,
-  },
-
-  fullWidthCard: {
-    width: "100%",
-  },
-
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: "800",
-    color: "#111111",
-    marginBottom: 24,
-  },
-
-  /* BAR CHART */
-
-  barChart: {
-    flexDirection: "row",
-    height: 270,
-  },
-
-  yAxis: {
-    width: 55,
-    height: 225,
-    justifyContent: "space-between",
-    alignItems: "flex-end",
-    paddingRight: 8,
-  },
-
-  axisText: {
-    fontSize: 11,
-    color: "#A98F79",
-  },
-
-  barsContainer: {
-    flex: 1,
-    height: 270,
-    position: "relative",
-  },
-
-  gridLineContainer: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: 0,
-    height: 225,
-    justifyContent: "space-between",
-  },
-
-  gridLine: {
-    borderTopWidth: 1,
-    borderColor: "#EDE5DD",
-    borderStyle: "dashed",
-  },
-
-  bars: {
-    height: 270,
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-    paddingHorizontal: 5,
-  },
-
-  barColumn: {
-    height: 270,
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "flex-end",
-    position: "relative",
-  },
-
-  bar: {
-    width: "65%",
-    minWidth: 10,
-    backgroundColor: ORANGE,
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
-  },
-
-  hourLabel: {
-    fontSize: 11,
-    color: "#9B8675",
-    marginTop: 9,
-  },
-
-  tooltip: {
-    position: "absolute",
-    bottom: 85,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    minWidth: 110,
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 5,
-    zIndex: 10,
-  },
-
-  tooltipHour: {
+  salesAmount: {
+    color: "#F45B00",
     fontSize: 13,
     fontWeight: "800",
-    color: "#111111",
-    marginBottom: 5,
   },
 
-  tooltipSales: {
-    fontSize: 12,
-    color: ORANGE,
-    fontWeight: "600",
-  },
-
-  /* DONUT */
-
-  donutWrapper: {
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-    marginTop: 5,
-  },
-
-  donutCenter: {
-    position: "absolute",
-    alignItems: "center",
-  },
-
-  donutTotal: {
-    fontSize: 22,
+  transactionAmount: {
+    color: "#855DE0",
+    fontSize: 14,
     fontWeight: "800",
-    color: "#111111",
   },
 
-  donutLabel: {
-    fontSize: 12,
-    color: "#9B8675",
+  averageAmount: {
+    color: "#008DAF",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+
+  summaryLabel: {
+    color: "#756B64",
+    fontSize: 10,
     marginTop: 2,
   },
 
-  legend: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    gap: 12,
-    marginTop: 20,
-  },
+  /* =====================================================
+     SECTION CARD
+  ===================================================== */
 
-  legendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  legendDot: {
-    width: 9,
-    height: 9,
-    borderRadius: 5,
-    marginRight: 6,
-  },
-
-  legendText: {
-    fontSize: 11,
-    color: "#8F725A",
-  },
-
-  /* TABLE */
-
-  tableCard: {
+  sectionCard: {
     backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E9E0D7",
-    borderRadius: 20,
-    padding: 26,
-  },
+    borderRadius: 16,
+    marginHorizontal: 16,
+    marginTop: 12,
 
-  tableHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 15,
-  },
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.04,
+    shadowRadius: 5,
 
-  actionButtons: {
-    flexDirection: "row",
-    gap: 9,
-  },
+    elevation: 2,
 
-  actionButton: {
-    backgroundColor: "#FFF3C9",
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-
-  actionText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#C46700",
-  },
-
-  table: {
-    minWidth: 850,
-  },
-
-  tableRowHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E8DFD6",
-    paddingBottom: 12,
-  },
-
-  tableHeaderText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#9B8675",
-    letterSpacing: 0.8,
-  },
-
-  tableRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    minHeight: 60,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0E9E2",
-  },
-
-  rankColumn: {
-    width: 90,
-  },
-
-  itemColumn: {
-    width: 280,
-  },
-
-  quantityColumn: {
-    width: 180,
-  },
-
-  revenueColumn: {
-    width: 200,
-  },
-
-  percentColumn: {
-    width: 190,
-  },
-
-  rankCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: ORANGE,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  rankText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "800",
-  },
-
-  itemText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#111111",
-  },
-
-  tableValue: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#111111",
-  },
-
-  percentWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-
-  progressBackground: {
-    width: 100,
-    height: 8,
-    borderRadius: 10,
-    backgroundColor: "#E8E1D8",
     overflow: "hidden",
   },
 
-  progress: {
+  sectionTitle: {
+    color: "#222222",
+    fontSize: 14,
+    fontWeight: "800",
+    paddingHorizontal: 16,
+    paddingTop: 15,
+    paddingBottom: 13,
+  },
+
+  sectionDivider: {
+    height: 1,
+    backgroundColor: "#F0ECE8",
+  },
+
+  /* =====================================================
+     RECENT TRANSACTIONS
+  ===================================================== */
+
+  transactionRow: {
+    minHeight: 57,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+
+    borderBottomWidth: 1,
+    borderBottomColor: "#F2EEEA",
+  },
+
+  lastTransactionRow: {
+    borderBottomWidth: 0,
+  },
+
+  transactionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 11,
+
+    backgroundColor: "#FFF5EA",
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    marginRight: 10,
+  },
+
+  receiptIcon: {
+    fontSize: 17,
+  },
+
+  transactionInfo: {
+    flex: 1,
+  },
+
+  transactionId: {
+    color: "#222222",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+
+  transactionDate: {
+    color: "#A09791",
+    fontSize: 10,
+    marginTop: 3,
+  },
+
+  transactionAmountValue: {
+    color: "#F45B00",
+    fontSize: 13,
+    fontWeight: "800",
+    marginLeft: 8,
+  },
+
+  /* =====================================================
+     SALES THIS WEEK
+  ===================================================== */
+
+  weekContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 11,
+  },
+
+  weekRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 9,
+  },
+
+  dayText: {
+    width: 37,
+    color: "#5D554F",
+    fontSize: 11,
+  },
+
+  progressBackground: {
+    flex: 1,
+    height: 9,
+    backgroundColor: "#F0F0F0",
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+
+  progressBar: {
     height: "100%",
-    backgroundColor: ORANGE,
+    backgroundColor: "#FFD09F",
     borderRadius: 10,
   },
 
-  percentText: {
-    fontSize: 13,
-    color: "#9B8675",
+  weekAmount: {
+    width: 48,
+    textAlign: "right",
+    color: "#403A36",
+    fontSize: 10,
   },
-    emptyChart: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    minHeight: 220,
-    },
+  /* =====================================================
+   BOTTOM NAV
+===================================================== */
 
-    emptyTable: {
-    minHeight: 80,
-    justifyContent: "center",
-    alignItems: "center",
-    },
+bottomNav: {
+  height: 51,
+  backgroundColor: "#FFF8EF",
 
-    emptyText: {
-    fontSize: 14,
-    color: "#9B8675",
-    },
+  borderTopWidth: 1,
+  borderTopColor: "#EDE7DF",
+
+  flexDirection: "row",
+},
+
+navItem: {
+  flex: 1,
+
+  alignItems: "center",
+  justifyContent: "center",
+
+  borderTopWidth: 2,
+  borderTopColor: "transparent",
+},
+
+activeNavItem: {
+  borderTopColor: "#F45B00",
+},
+
+navText: {
+  color: "#A39A93",
+  fontSize: 12,
+},
+
+activeNavText: {
+  color: "#F45B00",
+  fontSize: 12,
+  fontWeight: "700",
+},
 });

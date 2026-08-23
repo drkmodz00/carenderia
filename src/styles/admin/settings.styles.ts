@@ -1,27 +1,9 @@
 import { StyleSheet } from "react-native";
 
-const ORANGE = "#E47A00";
-
 export const settingStyles = StyleSheet.create({
-
-  /* =========================================================
-     PAGE
-  ========================================================= */
-
   page: {
     flex: 1,
-    flexDirection: "row",
-    backgroundColor: "#FAF9F7",
-  },
-
-  container: {
-    flex: 1,
-    backgroundColor: "#FAF9F7",
-  },
-
-  content: {
-    padding: 32,
-    paddingBottom: 60,
+    backgroundColor: "#FFF8EF",
   },
 
   /* =========================================================
@@ -29,38 +11,30 @@ export const settingStyles = StyleSheet.create({
   ========================================================= */
 
   header: {
-    marginBottom: 30,
+    height: 55,
+    backgroundColor: "#F45B00",
+    justifyContent: "center",
+    paddingHorizontal: 16,
   },
 
-  title: {
-    fontSize: 30,
+  headerTitle: {
+    color: "#FFFFFF",
+    fontSize: 21,
     fontWeight: "800",
-    color: "#111111",
-    marginBottom: 8,
-  },
-
-  subtitle: {
-    fontSize: 16,
-    color: "#9B8675",
   },
 
   /* =========================================================
-     COLUMNS
+     CONTAINER
   ========================================================= */
 
-  columns: {
-    flexDirection: "row",
-    gap: 24,
-    alignItems: "flex-start",
+  container: {
+    flex: 1,
+    backgroundColor: "#FFF8EF",
   },
 
-  leftColumn: {
-    flex: 1,
-  },
-
-  rightColumn: {
-    flex: 1,
-    gap: 24,
+  content: {
+    padding: 14,
+    paddingBottom: 25,
   },
 
   /* =========================================================
@@ -69,245 +43,135 @@ export const settingStyles = StyleSheet.create({
 
   card: {
     backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E9E0D7",
-    borderRadius: 20,
-    padding: 30,
+    borderRadius: 16,
+    marginBottom: 12,
+    overflow: "hidden",
+
+    // Android
+    elevation: 2,
+
+    // iOS
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
   },
 
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#111111",
-    marginBottom: 24,
+  sectionTitle: {
+    color: "#9A8E84",
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.4,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 8,
   },
 
   /* =========================================================
-     INPUT
+     ROWS
   ========================================================= */
 
-  inputGroup: {
+  row: {
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+  },
+
+  rowLabel: {
+    flex: 1,
+    color: "#111111",
+    fontSize: 14,
+    fontWeight: "400",
+    paddingRight: 10,
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: "#F3F3F3",
+    marginLeft: 16,
+  },
+
+  /* =========================================================
+     INPUTS
+  ========================================================= */
+
+  valueInput: {
+    width: "72%",
+    height: 34,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    color: "#333333",
+    fontSize: 13,
+    backgroundColor: "#FFFFFF",
+  },
+
+  footerInput: {
+    flex: 0.9,
+    color: "#777777",
+    fontSize: 12,
+    paddingVertical: 5,
+    paddingHorizontal: 0,
+  },
+
+  disabledText: {
+    color: "#BDBDBD",
+  },
+
+  /* =========================================================
+     PRINTER / ACCOUNT
+  ========================================================= */
+
+  statusText: {
+    color: "#999999",
+    fontSize: 12,
+  },
+
+  accountValue: {
+    color: "#777777",
+    fontSize: 12,
+  },
+
+  /* =========================================================
+     LOGOUT
+  ========================================================= */
+
+  logoutButton: {
+    height: 50,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: "#FF7777",
+    backgroundColor: "#FFF5F5",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 0,
     marginBottom: 20,
   },
 
-  label: {
+  logoutButtonPressed: {
+    backgroundColor: "#FFE7E7",
+  },
+
+  logoutText: {
+    color: "#E40000",
     fontSize: 14,
-    fontWeight: "700",
-    letterSpacing: 0.8,
-    color: "#9B8675",
-    marginBottom: 9,
-  },
-
-  input: {
-    height: 52,
-    borderWidth: 1,
-    borderColor: "#E8DFD6",
-    borderRadius: 15,
-    backgroundColor: "#FBFAF8",
-    paddingHorizontal: 18,
-    fontSize: 16,
-    color: "#111111",
-  },
-
-  disabledInput: {
-    height: 52,
-    borderWidth: 1,
-    borderColor: "#E8DFD6",
-    borderRadius: 15,
-    backgroundColor: "#FBFAF8",
-    paddingHorizontal: 18,
-    justifyContent: "center",
-  },
-
-  disabledInputText: {
-    fontSize: 16,
-    color: "#111111",
-  },
-
-  /* =========================================================
-     PRIMARY BUTTON
-  ========================================================= */
-
-  primaryButton: {
-    alignSelf: "flex-start",
-    backgroundColor: ORANGE,
-    paddingHorizontal: 24,
-    paddingVertical: 15,
-    borderRadius: 14,
-    marginTop: 4,
-  },
-
-  primaryButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "800",
-  },
-
-  /* =========================================================
-     DATA MANAGEMENT
-  ========================================================= */
-
-  managementButton: {
-    height: 53,
-    borderWidth: 1,
-    borderColor: "#E8DFD6",
-    borderRadius: 15,
-    backgroundColor: "#FBFAF8",
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    marginBottom: 14,
-  },
-
-  managementIcon: {
-    fontSize: 17,
-    marginRight: 10,
-  },
-
-  managementText: {
-    fontSize: 16,
-    color: "#55483F",
     fontWeight: "600",
   },
 
   /* =========================================================
-     DANGER BUTTON
+     FOOTER
   ========================================================= */
 
-  dangerButton: {
-    height: 53,
-    borderWidth: 1,
-    borderColor: "#FFB8B8",
-    borderRadius: 15,
-    backgroundColor: "#FFF1F1",
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 20,
-  },
-
-  dangerIcon: {
-    fontSize: 17,
-    marginRight: 10,
-  },
-
-  dangerText: {
-    fontSize: 16,
-    color: "#C72D2D",
-    fontWeight: "600",
-  },
-
-  /* =========================================================
-     VERSION
-  ========================================================= */
-
-  versionCard: {
-    backgroundColor: "#FFFBEA",
-    borderWidth: 1,
-    borderColor: "#F2CF55",
-    borderRadius: 20,
-    padding: 26,
-  },
-
-  versionTitle: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: "#C46A00",
-    marginBottom: 8,
-  },
-
-  versionName: {
-    fontSize: 16,
-    color: "#B75F00",
-    marginBottom: 8,
-  },
-
-  versionDate: {
-    fontSize: 14,
-    color: "#C47B31",
-  },
-  /* =========================================================
-     TOAST
-  ========================================================= */
-
-  toast: {
-    position: "absolute",
-    top: 25,
-    right: 30,
-
-    minWidth: 330,
-    maxWidth: 420,
-
-    flexDirection: "row",
-    alignItems: "center",
-
-    backgroundColor: "#FFFFFF",
-
-    borderRadius: 14,
-
-    paddingVertical: 15,
-    paddingHorizontal: 16,
-
-    zIndex: 9999,
-
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 5,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-
-    elevation: 10,
-  },
-
-  toastSuccess: {
-    borderLeftWidth: 4,
-    borderLeftColor: "#2E9B5B",
-  },
-
-  toastError: {
-    borderLeftWidth: 4,
-    borderLeftColor: "#D64545",
-  },
-
-  toastIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-
-    justifyContent: "center",
-    alignItems: "center",
-
-    marginRight: 12,
-  },
-
-  toastIconSuccess: {
-    backgroundColor: "#E4F6EB",
-  },
-
-  toastIconError: {
-    backgroundColor: "#FCE5E5",
-  },
-
-  toastIconText: {
-    fontSize: 18,
-    fontWeight: "800",
-  },
-
-  toastContent: {
-    flex: 1,
-  },
-
-  toastTitle: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: "#111111",
-    marginBottom: 3,
-  },
-
-  toastMessage: {
-    fontSize: 13,
-    color: "#806F60",
-    lineHeight: 18,
+  versionText: {
+    color: "#D2C8BF",
+    fontSize: 10,
+    textAlign: "center",
+    marginBottom: 5,
   },
 });
