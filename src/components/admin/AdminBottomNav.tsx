@@ -32,6 +32,11 @@ const navItems: NavItem[] = [
     icon: "▣",
   },
   {
+    label: "History",
+    route: "/admin/history",
+    icon: "◷",
+  },
+  {
     label: "Sales",
     route: "/admin/sales",
     icon: "▥",

@@ -1,458 +1,702 @@
 import { StyleSheet } from "react-native";
+import { COLORS } from "./theme";
 
 export const menuStyles = StyleSheet.create({
+  // =========================
+  // SCREEN
+  // =========================
+
   container: {
     flex: 1,
-    backgroundColor: "#FFF8EF",
+    backgroundColor: COLORS.bg,
   },
 
-  /* =====================================================
-     HEADER
-  ===================================================== */
+  loadingScreen: {
+    flex: 1,
+    backgroundColor: COLORS.bg,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
-  orangeHeader: {
-    height: 74,
-    backgroundColor: "#F45B00",
+  loadingText: {
+    marginTop: 10,
+    fontSize: 13,
+    fontWeight: "500",
+    color: COLORS.muted,
+  },
+
+  // =========================
+  // HEADER
+  // =========================
+
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+
+    paddingBottom: 14,
+
+    backgroundColor: COLORS.panel,
+
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+
+  headerTitle: {
+    color: COLORS.text,
+    fontSize: 22,
+    fontWeight: "800",
+  },
+
+  headerDate: {
+    color: COLORS.muted,
+    fontSize: 12,
+    marginTop: 2,
+  },
+
+  refreshButton: {
+    flexDirection: "row",
+    alignItems: "center",
+
+    gap: 6,
+
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+
+    borderRadius: 10,
+
+    backgroundColor: COLORS.card,
+
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+  },
+
+  refreshText: {
+    color: COLORS.text,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
+  pressed: {
+    opacity: 0.65,
+  },
+
+  // =========================
+  // GCASH
+  // =========================
+
+  paymentQrRow: {
+    flexDirection: "row",
+    alignItems: "center",
+
+    marginHorizontal: 16,
+    marginTop: 14,
+
+    minHeight: 72,
+    paddingHorizontal: 13,
+
+    backgroundColor: COLORS.card,
+
+    borderWidth: 1,
+    borderColor: COLORS.border,
+
+    borderRadius: 16,
+  },
+
+  paymentQrThumbWrap: {
+    width: 48,
+    height: 48,
+
+    justifyContent: "center",
+    alignItems: "center",
+
+    marginRight: 12,
+
+    backgroundColor: COLORS.cardAlt,
+
+    borderRadius: 12,
+
+    overflow: "hidden",
+  },
+
+  paymentQrThumb: {
+    width: "100%",
+    height: "100%",
+  },
+
+  paymentQrThumbIcon: {
+    fontSize: 20,
+    color: COLORS.mutedLight,
+  },
+
+  paymentQrInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  paymentQrTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: COLORS.text,
+  },
+
+  paymentQrSubtitle: {
+    marginTop: 3,
+    fontSize: 12,
+    color: COLORS.muted,
+  },
+
+  paymentQrChevron: {
+    marginLeft: 8,
+    fontSize: 22,
+    color: COLORS.mutedLight,
+  },
+
+  // =========================
+  // PAYMENT MODAL
+  // =========================
+
+  paymentBackdrop: {
+    flex: 1,
+    justifyContent: "flex-end",
+
+    backgroundColor: "rgba(0,0,0,0.68)",
+  },
+
+  paymentSheet: {
+    maxHeight: "88%",
+
+    paddingTop: 18,
+    paddingHorizontal: 20,
+    paddingBottom: 24,
+
+    backgroundColor: COLORS.panel,
+
+    borderTopLeftRadius: 26,
+    borderTopRightRadius: 26,
+
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+
+  paymentHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+
+    marginBottom: 12,
+  },
+
+  paymentTitle: {
+    fontSize: 19,
+    fontWeight: "800",
+    color: COLORS.text,
+  },
+
+  paymentCloseIcon: {
+    fontSize: 24,
+    lineHeight: 24,
+    color: COLORS.muted,
+  },
+
+  paymentScrollContent: {
+    paddingBottom: 8,
+  },
+
+  paymentLabel: {
+    marginTop: 14,
+    marginBottom: 8,
+
+    fontSize: 13,
+    fontWeight: "700",
+    color: COLORS.onSurfaceVariant,
+  },
+
+  qrPickerBox: {
+    width: 170,
+    height: 170,
+
+    alignSelf: "center",
+    justifyContent: "center",
+    alignItems: "center",
+
+    backgroundColor: COLORS.card,
+
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    borderStyle: "dashed",
+
+    borderRadius: 18,
+
+    overflow: "hidden",
+  },
+
+  qrImage: {
+    width: "100%",
+    height: "100%",
+  },
+
+  qrEmpty: {
+    alignItems: "center",
+    gap: 6,
+  },
+
+  qrEmptyIcon: {
+    fontSize: 30,
+    color: COLORS.mutedLight,
+  },
+
+  qrEmptyText: {
+    fontSize: 12,
+    color: COLORS.muted,
+  },
+
+  paymentInput: {
+    minHeight: 46,
+
+    paddingHorizontal: 14,
+
+    backgroundColor: COLORS.card,
+
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+
+    borderRadius: 12,
+
+    fontSize: 14,
+    color: COLORS.text,
+  },
+
+  paymentActions: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 18,
+  },
+
+  paymentButton: {
+    flex: 1,
+
+    minHeight: 46,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    borderRadius: 13,
+  },
+
+  removeButton: {
+    backgroundColor: COLORS.dangerBg,
+    borderWidth: 1,
+    borderColor: COLORS.dangerBg,
+  },
+
+  removeButtonText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: COLORS.danger,
+  },
+
+  saveButton: {
+    backgroundColor: COLORS.primary,
+  },
+
+  saveButtonDisabled: {
+    backgroundColor: COLORS.primaryDisabled,
+  },
+
+  saveButtonText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: COLORS.text,
+  },
+
+  paymentHint: {
+    marginTop: 8,
+    marginBottom: 18,
+
+    fontSize: 12,
+    lineHeight: 18,
+
+    color: COLORS.muted,
+  },
+
+  // =========================
+  // CATEGORIES
+  // =========================
+
+  categoryList: {
+    marginHorizontal: 16,
+    marginTop: 14,
+
+    maxHeight: 58,
+
+    backgroundColor: COLORS.panel,
+
+    borderWidth: 1,
+    borderColor: COLORS.border,
+
+    borderRadius: 15,
+  },
+
+  categoryListContent: {
+    flexGrow: 1,
+
+    flexDirection: "row",
+    alignItems: "center",
+
+    paddingHorizontal: 9,
+    paddingVertical: 8,
+
+    gap: 8,
+  },
+
+  categoryButton: {
+    height: 38,
+
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+
+    paddingHorizontal: 15,
+
+    backgroundColor: COLORS.card,
+
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+
+    borderRadius: 10,
+  },
+
+  categoryButtonActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+
+  categoryButtonText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: COLORS.onSurfaceVariant,
+  },
+
+  categoryButtonTextActive: {
+    color: COLORS.text,
+    fontWeight: "700",
+  },
+
+  // =========================
+  // MENU LIST
+  // =========================
+
+  menuListContent: {
     paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 120,
+
+    gap: 10,
+  },
+
+  // =========================
+  // MENU CARD
+  // =========================
+
+  card: {
+    flexDirection: "row",
+
+    padding: 11,
+
+    backgroundColor: COLORS.card,
+
+    borderWidth: 1,
+    borderColor: COLORS.border,
+
+    borderRadius: 17,
+
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowRadius: 5,
+
+    elevation: 2,
+  },
+
+  cardUnavailable: {
+    opacity: 0.52,
+  },
+
+  // =========================
+  // FOOD IMAGE
+  // =========================
+
+  thumbWrap: {
+    width: 82,
+    height: 82,
+
+    marginRight: 13,
+
+    backgroundColor: COLORS.cardAlt,
+
+    borderRadius: 13,
+
+    overflow: "hidden",
+  },
+
+  thumb: {
+    width: "100%",
+    height: "100%",
+  },
+
+  thumbFallback: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  thumbFallbackIcon: {
+    fontSize: 28,
+  },
+
+  unavailableBadge: {
+    position: "absolute",
+
+    left: 0,
+    right: 0,
+    bottom: 0,
+
+    paddingVertical: 4,
+
+    backgroundColor: "rgba(52,58,52,0.9)",
+  },
+
+  unavailableBadgeText: {
+    textAlign: "center",
+
+    fontSize: 9,
+    fontWeight: "700",
+
+    color: COLORS.text,
+
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+
+  // =========================
+  // CARD CONTENT
+  // =========================
+
+  cardBody: {
+    flex: 1,
+    minWidth: 0,
+
+    justifyContent: "space-between",
+  },
+
+  cardTopRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
 
-  pageTitle: {
-    color: "#FFFFFF",
-    fontSize: 20,
-    fontWeight: "800",
-  },
-
-  itemCount: {
-    color: "#FFE6D5",
-    fontSize: 12,
-    marginTop: 2,
-  },
-
-  addButton: {
-    height: 38,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    backgroundColor: "#EF813E",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  addButtonText: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-
-  /* =====================================================
-     ADD FORM
-  ===================================================== */
-
-  addForm: {
-    backgroundColor: "#FFF8EF",
-    paddingHorizontal: 16,
-    paddingTop: 13,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F1D5BF",
-  },
-
-  addFormTitle: {
-    color: "#E95500",
-    fontSize: 14,
-    fontWeight: "700",
-    marginBottom: 9,
-  },
-
-  addInputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-
-  addIconBox: {
-    width: 48,
-    height: 40,
-    borderWidth: 1,
-    borderColor: "#E3DDD8",
-    borderRadius: 9,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  addFoodIcon: {
-    fontSize: 20,
-  },
-
-  addNameInput: {
+  itemName: {
     flex: 1,
-    height: 40,
-    borderWidth: 1,
-    borderColor: "#E3DDD8",
-    borderRadius: 9,
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 10,
-    color: "#222222",
-    fontSize: 12,
-  },
 
-  addPriceBox: {
-    width: 64,
-    height: 40,
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#E3DDD8",
-    borderRadius: 9,
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 8,
-  },
+    marginRight: 8,
 
-  pricePrefix: {
-    color: "#777777",
-    fontSize: 12,
-  },
-
-  addPriceInput: {
-    flex: 1,
-    padding: 0,
-    color: "#222222",
-    fontSize: 12,
-  },
-
-  /* =====================================================
-     CATEGORY
-  ===================================================== */
-
-  categoryList: {
-    gap: 6,
-    paddingVertical: 8,
-  },
-
-  categoryButton: {
-    height: 28,
-    paddingHorizontal: 12,
-    borderRadius: 15,
-    backgroundColor: "#EAE6E3",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  categoryButtonActive: {
-    backgroundColor: "#F45B00",
-  },
-
-  categoryText: {
-    color: "#756D68",
-    fontSize: 11,
-  },
-
-  categoryTextActive: {
-    color: "#FFFFFF",
+    fontSize: 16,
     fontWeight: "700",
+
+    color: COLORS.text,
   },
 
-  /* =====================================================
-     FORM BUTTONS
-  ===================================================== */
-
-  formActions: {
-    flexDirection: "row",
-    gap: 8,
-    marginTop: 2,
+  textMuted: {
+    color: COLORS.muted,
   },
 
-  cancelButton: {
-    flex: 0.4,
-    height: 38,
-    borderRadius: 9,
-    borderWidth: 1,
-    borderColor: "#DDDDDD",
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  // =========================
+  // CATEGORY PILL
+  // =========================
 
-  cancelText: {
-    color: "#555555",
-    fontSize: 12,
-    fontWeight: "500",
-  },
+  categoryPill: {
+    alignSelf: "flex-start",
 
-  saveButton: {
-    flex: 1,
-    height: 38,
-    borderRadius: 9,
-    backgroundColor: "#F45B00",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+    maxWidth: "70%",
 
-  saveText: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "700",
-  },
+    marginTop: 6,
 
-  /* =====================================================
-     SCROLL
-  ===================================================== */
-
-  menuScroll: {
-    flex: 1,
-  },
-
-  menuContent: {
-    paddingHorizontal: 12,
-    paddingTop: 10,
-    paddingBottom: 20,
-  },
-
-  /* =====================================================
-     SECTION
-  ===================================================== */
-
-  section: {
-    marginBottom: 9,
-  },
-
-  sectionTitle: {
-    color: "#776B63",
-    fontSize: 12,
-    fontWeight: "500",
-    marginHorizontal: 4,
-    marginBottom: 7,
-  },
-
-  /* =====================================================
-     MENU CARD
-  ===================================================== */
-
-  menuCard: {
-    minHeight: 58,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 13,
-    marginBottom: 7,
     paddingHorizontal: 9,
-    paddingVertical: 7,
+    paddingVertical: 4,
+
+    backgroundColor: COLORS.primaryMuted,
+
+    borderWidth: 1,
+    borderColor: "rgba(51,147,102,0.18)",
+
+    borderRadius: 7,
+  },
+
+  categoryPillText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: COLORS.primary,
+  },
+
+  // =========================
+  // CARD FOOTER
+  // =========================
+
+  cardBottomRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+
+    marginTop: 8,
+  },
+
+  itemPrice: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: COLORS.primary,
+  },
+
+  cardActions: {
+    flexDirection: "row",
+    gap: 7,
+  },
+
+  iconButton: {
+    width: 32,
+    height: 32,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: COLORS.cardAlt,
+
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+
+    borderRadius: 9,
+  },
+
+  iconButtonText: {
+    fontSize: 14,
+    color: COLORS.onSurfaceVariant,
+  },
+
+  iconButtonDanger: {
+    backgroundColor: COLORS.dangerBg,
+    borderColor: COLORS.dangerBg,
+  },
+
+  iconButtonDangerText: {
+    fontSize: 14,
+    color: COLORS.danger,
+  },
+
+  // =========================
+  // TOGGLE
+  // =========================
+
+  toggle: {
+    width: 42,
+    height: 24,
+
+    justifyContent: "center",
+
+    padding: 2,
+
+    borderRadius: 999,
+  },
+
+  toggleOn: {
+    alignItems: "flex-end",
+    backgroundColor: COLORS.success,
+  },
+
+  toggleOff: {
+    alignItems: "flex-start",
+    backgroundColor: COLORS.mutedLight,
+  },
+
+  toggleKnob: {
+    width: 20,
+    height: 20,
+
+    backgroundColor: COLORS.card,
+
+    borderRadius: 999,
+  },
+
+  toggleKnobOn: {},
+
+  toggleKnobOff: {},
+
+  // =========================
+  // EMPTY STATE
+  // =========================
+
+  emptyState: {
+    alignItems: "center",
+
+    paddingTop: 65,
+    paddingHorizontal: 20,
+  },
+
+  emptyStateIcon: {
+    marginBottom: 10,
+    fontSize: 38,
+  },
+
+  emptyStateText: {
+    fontSize: 14,
+    textAlign: "center",
+    color: COLORS.muted,
+  },
+
+  // =========================
+  // FLOATING ADD BUTTON
+  // =========================
+
+  fab: {
+    position: "absolute",
+
+    right: 18,
+    bottom: 78,
+
+    width: 54,
+    height: 54,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: COLORS.primary,
+
+    borderRadius: 27,
 
     shadowColor: "#000",
+    shadowOpacity: 0.18,
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 4,
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    shadowRadius: 7,
 
-    elevation: 1,
+    elevation: 5,
   },
 
-  menuCardUnavailable: {
-    opacity: 0.65,
+  fabDisabled: {
+    backgroundColor: COLORS.primaryDisabled,
+
+    shadowOpacity: 0,
+    elevation: 0,
   },
 
-  /* =====================================================
-     FOOD ICON
-  ===================================================== */
-
-  foodIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 9,
-    backgroundColor: "#FFF8F2",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 7,
-  },
-
-  foodIcon: {
-    fontSize: 20,
-  },
-
-  /* =====================================================
-     FOOD INFO
-  ===================================================== */
-
-  menuInfo: {
-    flex: 1,
-    minWidth: 0,
-    justifyContent: "center",
-  },
-
-  foodName: {
-    color: "#111111",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-
-  unavailableText: {
-    color: "#999999",
-  },
-
-  foodPrice: {
-    color: "#F45B00",
-    fontSize: 11,
-    fontWeight: "500",
-    marginTop: 2,
-  },
-
-  /* =====================================================
-     ACTIONS
-  ===================================================== */
-
-  menuActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginLeft: 6,
-  },
-
-  /* =====================================================
-     ON / OFF
-  ===================================================== */
-
-  statusButton: {
-    minWidth: 34,
-    height: 30,
-    borderRadius: 7,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 7,
-  },
-
-  statusOn: {
-    backgroundColor: "#F0FFF6",
-    borderWidth: 1,
-    borderColor: "#5BDE92",
-  },
-
-  statusOff: {
-    backgroundColor: "#FFF2F2",
-    borderWidth: 1,
-    borderColor: "#FFAAAA",
-  },
-
-  statusText: {
-    fontSize: 9,
-    fontWeight: "700",
-  },
-
-  statusOnText: {
-    color: "#18B957",
-  },
-
-  statusOffText: {
-    color: "#E64A4A",
-  },
-
-  /* =====================================================
-     EDIT
-  ===================================================== */
-
-  editButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: "#FFF7F0",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  editIcon: {
-    color: "#F45B00",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-
-  /* =====================================================
-     SAVE EDIT
-  ===================================================== */
-
-  saveEditButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: "#F45B00",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  saveEditIcon: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "800",
-  },
-
-  /* =====================================================
-     DELETE
-  ===================================================== */
-
-  deleteButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: "#FFF3F3",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  deleteIcon: {
-    fontSize: 14,
-    color: "#E53935",
-  },
-
-  /* =====================================================
-     INLINE EDIT
-  ===================================================== */
-
-  editInfo: {
-    flex: 1,
-    minWidth: 0,
-    paddingHorizontal: 3,
-    justifyContent: "center",
-  },
-
-  inlineEditName: {
-    height: 30,
-    borderWidth: 1,
-    borderColor: "#F45B00",
-    borderRadius: 7,
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 8,
-    color: "#222222",
-    fontSize: 11,
-    marginBottom: 3,
-  },
-
-  inlinePriceRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  pesoSymbol: {
-    color: "#F45B00",
-    fontSize: 11,
-    marginRight: 2,
-  },
-
-  inlineEditPrice: {
-    width: 55,
-    height: 23,
-    padding: 0,
-    color: "#F45B00",
-    fontSize: 11,
-  },
-
-  /* =====================================================
-     BOTTOM
-  ===================================================== */
-
-  bottomSpacer: {
-    height: 20,
+  fabIcon: {
+    fontSize: 30,
+    lineHeight: 32,
+    fontWeight: "400",
+    color: COLORS.text,
   },
 });

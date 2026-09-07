@@ -1,554 +1,479 @@
-import { useMemo } from "react";
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import AdminSidebar from "@/components/admin/AdminBottomNav";
-import { salesStyles as styles } from "@/styles/admin/sales.styles";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-type SaleItem = {
-  product: string;
-  quantity: number;
-  price: number;
-};
+import AdminBottomNav from "@/components/admin/AdminBottomNav";
+import { createSalesStyles, COLORS } from "@/styles/admin/sales.styles";
+import { supabase } from "@/lib/supabase";
+
+type SaleItem = { product: string; quantity: number; price: number };
 
 type Sale = {
-  id: number;
+  id: string;
+  orderId: string;
   date: string;
+  total: number;
+  paymentMethod: string | null;
   items: SaleItem[];
 };
 
-/* =========================================================
-   MOCK SALES DATA
-========================================================= */
-const router = useRouter();
-
-const salesData: Sale[] = [
-  {
-    id: 1,
-    date: "2026-08-20T06:30:00",
-    items: [
-      { product: "Steamed Rice", quantity: 2, price: 15 },
-      { product: "Chicken Adobo", quantity: 1, price: 50 },
-    ],
-  },
-  {
-    id: 2,
-    date: "2026-08-20T07:15:00",
-    items: [
-      { product: "Steamed Rice", quantity: 3, price: 15 },
-      { product: "Fried Chicken", quantity: 1, price: 60 },
-    ],
-  },
-  {
-    id: 3,
-    date: "2026-08-20T08:20:00",
-    items: [
-      { product: "Chicken Adobo", quantity: 2, price: 50 },
-      { product: "Steamed Rice", quantity: 2, price: 15 },
-    ],
-  },
-  {
-    id: 4,
-    date: "2026-08-20T09:40:00",
-    items: [
-      { product: "Pork Giniling", quantity: 1, price: 50 },
-      { product: "Steamed Rice", quantity: 1, price: 15 },
-    ],
-  },
-  {
-    id: 5,
-    date: "2026-08-20T11:10:00",
-    items: [
-      { product: "Fried Chicken", quantity: 2, price: 60 },
-      { product: "Steamed Rice", quantity: 2, price: 15 },
-      { product: "Softdrink", quantity: 1, price: 30 },
-    ],
-  },
-  {
-    id: 6,
-    date: "2026-08-20T12:30:00",
-    items: [
-      { product: "Chicken Adobo", quantity: 2, price: 50 },
-      { product: "Steamed Rice", quantity: 2, price: 15 },
-    ],
-  },
-  {
-    id: 7,
-    date: "2026-08-19T08:30:00",
-    items: [
-      { product: "Steamed Rice", quantity: 4, price: 15 },
-      { product: "Chicken Adobo", quantity: 2, price: 50 },
-    ],
-  },
-  {
-    id: 8,
-    date: "2026-08-19T12:00:00",
-    items: [
-      { product: "Fried Chicken", quantity: 3, price: 60 },
-      { product: "Softdrink", quantity: 2, price: 30 },
-    ],
-  },
-  {
-    id: 9,
-    date: "2026-08-18T09:00:00",
-    items: [
-      { product: "Pork Giniling", quantity: 3, price: 50 },
-      { product: "Steamed Rice", quantity: 3, price: 15 },
-    ],
-  },
-  {
-    id: 10,
-    date: "2026-08-17T10:00:00",
-    items: [
-      { product: "Chicken Adobo", quantity: 3, price: 50 },
-      { product: "Steamed Rice", quantity: 3, price: 15 },
-    ],
-  },
-  {
-    id: 11,
-    date: "2026-08-16T11:30:00",
-    items: [
-      { product: "Fried Chicken", quantity: 2, price: 60 },
-      { product: "Steamed Rice", quantity: 2, price: 15 },
-    ],
-  },
-  {
-    id: 12,
-    date: "2026-08-15T13:00:00",
-    items: [
-      { product: "Pork Giniling", quantity: 2, price: 50 },
-      { product: "Softdrink", quantity: 2, price: 30 },
-    ],
-  },
-];
-
-/* =========================================================
-   HELPERS
-========================================================= */
-
-const getSaleTotal = (sale: Sale) => {
-  return sale.items.reduce(
-    (total, item) =>
-      total + item.quantity * item.price,
-    0
-  );
-};
-
-const formatCurrency = (amount: number) => {
-  return `₱${amount.toFixed(2)}`;
-};
-
-const formatTransactionDate = (date: string) => {
-  const value = new Date(date);
-
-  return value.toLocaleDateString("en-US", {
-    month: "short",
-    day: "2-digit",
-    year: "numeric",
-  });
-};
-
-const formatTransactionTime = (date: string) => {
-  const value = new Date(date);
-
-  return value.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-};
-
-/* =========================================================
-   MAIN
-========================================================= */
-
 export default function Sales() {
+  const router = useRouter();
+  const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
-  /*
-   * Use the latest date in the mock data as the
-   * simulated "today".
-   */
-  const dashboardDate = new Date(
-    "2026-08-20T23:59:59"
-  );
+  const isTablet = width >= 768;
+  const styles = useMemo(() => createSalesStyles(isTablet), [isTablet]);
 
-  /* =======================================================
-     TODAY'S SALES
-  ======================================================= */
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
+  useEffect(() => {
+    loadSales();
+  }, []);
+
+  const loadSales = async () => {
+    try {
+      setIsLoading(true);
+
+      const { data, error } = await supabase
+        .from("sales")
+        .select(`
+          id,
+          order_id,
+          total,
+          payment_method,
+          sold_at,
+          orders (
+            id,
+            status,
+            order_type,
+            created_at,
+            order_items (
+              id,
+              menu_item_id,
+              quantity,
+              unit_price,
+              subtotal,
+              menu_items ( id, name )
+            )
+          )
+        `)
+        .order("sold_at", { ascending: false });
+
+      if (error) throw error;
+
+      const loadedSales = data ?? [];
+
+      const formattedSales: Sale[] = loadedSales.map((sale: any) => {
+        const order = Array.isArray(sale.orders) ? sale.orders[0] : sale.orders;
+        const orderItems = order?.order_items ?? [];
+
+        const items: SaleItem[] = orderItems.map((item: any) => {
+          const menuItem = Array.isArray(item.menu_items) ? item.menu_items?.[0] : item.menu_items;
+          return {
+            product: menuItem?.name ?? "Unknown Item",
+            quantity: Number(item.quantity),
+            price: Number(item.unit_price),
+          };
+        });
+
+        return {
+          id: sale.id,
+          orderId: sale.order_id,
+          date: sale.sold_at ?? order?.created_at ?? new Date().toISOString(),
+          total: Number(sale.total),
+          paymentMethod: sale.payment_method,
+          items,
+        };
+      });
+
+      setSales(formattedSales);
+    } catch (error) {
+      console.error("Failed to load sales dashboard:", error);
+      const message = error instanceof Error ? error.message : "Unable to load sales dashboard.";
+      Alert.alert("Sales Error", message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // FORMATTERS
+  const formatCurrency = (amount: number) => `₱${amount.toFixed(2)}`;
+
+  const formatTransactionTime = (date: string) =>
+    new Date(date).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+
+  // DASHBOARD DATE
+  const dashboardDate = new Date();
+
+  const headerDateLabel = useMemo(() => {
+    return dashboardDate.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // TODAY'S SALES
   const todaySales = useMemo(() => {
-    return salesData.filter((sale) => {
+    return sales.filter((sale) => {
       const date = new Date(sale.date);
-
       return (
         date.getFullYear() === dashboardDate.getFullYear() &&
         date.getMonth() === dashboardDate.getMonth() &&
         date.getDate() === dashboardDate.getDate()
       );
     });
-  }, []);
+  }, [sales]);
 
-  const totalSales = todaySales.reduce(
-    (total, sale) => total + getSaleTotal(sale),
-    0
+  const totalSales = useMemo(
+    () => todaySales.reduce((total, sale) => total + Number(sale.total), 0),
+    [todaySales]
   );
 
   const totalTransactions = todaySales.length;
+  const averageSale = totalTransactions > 0 ? totalSales / totalTransactions : 0;
 
-  const averageSale =
-    totalTransactions > 0
-      ? totalSales / totalTransactions
-      : 0;
+  const itemsSoldToday = useMemo(() => {
+    return todaySales.reduce(
+      (total, sale) => total + sale.items.reduce((sum, item) => sum + item.quantity, 0),
+      0
+    );
+  }, [todaySales]);
 
-  /* =======================================================
-     RECENT TRANSACTIONS
-  ======================================================= */
+  // TOP SELLING ITEMS
+  const topSellingItems = useMemo(() => {
+    const totals = new Map<string, { name: string; quantity: number; revenue: number }>();
 
-  const recentTransactions = useMemo(() => {
-    return [...salesData]
-      .sort(
-        (a, b) =>
-          new Date(b.date).getTime() -
-          new Date(a.date).getTime()
-      )
+    sales.forEach((sale) => {
+      sale.items.forEach((item) => {
+        const existing = totals.get(item.product);
+        const revenue = item.price * item.quantity;
+
+        if (existing) {
+          existing.quantity += item.quantity;
+          existing.revenue += revenue;
+        } else {
+          totals.set(item.product, { name: item.product, quantity: item.quantity, revenue });
+        }
+      });
+    });
+
+    return Array.from(totals.values())
+      .sort((a, b) => b.quantity - a.quantity)
       .slice(0, 5);
-  }, []);
+  }, [sales]);
 
-  /* =======================================================
-     SALES THIS WEEK
-  ======================================================= */
+  const maxTopItemQuantity = Math.max(...topSellingItems.map((item) => item.quantity), 1);
 
+  const RANK_BADGE_COLORS = ["#D99A00", "#8D969F", "#B96D32"];
+
+  // RECENT TRANSACTIONS
+  const recentTransactions = useMemo(() => {
+    return [...sales].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
+  }, [sales]);
+
+  // SALES THIS WEEK
   const weekSales = useMemo(() => {
-
     const result = [
-      {
-        day: "Mon",
-        amount: 0,
-      },
-      {
-        day: "Tue",
-        amount: 0,
-      },
-      {
-        day: "Wed",
-        amount: 0,
-      },
-      {
-        day: "Thu",
-        amount: 0,
-      },
-      {
-        day: "Fri",
-        amount: 0,
-      },
-      {
-        day: "Sat",
-        amount: 0,
-      },
-      {
-        day: "Sun",
-        amount: 0,
-      },
+      { day: "Mon", amount: 0 },
+      { day: "Tue", amount: 0 },
+      { day: "Wed", amount: 0 },
+      { day: "Thu", amount: 0 },
+      { day: "Fri", amount: 0 },
+      { day: "Sat", amount: 0 },
+      { day: "Sun", amount: 0 },
     ];
 
-    salesData.forEach((sale) => {
+    const today = new Date();
+    const currentDay = today.getDay();
+    const monday = new Date(today);
+    const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1;
+    monday.setDate(today.getDate() - daysFromMonday);
+    monday.setHours(0, 0, 0, 0);
+
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+
+    sales.forEach((sale) => {
       const date = new Date(sale.date);
+      if (date < monday || date > sunday) return;
 
-      /*
-       * JS:
-       * Sunday = 0
-       * Monday = 1
-       */
-      const dayIndex =
-        date.getDay() === 0
-          ? 6
-          : date.getDay() - 1;
-
-      result[dayIndex].amount += getSaleTotal(sale);
+      const jsDay = date.getDay();
+      const dayIndex = jsDay === 0 ? 6 : jsDay - 1;
+      result[dayIndex].amount += Number(sale.total);
     });
 
     return result;
-  }, []);
+  }, [sales]);
 
-  const maxWeekSales = Math.max(
-    ...weekSales.map((item) => item.amount),
-    1
-  );
+  const maxWeekSales = Math.max(...weekSales.map((item) => item.amount), 1);
 
-  /* =======================================================
-     RENDER
-  ======================================================= */
+  if (isLoading) {
+    return (
+      <View style={[styles.page, styles.centered, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={styles.loadingText}>Loading sales...</Text>
+        <AdminBottomNav />
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.page}>
+    <View style={[styles.page, { paddingLeft: insets.left, paddingRight: insets.right }]}>
+      {/* HEADER */}
+      <View style={[styles.header, { paddingTop: (isTablet ? 18 : 14) + insets.top }]}>
+        <View>
+          <Text style={styles.headerTitle}>Mga Benta</Text>
+          <Text style={styles.headerDate}>{headerDateLabel}</Text>
+        </View>
 
-      {/* =================================================
-          MAIN CONTENT
-      ================================================= */}
+        <Pressable onPress={loadSales} style={({ pressed }) => [styles.refreshButton, pressed && styles.pressed]}>
+          <MaterialIcons name="refresh" size={19} color={COLORS.text} />
+          <Text style={styles.refreshText}>Refresh</Text>
+        </Pressable>
+      </View>
 
+      {/* CONTENT */}
       <ScrollView
         style={styles.container}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: 32 + insets.bottom }]}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.contentInner}>
+          {/* TODAY */}
+          <Text style={styles.sectionLabel}>Ngayong Araw</Text>
 
-        {/* =================================================
-            HEADER
-        ================================================= */}
-
-        <View style={styles.header}>
-
-          <Text style={styles.title}>
-            Sales Dashboard
-          </Text>
-
-          <Text style={styles.date}>
-            Aug 20, 2026
-          </Text>
-
-        </View>
-
-        {/* =================================================
-            SUMMARY CARDS
-        ================================================= */}
-
-        <View style={styles.summaryRow}>
-
-          {/* TODAY'S SALES */}
-
-          <View
-            style={[
-              styles.summaryCard,
-              styles.salesCard,
-            ]}
-          >
-
-            <Text style={styles.summaryIcon}>
-              💰
-            </Text>
-
-            <Text style={styles.salesAmount}>
-              {formatCurrency(totalSales)}
-            </Text>
-
-            <Text style={styles.summaryLabel}>
-              Today's Sales
-            </Text>
-
-          </View>
-
-          {/* TRANSACTIONS */}
-
-          <View
-            style={[
-              styles.summaryCard,
-              styles.transactionCard,
-            ]}
-          >
-
-            <Text style={styles.summaryIcon}>
-              🧾
-            </Text>
-
-            <Text style={styles.transactionAmount}>
-              {totalTransactions}
-            </Text>
-
-            <Text style={styles.summaryLabel}>
-              Transactions
-            </Text>
-
-          </View>
-
-          {/* AVERAGE */}
-
-          <View
-            style={[
-              styles.summaryCard,
-              styles.averageCard,
-            ]}
-          >
-
-            <Text style={styles.summaryIcon}>
-              📊
-            </Text>
-
-            <Text style={styles.averageAmount}>
-              {formatCurrency(averageSale)}
-            </Text>
-
-            <Text style={styles.summaryLabel}>
-              Average
-            </Text>
-
-          </View>
-
-        </View>
-
-        {/* =================================================
-            RECENT TRANSACTIONS
-        ================================================= */}
-
-        <View style={styles.sectionCard}>
-
-          <Text style={styles.sectionTitle}>
-            Recent Transactions
-          </Text>
-
-          <View style={styles.sectionDivider} />
-
-          {recentTransactions.map(
-            (transaction, index) => {
-
-              const total =
-                getSaleTotal(transaction);
-
-              return (
-                <View
-                  key={transaction.id}
-                  style={[
-                    styles.transactionRow,
-                    index ===
-                      recentTransactions.length - 1 &&
-                      styles.lastTransactionRow,
-                  ]}
-                >
-
-                  {/* ICON */}
-
-                  <View style={styles.transactionIcon}>
-                    <Text style={styles.receiptIcon}>
-                      🧾
-                    </Text>
-                  </View>
-
-                  {/* DETAILS */}
-
-                  <View style={styles.transactionInfo}>
-
-                    <Text style={styles.transactionId}>
-                      {`TXN-${String(
-                        43 - transaction.id + 1
-                      ).padStart(4, "0")}`}
-                    </Text>
-
-                    <Text style={styles.transactionDate}>
-                      {formatTransactionDate(
-                        transaction.date
-                      )}{" "}
-                      ·{" "}
-                      {formatTransactionTime(
-                        transaction.date
-                      )}
-                    </Text>
-
-                  </View>
-
-                  {/* AMOUNT */}
-
-                  <Text
-                    style={styles.transactionAmountValue}
-                  >
-                    {formatCurrency(total)}
-                  </Text>
-
+          <View style={styles.summaryGrid}>
+            {/* TOTAL SALES */}
+            <View style={[styles.summaryCard, styles.salesCard]}>
+              <View style={styles.summaryTopRow}>
+                <View style={styles.summaryIcon}>
+                  <MaterialIcons name="payments" size={21} color={COLORS.primary} />
                 </View>
-              );
-            }
-          )}
+                <Text style={styles.summaryTrend}>TODAY</Text>
+              </View>
+              <Text style={styles.summaryCardLabel}>Kabuuang Benta</Text>
+              <Text style={styles.salesAmount}>{formatCurrency(totalSales)}</Text>
+              <Text style={styles.summaryCaption}>na piso ngayong araw</Text>
+            </View>
 
-        </View>
+            {/* TRANSACTIONS */}
+            <View style={[styles.summaryCard, styles.transactionCard]}>
+              <View style={styles.summaryTopRow}>
+                <View style={styles.summaryIcon}>
+                  <MaterialIcons name="receipt-long" size={21} color={COLORS.primary} />
+                </View>
+                <Text style={styles.summaryTrend}>ORDERS</Text>
+              </View>
+              <Text style={styles.summaryCardLabel}>Transaksyon</Text>
+              <Text style={styles.transactionAmount}>{totalTransactions}</Text>
+              <Text style={styles.summaryCaption}>orders na natapos</Text>
+            </View>
 
-        {/* =================================================
-            SALES THIS WEEK
-        ================================================= */}
+            {/* AVERAGE */}
+            <View style={[styles.summaryCard, styles.averageCard]}>
+              <View style={styles.summaryTopRow}>
+                <View style={styles.summaryIcon}>
+                  <MaterialIcons name="analytics" size={21} color={COLORS.primary} />
+                </View>
+                <Text style={styles.summaryTrend}>AVERAGE</Text>
+              </View>
+              <Text style={styles.summaryCardLabel}>Average na Order</Text>
+              <Text style={styles.averageAmount}>{formatCurrency(averageSale)}</Text>
+              <Text style={styles.summaryCaption}>bawat transaksyon</Text>
+            </View>
 
-        <View style={styles.sectionCard}>
+            {/* ITEMS */}
+            <View style={[styles.summaryCard, styles.itemsCard]}>
+              <View style={styles.summaryTopRow}>
+                <View style={styles.summaryIcon}>
+                  <MaterialIcons name="restaurant" size={21} color={COLORS.primary} />
+                </View>
+                <Text style={styles.summaryTrend}>ITEMS</Text>
+              </View>
+              <Text style={styles.summaryCardLabel}>Items na Nabenta</Text>
+              <Text style={styles.itemsAmount}>{itemsSoldToday}</Text>
+              <Text style={styles.summaryCaption}>piraso ng pagkain</Text>
+            </View>
+          </View>
 
-          <Text style={styles.sectionTitle}>
-            Sales This Week
-          </Text>
+          {/* MAIN DASHBOARD GRID */}
+          <View style={styles.dashboardGrid}>
+            {/* SALES THIS WEEK */}
+            <View style={styles.salesWeekCard}>
+              <View style={styles.dashboardCardHeader}>
+                <View style={styles.dashboardCardHeaderText}>
+                  <Text style={styles.dashboardCardTitle}>Benta Ngayong Linggo</Text>
+                  <Text style={styles.dashboardCardSubtitle}>Sales performance from Monday to Sunday</Text>
+                </View>
+                <View style={styles.cardHeaderIcon}>
+                  <MaterialIcons name="bar-chart" size={21} color={COLORS.primary} />
+                </View>
+              </View>
 
-          <View style={styles.weekContainer}>
+              <View style={styles.weekContainer}>
+                {weekSales.map((item) => {
+                  const percentage = (item.amount / maxWeekSales) * 100;
+                  return (
+                    <View key={item.day} style={styles.weekRow}>
+                      <Text style={styles.dayText}>{item.day}</Text>
+                      <View style={styles.progressBackground}>
+                        <View style={[styles.progressBar, { width: `${percentage}%` }]} />
+                      </View>
+                      <Text style={styles.weekAmount}>₱{item.amount.toFixed(0)}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
 
-            {weekSales.map((item) => {
+            {/* TOP SELLING */}
+            <View style={styles.topSellingCard}>
+              <View style={styles.dashboardCardHeader}>
+                <View style={styles.dashboardCardHeaderText}>
+                  <Text style={styles.dashboardCardTitle}>Top Selling Items</Text>
+                  <Text style={styles.dashboardCardSubtitle}>Best performing menu items</Text>
+                </View>
+                <View style={styles.cardHeaderIcon}>
+                  <MaterialIcons name="emoji-events" size={21} color={COLORS.primary} />
+                </View>
+              </View>
 
-              const percentage =
-                (item.amount / maxWeekSales) *
-                100;
+              {topSellingItems.length === 0 ? (
+                <View style={styles.emptyBlock}>
+                  <MaterialIcons name="restaurant" size={32} color={COLORS.textFaint} />
+                  <Text style={styles.emptyText}>No items sold yet.</Text>
+                </View>
+              ) : (
+                topSellingItems.map((item, index) => {
+                  const percentage = (item.quantity / maxTopItemQuantity) * 100;
+                  const badgeColor = RANK_BADGE_COLORS[index] ?? "#E5DFD3";
+                  const isLast = index === topSellingItems.length - 1;
 
-              return (
-                <View
-                  key={item.day}
-                  style={styles.weekRow}
-                >
+                  return (
+                    <View key={item.name} style={[styles.topItemRow, isLast && styles.lastRow]}>
+                      <View style={[styles.rankBadge, { backgroundColor: badgeColor }]}>
+                        <Text style={styles.rankBadgeText}>{index + 1}</Text>
+                      </View>
 
-                  <Text style={styles.dayText}>
-                    {item.day}
-                  </Text>
+                      <View style={styles.topItemInfo}>
+                        <Text style={styles.topItemName} numberOfLines={1}>{item.name}</Text>
+                        <View style={styles.topItemBarBackground}>
+                          <View style={[styles.topItemBar, { width: `${percentage}%` }]} />
+                        </View>
+                      </View>
 
-                  <View
-                    style={styles.progressBackground}
-                  >
+                      <View style={styles.topItemStats}>
+                        <Text style={styles.topItemQuantity}>{item.quantity} sold</Text>
+                        <Text style={styles.topItemRevenue}>{formatCurrency(item.revenue)}</Text>
+                      </View>
+                    </View>
+                  );
+                })
+              )}
+            </View>
+          </View>
+
+          {/* RECENT TRANSACTIONS */}
+          <View style={styles.transactionsCard}>
+            <View style={styles.dashboardCardHeader}>
+              <View style={styles.dashboardCardHeaderText}>
+                <Text style={styles.dashboardCardTitle}>Pinakabagong Transaksyon</Text>
+                <Text style={styles.dashboardCardSubtitle}>Latest sales activity</Text>
+              </View>
+
+              <Pressable
+                onPress={() => router.push("/admin/history")}
+                style={({ pressed }) => [styles.viewAllButton, pressed && styles.pressed]}
+              >
+                <Text style={styles.viewAllLink}>Tingnan Lahat</Text>
+                <MaterialIcons name="arrow-forward" size={17} color={COLORS.primary} />
+              </Pressable>
+            </View>
+
+            {recentTransactions.length === 0 ? (
+              <View style={styles.emptyBlock}>
+                <MaterialIcons name="receipt-long" size={32} color={COLORS.textFaint} />
+                <Text style={styles.emptyText}>No transactions yet.</Text>
+              </View>
+            ) : (
+              <View style={styles.transactionTable}>
+                {/* TABLE HEADER */}
+                <View style={styles.transactionTableHeader}>
+                  <Text style={styles.tableHeaderTransaction}>TRANSACTION</Text>
+                  <Text style={styles.tableHeaderItems}>ITEMS</Text>
+                  <Text style={styles.tableHeaderTime}>TIME</Text>
+                  <Text style={styles.tableHeaderPayment}>PAYMENT</Text>
+                  <Text style={[styles.tableHeaderAmount, styles.amountColumn]}>AMOUNT</Text>
+                </View>
+
+                {/* TABLE ROWS */}
+                {recentTransactions.map((transaction, index) => {
+                  const total = Number(transaction.total);
+                  const itemCount = transaction.items.reduce((sum, item) => sum + item.quantity, 0);
+                  const isLast = index === recentTransactions.length - 1;
+
+                  return (
                     <View
-                      style={[
-                        styles.progressBar,
-                        {
-                          width: `${percentage}%`,
-                        },
-                      ]}
-                    />
-                  </View>
+                      key={transaction.id}
+                      style={[styles.transactionTableRow, isLast && styles.lastTransactionRow]}
+                    >
+                      {/* TRANSACTION */}
+                      <View style={styles.tableTransaction}>
+                        <View style={styles.transactionIcon}>
+                          <MaterialIcons name="receipt" size={17} color={COLORS.onSurfaceVariant} />
+                        </View>
+                        <View style={styles.transactionInfo}>
+                          <Text style={styles.transactionId}>
+                            TXN-{transaction.id.slice(0, 4).toUpperCase()}
+                          </Text>
+                          <Text style={styles.transactionDate}>
+                            {new Date(transaction.date).toLocaleDateString("en-US")}
+                          </Text>
+                        </View>
+                      </View>
 
-                  <Text style={styles.weekAmount}>
-                    ₱{item.amount.toFixed(0)}
-                  </Text>
+                      {/* ITEMS */}
+                      <Text style={[styles.tableCell, styles.itemsColumn]}>{itemCount} items</Text>
 
-                </View>
-              );
-            })}
+                      {/* TIME */}
+                      <Text style={[styles.tableCell, styles.timeColumn]}>
+                        {formatTransactionTime(transaction.date)}
+                      </Text>
 
+                      {/* PAYMENT */}
+                      <View style={styles.paymentCell}>
+                        <View
+                          style={[
+                            styles.paymentBadge,
+                            transaction.paymentMethod ? styles.paidBadge : styles.unpaidBadge,
+                          ]}
+                        >
+                          <Text style={transaction.paymentMethod ? styles.paidLabel : styles.unpaidLabel}>
+                            {transaction.paymentMethod ? "✓ Bayad" : "Hindi pa bayad"}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* AMOUNT */}
+                      <Text style={[styles.tableAmount, styles.amountColumn]}>{formatCurrency(total)}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
           </View>
-
         </View>
-
       </ScrollView>
 
-      {/* =================================================
-          BOTTOM NAV
-      ================================================= */}
-      <View style={styles.bottomNav}>
-
-          <Pressable
-            style={[
-              styles.navItem,
-              styles.activeNavItem,
-            ]}
-            onPress={() => {
-              // Already on Sales Dashboard
-            }}
-          >
-            <Text style={styles.activeNavText}>
-              Dashboard
-            </Text>
-          </Pressable>
-
-          <Pressable
-            style={styles.navItem}
-            onPress={() => router.push("/admin/history")}
-          >
-            <Text style={styles.navText}>
-              History
-            </Text>
-          </Pressable>
-
-        </View>
-      <AdminSidebar />
-
+      <AdminBottomNav />
     </View>
   );
 }

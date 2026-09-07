@@ -1,15 +1,15 @@
 import { StyleSheet } from "react-native";
 
-export const successToastStyles = StyleSheet.create({
+export const errorToastStyles = StyleSheet.create({
   container: {
     position: "absolute",
     top: 16,
     right: 16,
 
-    width: 270,
-    minHeight: 78,
+    width: 300,
+    minHeight: 82,
 
-    backgroundColor: "#E77D00",
+    backgroundColor: "#D94A38",
     borderRadius: 18,
 
     flexDirection: "row",
@@ -35,16 +35,20 @@ export const successToastStyles = StyleSheet.create({
     width: 32,
     height: 32,
 
+    borderRadius: 16,
+
     justifyContent: "center",
     alignItems: "center",
 
     marginRight: 12,
+
+    backgroundColor: "rgba(255,255,255,0.18)",
   },
 
   icon: {
     color: "#FFFFFF",
-    fontSize: 27,
-    fontWeight: "400",
+    fontSize: 20,
+    fontWeight: "800",
   },
 
   content: {
@@ -62,5 +66,6 @@ export const successToastStyles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 13,
     fontWeight: "500",
+    lineHeight: 18,
   },
 });

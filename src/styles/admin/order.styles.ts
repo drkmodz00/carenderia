@@ -1,408 +1,121 @@
 import { StyleSheet } from "react-native";
-
-export const orderStyles = StyleSheet.create({
-
-  /* =====================================================
-     MAIN
-  ===================================================== */
-
-  container: {
-    flex: 1,
-    backgroundColor: "#FFF8EF",
-  },
-
-  /* =====================================================
-     HEADER
-  ===================================================== */
-
-  orangeHeader: {
-    height: 105,
-    backgroundColor: "#F45B00",
-    paddingHorizontal: 16,
-    paddingTop: 18,
-    paddingBottom: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-
-  headerLeft: {
-    flex: 1,
-    paddingRight: 8,
-  },
-
-  storeTitle: {
-    color: "#FFFFFF",
-    fontSize: 19,
-    fontWeight: "800",
-    marginBottom: 5,
-  },
-
-  dateText: {
-    color: "#FFE8D7",
-    fontSize: 12,
-  },
-
-  cashierBox: {
-    backgroundColor: "#F47A32",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    alignItems: "center",
-    minWidth: 64,
-  },
-
-  cashierLabel: {
-    color: "#FFEDE1",
-    fontSize: 9,
-    fontWeight: "500",
-  },
-
-  cashierName: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "700",
-    marginTop: 2,
-  },
-
-  /* =====================================================
-     CATEGORIES
-  ===================================================== */
-
-  categoryScroll: {
-    maxHeight: 58,
-    backgroundColor: "#FFF8EF",
-  },
-
-  categoryContent: {
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    gap: 7,
-  },
-
-  categoryTab: {
-    backgroundColor: "#F2F2F2",
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    height: 34,
-    justifyContent: "center",
-  },
-
-  activeCategoryTab: {
-    backgroundColor: "#F45B00",
-  },
-
-  categoryTabText: {
-    color: "#666666",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-
-  activeCategoryTabText: {
-    color: "#FFFFFF",
-  },
-
-  /* =====================================================
-     MENU
-  ===================================================== */
-
-  menuScroll: {
-    flex: 1,
-  },
-
-  menuGrid: {
-    paddingHorizontal: 12,
-    paddingTop: 5,
-    paddingBottom: 15,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
-
-  menuCard: {
-    width: "48.5%",
-    minHeight: 109,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
-    marginBottom: 9,
-    paddingHorizontal: 10,
-    paddingTop: 9,
-    paddingBottom: 8,
-
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.07,
-    shadowRadius: 5,
-
-    elevation: 2,
-  },
-
-  unavailableCard: {
-    opacity: 0.5,
-  },
-
-  foodIconContainer: {
-    height: 42,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 3,
-  },
-
-  foodIcon: {
-    fontSize: 29,
-  },
-
-  foodName: {
-    color: "#292929",
-    fontSize: 12,
-    fontWeight: "600",
-    lineHeight: 17,
-    minHeight: 34,
-  },
-
-  cardBottom: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 1,
-  },
-
-  foodPrice: {
-    color: "#F45B00",
-    fontSize: 14,
-    fontWeight: "700",
-  },
-
-  /* =====================================================
-     PLUS BUTTON
-  ===================================================== */
-
-  plusButton: {
-    width: 25,
-    height: 25,
-    borderRadius: 7,
-    backgroundColor: "#F45B00",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  disabledPlusButton: {
-    backgroundColor: "#BDBDBD",
-    opacity: 0.7,
-  },
-
-  plusText: {
-    color: "#FFFFFF",
-    fontSize: 21,
-    fontWeight: "500",
-    lineHeight: 22,
-  },
-
-  /* =====================================================
-     CURRENT ORDER PANEL
-  ===================================================== */
-
-  orderPanel: {
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: -3,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-
-    elevation: 8,
-
-    maxHeight: 355,
-  },
-
-  orderHeader: {
-    minHeight: 61,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-
-    borderBottomWidth: 1,
-    borderBottomColor: "#F1EDE8",
-  },
-
-  orderTitle: {
-    color: "#292929",
-    fontSize: 16,
-    fontWeight: "800",
-  },
-
-  orderCount: {
-    color: "#8E8E8E",
-    fontSize: 11,
-    marginTop: 2,
-  },
-
-  clearButton: {
-    backgroundColor: "#FFE4E4",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-
-  clearOrderText: {
-    color: "#E43B3B",
-    fontSize: 11,
-    fontWeight: "700",
-  },
-
-  /* =====================================================
-     ORDER ITEMS
-  ===================================================== */
-
-  orderItems: {
-    maxHeight: 170,
-  },
-
-  orderItem: {
-    minHeight: 65,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-
-    flexDirection: "row",
-    alignItems: "center",
-
-    borderBottomWidth: 1,
-    borderBottomColor: "#F2EFEC",
-  },
-
-  orderItemInfo: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    minWidth: 0,
-  },
-
-  orderItemIcon: {
-    width: 32,
-    fontSize: 22,
-    marginRight: 8,
-  },
-
-  orderItemTextContainer: {
-    flex: 1,
-    minWidth: 0,
-  },
-
-  orderItemName: {
-    color: "#343434",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-
-  orderItemPrice: {
-    color: "#999999",
-    fontSize: 10,
-    marginTop: 3,
-  },
-
-  /* =====================================================
-     QUANTITY
-  ===================================================== */
-
-  quantityControls: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginHorizontal: 8,
-  },
-
-  quantityButton: {
-    width: 26,
-    height: 26,
-    borderRadius: 7,
-    borderWidth: 1,
-    borderColor: "#E2DED9",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFFFFF",
-  },
-
-  quantityButtonText: {
-    color: "#777777",
-    fontSize: 18,
-    lineHeight: 20,
-  },
-
-  quantityText: {
-    color: "#292929",
-    fontSize: 13,
-    fontWeight: "700",
-    width: 25,
-    textAlign: "center",
-  },
-
-  orderItemTotal: {
-    width: 55,
-    textAlign: "right",
-    color: "#292929",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-
-  /* =====================================================
-     ORDER FOOTER
-  ===================================================== */
-
-  orderFooter: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 13,
-
-    borderTopWidth: 1,
-    borderTopColor: "#F0ECE7",
-  },
-
-  totalLabel: {
-    color: "#292929",
-    fontSize: 13,
-    fontWeight: "700",
-    marginBottom: 3,
-  },
-
-  totalAmount: {
-    color: "#F05A00",
-    fontSize: 19,
-    fontWeight: "800",
-  },
-
-  checkoutButton: {
-    height: 48,
-    marginTop: 10,
-    borderRadius: 14,
-    backgroundColor: "#F05A00",
-    alignItems: "center",
-    justifyContent: "center",
-
-    shadowColor: "#F05A00",
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-
-    elevation: 3,
-  },
-
-  checkoutButtonText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "800",
-  },
-
-});
+import { COLORS } from "@/styles/admin/theme";
+
+/**
+ * "New Order" screen — same dark theme as the rest of the app
+ * (login/register): near-black background, orange accent, dark cards.
+ * Tablet (>=768dp): side-by-side layout with a fixed order panel.
+ * Phone (<768dp): menu stacks above the order panel.
+ */
+
+export const createOrderStyles = (isTablet: boolean, numColumns: number) => {
+  const gap = 2;
+  const cardWidth = `${100 / numColumns - gap}%` as const;
+  const pad = isTablet ? 24 : 16;
+
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: COLORS.bg },
+    centered: { justifyContent: "center", alignItems: "center" },
+    loadingText: { marginTop: 12, fontSize: 16, color: COLORS.muted },
+
+    /* HEADER */
+    pageHeader: { paddingHorizontal: pad, paddingVertical: isTablet ? 18 : 14, borderBottomWidth: 1, borderBottomColor: COLORS.border },
+    pageTitle: { color: COLORS.text, fontSize: isTablet ? 22 : 19, fontWeight: "800" },
+    pageHint: { color: COLORS.muted, fontSize: 13, marginTop: 2 },
+
+    /* LAYOUT */
+    mainRow: { flex: 1, flexDirection: isTablet ? "row" : "column" },
+    leftPane: { flex: isTablet ? 1 : 1.3 },
+
+    /* CATEGORY PILLS */
+    categoryScroll: { maxHeight: 60, backgroundColor: COLORS.bg },
+    categoryContent: { paddingHorizontal: pad, paddingVertical: 12, gap: 10 },
+    categoryTab: { backgroundColor: COLORS.card, borderRadius: 24, paddingHorizontal: 18, height: 36, justifyContent: "center", borderWidth: 1, borderColor: COLORS.border },
+    activeCategoryTab: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+    categoryTabText: { color: COLORS.muted, fontSize: 13, fontWeight: "600" },
+    activeCategoryTabText: { color: COLORS.text },
+
+    /* FOOD GRID */
+    menuScroll: { flex: 1 },
+    menuGrid: { paddingHorizontal: isTablet ? 22 : 14, paddingTop: 8, paddingBottom: 24, flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
+    emptyMenu: { width: "100%", alignItems: "center", paddingVertical: 40 },
+    emptyMenuText: { fontSize: 15, color: COLORS.muted },
+
+    foodCard: { width: cardWidth, backgroundColor: COLORS.card, borderRadius: 16, marginBottom: 14, overflow: "hidden", borderWidth: 1, borderColor: COLORS.border },
+    foodCardSelected: { borderColor: COLORS.primary, borderWidth: 2 },
+    unavailableCard: { opacity: 0.5 },
+
+    foodImageWrap: { width: "100%", aspectRatio: 1.2, backgroundColor: COLORS.panel, position: "relative" },
+    foodImage: { width: "100%", height: "100%" },
+    foodImagePlaceholder: { width: "100%", height: "100%", alignItems: "center", justifyContent: "center" },
+    foodIcon: { fontSize: isTablet ? 32 : 26 },
+
+    quantityBadge: { position: "absolute", top: 8, right: 8, backgroundColor: COLORS.primaryDisabled, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
+    quantityBadgeText: { color: COLORS.primary, fontSize: 10, fontWeight: "800" },
+
+    soldOutBadge: { position: "absolute", top: 8, left: 8, backgroundColor: COLORS.dangerBg, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
+    soldOutBadgeText: { color: COLORS.danger, fontSize: 9, fontWeight: "700" },
+
+    foodCardBody: { paddingHorizontal: 12, paddingVertical: 10 },
+    foodName: { color: COLORS.text, fontSize: isTablet ? 14 : 13, fontWeight: "700", marginBottom: 4 },
+    foodPrice: { color: COLORS.primary, fontSize: isTablet ? 13.5 : 12.5, fontWeight: "800" },
+
+    /* CURRENT ORDER PANEL: fixed sidebar on tablet, full-width section on phone */
+    orderPanel: isTablet
+      ? { width: 340, backgroundColor: COLORS.card, borderLeftWidth: 1, borderLeftColor: COLORS.border }
+      : { flex: 1, backgroundColor: COLORS.card, borderTopWidth: 1, borderTopColor: COLORS.border },
+
+    orderPanelHeader: { paddingHorizontal: pad, paddingTop: 20, paddingBottom: 18, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight },
+    orderPanelTitle: { color: COLORS.text, fontSize: 18, fontWeight: "800", marginBottom: 14 },
+    tableInputLabel: { color: COLORS.muted, fontSize: 13, fontWeight: "600", marginBottom: 8 },
+    tableInput: { height: 44, borderRadius: 10, borderWidth: 1, borderColor: COLORS.borderLight, backgroundColor: COLORS.bg, paddingHorizontal: 14, fontSize: 14, color: COLORS.text },
+
+    /* ORDER TYPE */
+    orderTypeSection: { paddingHorizontal: pad, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight },
+    orderTypeLabel: { color: COLORS.muted, fontSize: 13, fontWeight: "600", marginBottom: 10 },
+    orderTypeButtons: { flexDirection: "row", gap: 10 },
+    orderTypeButton: { flex: 1, height: 44, borderRadius: 10, borderWidth: 1, borderColor: COLORS.borderLight, backgroundColor: COLORS.bg, alignItems: "center", justifyContent: "center" },
+    orderTypeButtonActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+    orderTypeButtonText: { color: COLORS.muted, fontSize: 13.5, fontWeight: "700" },
+    orderTypeButtonTextActive: { color: COLORS.text },
+
+    /* EMPTY STATE */
+    emptyOrderContainer: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24, paddingVertical: isTablet ? 0 : 24 },
+    emptyCartIcon: { fontSize: 42, opacity: 0.35, marginBottom: 10 },
+    emptyOrderTitle: { color: COLORS.text, fontSize: 14, fontWeight: "700", marginBottom: 4, textAlign: "center" },
+    emptyOrderSubtitle: { color: COLORS.mutedLight, fontSize: 12, textAlign: "center" },
+
+    /* ORDER LINE ITEMS */
+    orderItemsList: { flex: 1 },
+    orderLineItem: { flexDirection: "row", alignItems: "center", paddingHorizontal: pad, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: COLORS.border },
+    orderLineInfo: { flex: 1, minWidth: 0 },
+    orderLineName: { color: COLORS.text, fontSize: 13.5, fontWeight: "700" },
+    orderLineSub: { color: COLORS.muted, fontSize: 11.5, marginTop: 2 },
+
+    orderLineControls: { flexDirection: "row", alignItems: "center", marginHorizontal: 10 },
+    stepperButton: { width: 26, height: 26, borderRadius: 7, borderWidth: 1, borderColor: COLORS.borderLight, backgroundColor: COLORS.bg, alignItems: "center", justifyContent: "center" },
+    stepperButtonPlus: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+    stepperButtonText: { color: COLORS.muted, fontSize: 16, lineHeight: 18 },
+    stepperButtonTextPlus: { color: COLORS.text },
+    stepperValue: { width: 24, textAlign: "center", color: COLORS.text, fontSize: 13.5, fontWeight: "700" },
+    orderLineTotal: { width: 60, textAlign: "right", color: COLORS.text, fontSize: 13.5, fontWeight: "800" },
+
+    /* TOTAL FOOTER */
+    orderFooter: { paddingHorizontal: pad, paddingTop: 16, paddingBottom: 20, borderTopWidth: 1, borderTopColor: COLORS.border },
+    subtotalRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
+    subtotalLabel: { color: COLORS.muted, fontSize: 13.5 },
+    subtotalValue: { color: COLORS.text, fontSize: 13.5, fontWeight: "600" },
+    totalRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 16 },
+    totalLabelBold: { color: COLORS.text, fontSize: 16, fontWeight: "800" },
+    totalValueBold: { color: COLORS.primary, fontSize: 21, fontWeight: "800" },
+
+    saveOrderButton: { height: 52, borderRadius: 12, backgroundColor: COLORS.primary, alignItems: "center", justifyContent: "center" },
+    saveOrderButtonDisabled: { backgroundColor: COLORS.primaryDisabled },
+    saveOrderButtonText: { color: COLORS.text, fontSize: 14.5, fontWeight: "800", letterSpacing: 0.8 },
+
+    footerBottomRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 14 },
+    clearOrderLink: { color: COLORS.muted, fontSize: 12.5, fontWeight: "600" },
+    helpCircle: { width: 22, height: 22, borderRadius: 11, borderWidth: 1, borderColor: COLORS.borderLight, alignItems: "center", justifyContent: "center" },
+    helpCircleText: { color: COLORS.muted, fontSize: 11, fontWeight: "700" },
+  });
+};

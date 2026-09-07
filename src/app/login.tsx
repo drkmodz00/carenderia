@@ -1,310 +1,209 @@
 import React, { useState } from "react";
-
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from "react-native";
-
+import { Alert,  Pressable, Text, TextInput, useWindowDimensions, View, } from "react-native";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { supabase } from "@/lib/supabase";
+import { loginStyles } from "@/styles/admin/login.styles";
 
-import { loginStyles as styles } from "@/styles/admin/login.styles";
+const TABLET_BREAKPOINT = 768;
 
-export default function Login() {
+export default function LoginPage() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= TABLET_BREAKPOINT;
 
-  const [username, setUsername] =
-    useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const [password, setPassword] =
-    useState("");
+  const handleLogin = async () => {
+    if (loading) return;
 
-  const [error, setError] =
-    useState("");
+    const cleanEmail = email.trim().toLowerCase();
 
-  const [showPassword, setShowPassword] =
-    useState(false);
-
-  const [isLoading, setIsLoading] =
-    useState(false);
-
-  /* =====================================================
-     LOGIN
-  ===================================================== */
-
-  const handleLogin = () => {
-    setError("");
-
-    /* ================================
-       VALIDATION
-    ================================= */
-
-    if (!username.trim()) {
-      setError(
-        "Please enter your username.",
+    if (!cleanEmail || !password) {
+      Alert.alert(
+        "Missing Information",
+        "Please enter your email and password."
       );
-
       return;
     }
 
-    if (!password.trim()) {
-      setError(
-        "Please enter your password.",
+    try {
+      setLoading(true);
+
+      console.log("LOGIN START:", cleanEmail);
+
+      const {
+        data: authData,
+        error: loginError,
+      } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password,
+      });
+
+      console.log(
+        "AUTH RESULT:",
+        authData,
+        loginError
       );
 
-      return;
-    }
+      if (loginError) {
+        Alert.alert(
+          "Login Failed",
+          loginError.message
+        );
+        return;
+      }
 
-    setIsLoading(true);
+      if (!authData.user) {
+        Alert.alert(
+          "Login Failed",
+          "User account could not be loaded."
+        );
+        return;
+      }
 
-    /* ================================
-       TEMPORARY LOGIN
-       
-       Username: admin
-       Password: admin123
-    ================================= */
+      const user = authData.user;
 
-    setTimeout(() => {
-      const validUsername =
-        username.trim().toLowerCase() ===
-        "admin";
+      const username =
+        user.user_metadata?.username;
 
-      const validPassword =
-        password === "admin123";
+      const name =
+        user.user_metadata?.name;
 
-      if (
-        validUsername &&
-        validPassword
-      ) {
-        setIsLoading(false);
+      const role =
+        user.user_metadata?.role;
 
-        /*
-          Go directly to MENU
-        */
+      console.log("LOGGED IN USER:", {
+        id: user.id,
+        email: user.email,
+        username,
+        name,
+        role,
+      });
+
+      if (role === "admin") {
+        console.log("ROLE: ADMIN");
 
         router.replace("/admin/orders");
-      } else {
-        setIsLoading(false);
-
-        setError(
-          "Invalid username or password.",
-        );
+        return;
       }
-    }, 500);
+
+      if (role === "cashier") {
+        console.log("ROLE: CASHIER");
+
+        router.replace("/admin/orders");
+        return;
+      }
+
+      console.log("INVALID ROLE:", role);
+
+      await supabase.auth.signOut();
+
+      Alert.alert(
+        "Access Denied",
+        "Your account does not have a valid role."
+      );
+    } catch (error: any) {
+      console.log(
+        "LOGIN ERROR:",
+        error
+      );
+
+      Alert.alert(
+        "Login Failed",
+        error?.message ||
+          "Something went wrong while logging in."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
-  /* =====================================================
-     SCREEN
-  ===================================================== */
-
   return (
-    <KeyboardAvoidingView
-      style={styles.page}
-      behavior={
-        Platform.OS === "ios"
-          ? "padding"
-          : undefined
-      }
+    <View
+      style={[
+        loginStyles.page,
+        {
+          flexDirection: isTablet ? "row" : "column",
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom,
+          paddingLeft: insets.left,
+          paddingRight: insets.right,
+        },
+      ]}
     >
-      <ScrollView
-        contentContainerStyle={
-          styles.scrollContent
-        }
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.container}>
-
-          {/* ==========================================
-              LOGO
-          =========================================== */}
-
-          <View style={styles.logo}>
-            <Text style={styles.logoText}>
-              🍽️
-            </Text>
-          </View>
-
-          {/* ==========================================
-              BRAND
-          =========================================== */}
-
-          <Text style={styles.brandName}>
-            Carenderia POS
+      {isTablet && (
+        <View style={loginStyles.brandPanel}>
+          <Text style={loginStyles.brandEyebrow}>Admin Portal</Text>
+          <Text style={loginStyles.brandTitle}>
+            Manage orders with ease
           </Text>
-
-          <Text style={styles.brandSubtitle}>
-            Mabilis · Madali · Maaasahan
+          <Text style={loginStyles.brandText}>
+            Sign in with your account to access the system.
           </Text>
-
-          {/* ==========================================
-              LOGIN CARD
-          =========================================== */}
-
-          <View style={styles.card}>
-
-            <Text style={styles.title}>
-              Mag-login
-            </Text>
-
-            {/* ======================================
-                ERROR
-            ======================================= */}
-
-            {error !== "" && (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorIcon}>
-                  !
-                </Text>
-
-                <Text style={styles.errorText}>
-                  {error}
-                </Text>
-              </View>
-            )}
-
-            {/* ======================================
-                USERNAME
-            ======================================= */}
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                Username
-              </Text>
-
-              <TextInput
-                value={username}
-                onChangeText={(text) => {
-                  setUsername(text);
-                  setError("");
-                }}
-                style={styles.input}
-                placeholder="Ilagay ang username"
-                placeholderTextColor="#A98F79"
-                autoCapitalize="none"
-                autoCorrect={false}
-                returnKeyType="next"
-              />
-            </View>
-
-            {/* ======================================
-                PASSWORD
-            ======================================= */}
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                Password
-              </Text>
-
-              <View
-                style={
-                  styles.passwordContainer
-                }
-              >
-                <TextInput
-                  value={password}
-                  onChangeText={(text) => {
-                    setPassword(text);
-                    setError("");
-                  }}
-                  style={
-                    styles.passwordInput
-                  }
-                  placeholder="Ilagay ang password"
-                  placeholderTextColor="#A98F79"
-                  secureTextEntry={
-                    !showPassword
-                  }
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  onSubmitEditing={
-                    handleLogin
-                  }
-                  returnKeyType="done"
-                />
-
-                <Pressable
-                  onPress={() =>
-                    setShowPassword(
-                      (current) =>
-                        !current,
-                    )
-                  }
-                  style={
-                    styles.showButton
-                  }
-                >
-                  <Text
-                    style={
-                      styles.showButtonText
-                    }
-                  >
-                    {showPassword
-                      ? "Hide"
-                      : "Show"}
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-
-            {/* ======================================
-                LOGIN BUTTON
-            ======================================= */}
-
-            <Pressable
-              onPress={handleLogin}
-              disabled={isLoading}
-              style={[
-                styles.loginButton,
-                isLoading &&
-                  styles.loginButtonDisabled,
-              ]}
-            >
-              <Text
-                style={
-                  styles.loginButtonText
-                }
-              >
-                {isLoading
-                  ? "Nagla-login..."
-                  : "Login"}
-              </Text>
-            </Pressable>
-
-          </View>
-
-          {/* ==========================================
-              DEMO ACCOUNT
-          =========================================== */}
-
-          <View style={styles.demoBox}>
-            <Text style={styles.demoTitle}>
-              Demo Account
-            </Text>
-
-            <Text style={styles.demoText}>
-              Username: admin
-            </Text>
-
-            <Text style={styles.demoText}>
-              Password: admin123
-            </Text>
-          </View>
-
-          {/* ==========================================
-              FOOTER
-          =========================================== */}
-
-          <Text style={styles.footer}>
-            Carenderia POS v1.0 · © 2026
-          </Text>
-
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      )}
+
+      <View style={loginStyles.formPanel}>
+        <View style={loginStyles.card}>
+          {/* TITLE */}
+          <Text style={loginStyles.title}>Welcome back</Text>
+          <Text style={loginStyles.subtitle}>Log in to continue</Text>
+
+          {/* EMAIL */}
+          <Text style={loginStyles.label}>Email</Text>
+          <TextInput
+            placeholder="you@example.com"
+            placeholderTextColor="#5B5F68"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            editable={!loading}
+            style={loginStyles.input}
+          />
+
+          <Text style={loginStyles.label}>Password</Text>
+          <TextInput
+            placeholder="••••••••"
+            placeholderTextColor="#5B5F68"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            autoCapitalize="none"
+            editable={!loading}
+            style={loginStyles.inputLast}
+          />
+
+          <Pressable
+            onPress={handleLogin}
+            disabled={loading}
+            style={[
+              loginStyles.loginButton,
+              loading && loginStyles.loginButtonDisabled,
+            ]}
+          >
+            <Text style={loginStyles.loginButtonText}>
+              {loading ? "Logging in..." : "Login"}
+            </Text>
+          </Pressable>
+
+          {/* REGISTER */}
+          <Pressable
+            onPress={() => router.replace("/register")}
+            disabled={loading}
+            style={loginStyles.registerButton}
+          >
+            <Text style={loginStyles.registerButtonText}>
+              Don't have an account? Create Account
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+    </View>
   );
 }

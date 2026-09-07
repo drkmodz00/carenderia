@@ -1,7 +1,7 @@
 import { StyleSheet } from "react-native";
+import { COLORS } from "@/styles/admin/theme";
 
 export const sidebarStyles = StyleSheet.create({
-
   // =====================================
   // SIDEBAR
   // =====================================
@@ -9,14 +9,13 @@ export const sidebarStyles = StyleSheet.create({
   sidebar: {
     width: 240,
     height: "100%",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.panel,
     borderRightWidth: 1,
-    borderRightColor: "#E5E7EB",
+    borderRightColor: COLORS.border,
     paddingVertical: 24,
     paddingHorizontal: 16,
     justifyContent: "space-between",
   },
-
 
   // =====================================
   // BRAND
@@ -33,7 +32,7 @@ export const sidebarStyles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 11,
-    backgroundColor: "#111827",
+    backgroundColor: COLORS.primary,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 10,
@@ -48,15 +47,14 @@ export const sidebarStyles = StyleSheet.create({
   brandName: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: COLORS.text,
   },
 
   brandSubtitle: {
     fontSize: 11,
-    color: "#9CA3AF",
+    color: COLORS.muted,
     marginTop: 2,
   },
-
 
   // =====================================
   // NAVIGATION
@@ -69,7 +67,7 @@ export const sidebarStyles = StyleSheet.create({
   menuLabel: {
     fontSize: 10,
     fontWeight: "700",
-    color: "#9CA3AF",
+    color: COLORS.muted,
     marginBottom: 10,
     paddingHorizontal: 10,
     letterSpacing: 1,
@@ -85,40 +83,39 @@ export const sidebarStyles = StyleSheet.create({
   },
 
   menuItemActive: {
-    backgroundColor: "#111827",
+    backgroundColor: COLORS.primaryMuted,
   },
 
   menuIcon: {
     width: 28,
     fontSize: 17,
-    color: "#6B7280",
+    color: COLORS.muted,
     textAlign: "center",
   },
 
   menuIconActive: {
-    color: "#FFFFFF",
+    color: COLORS.primary,
   },
 
   menuText: {
     marginLeft: 8,
     fontSize: 13,
     fontWeight: "500",
-    color: "#4B5563",
+    color: COLORS.onSurfaceVariant,
   },
 
   menuTextActive: {
-    color: "#FFFFFF",
-    fontWeight: "600",
+    color: COLORS.primary,
+    fontWeight: "700",
   },
 
-
   // =====================================
-  // BOTTOM
+  // BOTTOM SECTION
   // =====================================
 
   bottomSection: {
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    borderTopColor: COLORS.border,
     paddingTop: 16,
   },
 
@@ -132,7 +129,7 @@ export const sidebarStyles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: COLORS.cardAlt,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -140,7 +137,7 @@ export const sidebarStyles = StyleSheet.create({
   avatarText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#374151",
+    color: COLORS.text,
   },
 
   userInfo: {
@@ -150,12 +147,12 @@ export const sidebarStyles = StyleSheet.create({
   userName: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#111827",
+    color: COLORS.text,
   },
 
   userRole: {
     fontSize: 10,
-    color: "#9CA3AF",
+    color: COLORS.muted,
     marginTop: 2,
   },
 
@@ -170,7 +167,7 @@ export const sidebarStyles = StyleSheet.create({
 
   logoutIcon: {
     fontSize: 17,
-    color: "#6B7280",
+    color: COLORS.muted,
     width: 28,
     textAlign: "center",
   },
@@ -178,45 +175,48 @@ export const sidebarStyles = StyleSheet.create({
   logoutText: {
     marginLeft: 8,
     fontSize: 13,
-    color: "#6B7280",
+    color: COLORS.muted,
   },
-bottomNav: {
-  height: 72,
-  backgroundColor: "#FFFFFF",
-  borderTopWidth: 1,
-  borderTopColor: "#E8E1DA",
 
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-around",
+  // =====================================
+  // MOBILE BOTTOM NAV
+  // =====================================
 
-  paddingBottom: 5,
-},
+  bottomNav: {
+    height: 72,
+    backgroundColor: COLORS.panel,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    paddingBottom: 5,
+  },
 
-bottomNavItem: {
-  flex: 1,
-  alignItems: "center",
-  justifyContent: "center",
-},
+  bottomNavItem: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 
-bottomNavIcon: {
-  color: "#A5A5A5",
-  fontSize: 22,
-  lineHeight: 25,
-},
+  bottomNavIcon: {
+    color: COLORS.mutedLight,
+    fontSize: 22,
+    lineHeight: 25,
+  },
 
-bottomNavIconActive: {
-  color: "#F45B00",
-},
+  bottomNavIconActive: {
+    color: COLORS.primary,
+  },
 
-bottomNavText: {
-  color: "#999999",
-  fontSize: 10,
-  fontWeight: "600",
-  marginTop: 3,
-},
+  bottomNavText: {
+    color: COLORS.muted,
+    fontSize: 10,
+    fontWeight: "600",
+    marginTop: 3,
+  },
 
-bottomNavTextActive: {
-  color: "#F45B00",
-},
+  bottomNavTextActive: {
+    color: COLORS.primary,
+  },
 });

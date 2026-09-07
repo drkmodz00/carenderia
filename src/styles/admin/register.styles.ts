@@ -1,56 +1,22 @@
 import { StyleSheet } from "react-native";
 import { COLORS } from "@/styles/admin/theme";
 
-export const loginStyles = StyleSheet.create({
+export const registerStyles = StyleSheet.create({
   page: {
     flex: 1,
     backgroundColor: COLORS.bg,
   },
 
-  brandPanel: {
-    flex: 1,
-    display: "flex",
-    justifyContent: "center",
-    paddingHorizontal: 48,
-    backgroundColor: COLORS.panel,
-    borderRightWidth: 1,
-    borderRightColor: COLORS.border,
-  },
-
-  brandEyebrow: {
-    fontSize: 14,
-    fontWeight: "600",
-    letterSpacing: 2,
-    color: COLORS.primary,
-    marginBottom: 16,
-    textTransform: "uppercase",
-  },
-
-  brandTitle: {
-    fontSize: 34,
-    fontWeight: "700",
-    color: COLORS.text,
-    marginBottom: 12,
-    maxWidth: 360,
-  },
-
-  brandText: {
-    fontSize: 15,
-    color: COLORS.muted,
-    maxWidth: 320,
-    lineHeight: 22,
-  },
-
-  formPanel: {
-    flex: 1,
+  container: {
+    flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 24,
+    padding: 24,
   },
 
   card: {
     width: "100%",
-    maxWidth: 380,
+    maxWidth: 420,
     backgroundColor: COLORS.card,
     borderRadius: 16,
     padding: 32,
@@ -58,17 +24,27 @@ export const loginStyles = StyleSheet.create({
     borderColor: COLORS.border,
   },
 
+  eyebrow: {
+    fontSize: 13,
+    fontWeight: "600",
+    letterSpacing: 2,
+    color: COLORS.primary,
+    marginBottom: 10,
+    textTransform: "uppercase",
+  },
+
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "700",
     color: COLORS.text,
-    marginBottom: 4,
+    marginBottom: 5,
   },
 
   subtitle: {
     fontSize: 14,
     color: COLORS.muted,
-    marginBottom: 28,
+    lineHeight: 20,
+    marginBottom: 24,
   },
 
   label: {
@@ -83,43 +59,81 @@ export const loginStyles = StyleSheet.create({
     borderColor: COLORS.borderLight,
     borderRadius: 10,
     padding: 14,
-    marginBottom: 16,
+    marginBottom: 15,
     color: COLORS.text,
     backgroundColor: COLORS.bg,
   },
 
-  inputLast: {
+  passwordInput: {
     borderWidth: 1,
     borderColor: COLORS.borderLight,
     borderRadius: 10,
     padding: 14,
-    marginBottom: 24,
+    marginBottom: 22,
     color: COLORS.text,
     backgroundColor: COLORS.bg,
   },
 
-  loginButton: {
+  roleLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: COLORS.onSurfaceVariant,
+    marginBottom: 8,
+  },
+
+  roleRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 24,
+  },
+
+  roleButton: {
+    flex: 1,
+    paddingVertical: 13,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    backgroundColor: COLORS.bg,
+  },
+
+  roleButtonActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+
+  roleText: {
+    textAlign: "center",
+    color: COLORS.muted,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
+  roleTextActive: {
+    color: COLORS.text,
+  },
+
+  registerButton: {
     backgroundColor: COLORS.primary,
     padding: 16,
     borderRadius: 10,
   },
 
-  loginButtonDisabled: {
+  registerButtonDisabled: {
     backgroundColor: COLORS.primaryDisabled,
   },
 
-  loginButtonText: {
+  registerButtonText: {
     color: COLORS.text,
     textAlign: "center",
     fontWeight: "700",
   },
 
-  registerButton: {
+  loginButton: {
     marginTop: 16,
     padding: 8,
   },
 
-  registerButtonText: {
+  loginButtonText: {
     textAlign: "center",
     color: COLORS.primary,
     fontWeight: "600",

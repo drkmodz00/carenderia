@@ -1,1023 +1,848 @@
-import React, { useMemo, useState } from "react";
-
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import {ActivityIndicator,Alert,FlatList,Image,Modal,Pressable,  ScrollView,  Text,  TextInput,  View,  useWindowDimensions,} from "react-native";
+  
+import { MaterialIcons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as ImagePicker from "expo-image-picker";
 
 import AdminBottomNav from "@/components/admin/AdminBottomNav";
+
+import AddMenuModal, {  AddMenuData, } from "@/components/admin/modals/menu_crud/AddMenuModal";
+import EditMenuModal, {  EditMenuData, } from "@/components/admin/modals/menu_crud/EditMenuModal";
+import DeleteMenuModal from "@/components/admin/modals/menu_crud/DeleteMenuModal";
+
 import { menuStyles as styles } from "@/styles/admin/menu.styles";
+import { COLORS } from "@/styles/admin/theme";
 
-/* =====================================================
-   TYPES
-===================================================== */
+import { addMenuItem, deleteMenuItem, getMenuItems, MenuItem, toggleMenuItem, updateMenuItem, } from "@/lib/menu";
+import { getCategories } from "@/lib/category";
 
-type Category =
-  | "All"
-  | "Chicken"
-  | "Pork"
-  | "Fish"
-  | "Rice Meals"
-  | "Drinks";
-
-type ActualCategory = Exclude<Category, "All">;
-
-type MenuItem = {
-  id: number;
-  name: string;
-  category: ActualCategory;
-  price: number;
-  available: boolean;
-  image?: string;
-  icon?: string;
-};
-
-/* =====================================================
-   CATEGORY HELPER
-===================================================== */
-
-const isCategory = (
-  value: string,
-): value is ActualCategory => {
-  return (
-    value === "Chicken" ||
-    value === "Pork" ||
-    value === "Fish" ||
-    value === "Rice Meals" ||
-    value === "Drinks"
-  );
-};
-
-/* =====================================================
-   CATEGORY ICON
-===================================================== */
-
-const getCategoryIcon = (
-  category: ActualCategory,
-): string => {
-  switch (category) {
-    case "Chicken":
-      return "🍗";
-
-    case "Pork":
-      return "🍖";
-
-    case "Fish":
-      return "🐟";
-
-    case "Rice Meals":
-      return "🍚";
-
-    case "Drinks":
-      return "🥤";
-
-    default:
-      return "🍽️";
-  }
-};
-
-/* =====================================================
-   INITIAL MENU
-===================================================== */
-
-const INITIAL_MENU_ITEMS: MenuItem[] = [
-  {
-    id: 1,
-    name: "Pork Adobo",
-    category: "Pork",
-    price: 65,
-    available: true,
-    icon: "🍖",
-  },
-
-  {
-    id: 2,
-    name: "Fried Chicken",
-    category: "Chicken",
-    price: 70,
-    available: true,
-    icon: "🍗",
-  },
-
-  {
-    id: 3,
-    name: "Lechon Kawali",
-    category: "Pork",
-    price: 75,
-    available: true,
-    icon: "🥩",
-  },
-
-  {
-    id: 4,
-    name: "Mechado",
-    category: "Pork",
-    price: 70,
-    available: true,
-    icon: "🥘",
-  },
-
-  {
-    id: 5,
-    name: "Bicol Express",
-    category: "Pork",
-    price: 60,
-    available: true,
-    icon: "🌶️",
-  },
-
-  {
-    id: 6,
-    name: "Tinolang Manok",
-    category: "Chicken",
-    price: 70,
-    available: true,
-    icon: "🍲",
-  },
-
-  {
-    id: 7,
-    name: "Sinigang na Baboy",
-    category: "Pork",
-    price: 80,
-    available: true,
-    icon: "🍲",
-  },
-
-  {
-    id: 8,
-    name: "Nilaga",
-    category: "Pork",
-    price: 70,
-    available: false,
-    icon: "🍲",
-  },
-
-  {
-    id: 9,
-    name: "Kanin",
-    category: "Rice Meals",
-    price: 15,
-    available: true,
-    icon: "🍚",
-  },
-
-  {
-    id: 10,
-    name: "Garlic Rice",
-    category: "Rice Meals",
-    price: 20,
-    available: true,
-    icon: "🍚",
-  },
-
-  {
-    id: 11,
-    name: "Fried Fish",
-    category: "Fish",
-    price: 60,
-    available: true,
-    icon: "🐟",
-  },
-
-  {
-    id: 12,
-    name: "Sinigang na Bangus",
-    category: "Fish",
-    price: 80,
-    available: true,
-    icon: "🍲",
-  },
-
-  {
-    id: 13,
-    name: "Pancit Bihon",
-    category: "Rice Meals",
-    price: 55,
-    available: true,
-    icon: "🍜",
-  },
-
-  {
-    id: 14,
-    name: "Plain Rice",
-    category: "Rice Meals",
-    price: 15,
-    available: true,
-    icon: "🍚",
-  },
-
-  {
-    id: 15,
-    name: "Softdrinks",
-    category: "Drinks",
-    price: 25,
-    available: true,
-    icon: "🥤",
-  },
-
-  {
-    id: 16,
-    name: "Buko Juice",
-    category: "Drinks",
-    price: 30,
-    available: true,
-    icon: "🥥",
-  },
-];
-
-/* =====================================================
-   MAIN SCREEN
-===================================================== */
+import { getPaymentSettings,  PaymentSettings, removePaymentQr, savePaymentSettings, } from "@/lib/paymentSetting";
 
 export default function MenuManagement() {
-  /* ===================================================
-     MENU STATE
-  =================================================== */
+  const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
-  const [menuItems, setMenuItems] =
-    useState<MenuItem[]>(
-      INITIAL_MENU_ITEMS,
-    );
+  const isTablet = width >= 768;
+  const pad = isTablet ? 24 : 16;
 
-  /* ===================================================
-     ADD FORM
-  =================================================== */
+  const headerDateLabel = new Date().toLocaleDateString("en-PH", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 
-  const [showAddForm, setShowAddForm] =
-    useState(false);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const [newName, setNewName] =
-    useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<MenuItem | null>(null);
+  const [deleteBlockedReason, setDeleteBlockedReason] =
+    useState<string | null>(null);
 
-  const [newPrice, setNewPrice] =
-    useState("");
+  const [paymentSettings, setPaymentSettings] =
+    useState<PaymentSettings | null>(null);
 
-  const [newCategory, setNewCategory] =
-    useState<ActualCategory>("Pork");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [savingPayment, setSavingPayment] = useState(false);
+  const [localQrUri, setLocalQrUri] = useState<string | null>(null);
+  const [accountName, setAccountName] = useState("");
 
-  /* ===================================================
-     EDIT STATE
-  =================================================== */
+  const filteredItems = useMemo(
+    () =>
+      selectedCategory === "All"
+        ? menuItems
+        : menuItems.filter((item) => item.category === selectedCategory),
+    [menuItems, selectedCategory]
+  );
 
-  const [editingId, setEditingId] =
-    useState<number | null>(null);
+  async function loadMenu() {
+    try {
+      setLoading(true);
 
-  const [editName, setEditName] =
-    useState("");
+      const [menuData, categoryData, paymentData] = await Promise.all([
+        getMenuItems(),
+        getCategories(),
+        getPaymentSettings(),
+      ]);
 
-  const [editPrice, setEditPrice] =
-    useState("");
+      setMenuItems(menuData);
+      setCategories(categoryData.map((category) => category.name));
+      setPaymentSettings(paymentData);
+    } catch (error) {
+      console.error("Failed to load menu:", error);
 
-  /* ===================================================
-     AVAILABLE COUNT
-  =================================================== */
+      Alert.alert(
+        "Error",
+        error instanceof Error ? error.message : "Unable to load menu."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  const availableCount = useMemo(() => {
-    return menuItems.filter(
-      (item) => item.available,
-    ).length;
-  }, [menuItems]);
+  useEffect(() => {
+    loadMenu();
+  }, []);
 
-  /* ===================================================
-     ADD ITEM
-  =================================================== */
+  async function handleAdd(data: AddMenuData) {
+    try {
+      setSaving(true);
 
-  const handleAdd = () => {
-    const name = newName.trim();
+      const item = await addMenuItem(
+        data.name.trim(),
+        data.price,
+        data.category.trim(),
+        data.image?.trim() || null
+      );
 
-    const price = Number(newPrice);
+      setMenuItems((items) => [...items, item]);
+      setShowAddModal(false);
+    } catch (error) {
+      console.error("Failed to add menu item:", error);
+
+      Alert.alert(
+        "Error",
+        error instanceof Error ? error.message : "Unable to add menu item."
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function saveEdit(data: EditMenuData) {
+    if (!editingItem) return;
+
+    const name = data.name.trim();
+    const price = Number(data.price);
+    const category = data.category.trim();
+    const image = data.image?.trim() || null;
 
     if (!name) {
+      Alert.alert("Invalid", "Please enter a menu name.");
       return;
     }
 
-    if (
-      !newPrice ||
-      Number.isNaN(price) ||
-      price <= 0
-    ) {
+    if (!Number.isFinite(price) || price <= 0) {
+      Alert.alert("Invalid", "Please enter a valid price.");
       return;
     }
 
-    const newItem: MenuItem = {
-      id: Date.now(),
-      name,
-      category: newCategory,
-      price,
-      available: true,
-      icon: getCategoryIcon(newCategory),
-    };
-
-    setMenuItems((currentItems) => [
-      ...currentItems,
-      newItem,
-    ]);
-
-    /* Reset form */
-
-    setNewName("");
-
-    setNewPrice("");
-
-    setNewCategory("Pork");
-
-    /* Hide form after save */
-
-    setShowAddForm(false);
-  };
-
-  /* ===================================================
-     CLEAR ADD FORM
-  =================================================== */
-
-  const handleClearAddForm = () => {
-    setNewName("");
-
-    setNewPrice("");
-
-    setNewCategory("Pork");
-  };
-
-  /* ===================================================
-     START EDIT
-  =================================================== */
-
-  const handleStartEdit = (
-    item: MenuItem,
-  ) => {
-    setEditingId(item.id);
-
-    setEditName(item.name);
-
-    setEditPrice(String(item.price));
-  };
-
-  /* ===================================================
-     SAVE EDIT
-  =================================================== */
-
-  const handleSaveEdit = (
-    id: number,
-  ) => {
-    const name = editName.trim();
-
-    const price = Number(editPrice);
-
-    if (!name) {
+    if (!category) {
+      Alert.alert("Invalid", "Please select a category.");
       return;
     }
 
-    if (
-      !editPrice ||
-      Number.isNaN(price) ||
-      price <= 0
-    ) {
-      return;
+    try {
+      setSaving(true);
+
+      const updated = await updateMenuItem(
+        editingItem.id,
+        name,
+        price,
+        category,
+        image
+      );
+
+      setMenuItems((items) =>
+        items.map((item) =>
+          item.id === editingItem.id ? updated : item
+        )
+      );
+
+      setEditingItem(null);
+    } catch (error) {
+      console.error("Failed to update menu:", error);
+
+      Alert.alert(
+        "Error",
+        error instanceof Error
+          ? error.message
+          : "Unable to update menu item."
+      );
+    } finally {
+      setSaving(false);
     }
+  }
 
-    setMenuItems((currentItems) =>
-      currentItems.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              name,
-              price,
-            }
-          : item,
-      ),
-    );
+  async function handleToggle(item: MenuItem) {
+    if (saving) return;
 
-    setEditingId(null);
+    try {
+      setSaving(true);
 
-    setEditName("");
+      const updated = await toggleMenuItem(
+        item.id,
+        !item.available
+      );
 
-    setEditPrice("");
-  };
+      setMenuItems((items) =>
+        items.map((current) =>
+          current.id === item.id ? updated : current
+        )
+      );
+    } catch (error) {
+      console.error("Toggle error:", error);
 
-  /* ===================================================
-     CANCEL EDIT
-  =================================================== */
-
-  const handleCancelEdit = () => {
-    setEditingId(null);
-
-    setEditName("");
-
-    setEditPrice("");
-  };
-
-  /* ===================================================
-     DELETE ITEM
-  =================================================== */
-
-  const handleDelete = (
-    id: number,
-  ) => {
-    setMenuItems((currentItems) =>
-      currentItems.filter(
-        (item) => item.id !== id,
-      ),
-    );
-
-    if (editingId === id) {
-      handleCancelEdit();
+      Alert.alert(
+        "Error",
+        error instanceof Error
+          ? error.message
+          : "Unable to update availability."
+      );
+    } finally {
+      setSaving(false);
     }
-  };
+  }
 
-  /* ===================================================
-     TOGGLE AVAILABILITY
-  =================================================== */
+  function handleDelete(item: MenuItem) {
+    if (saving) return;
 
-  const toggleAvailability = (
-    id: number,
-  ) => {
-    setMenuItems((currentItems) =>
-      currentItems.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              available:
-                !item.available,
-            }
-          : item,
-      ),
-    );
-  };
+    setDeleteBlockedReason(null);
+    setItemToDelete(item);
+  }
 
-  /* ===================================================
-     MENU SECTIONS
-  =================================================== */
+  async function confirmDelete() {
+    if (!itemToDelete) return;
 
-  const sections = useMemo(() => {
-    const ulam = menuItems.filter(
-      (item) =>
-        item.category === "Chicken" ||
-        item.category === "Pork" ||
-        item.category === "Fish",
-    );
+    try {
+      setSaving(true);
 
-    const sabaw = menuItems.filter(
-      (item) => {
-        const name =
-          item.name.toLowerCase();
+      await deleteMenuItem(itemToDelete.id);
 
-        return (
-          name.includes("sinigang") ||
-          name.includes("tinola") ||
-          name.includes("nilaga")
+      setMenuItems((items) =>
+        items.filter(
+          (current) => current.id !== itemToDelete.id
+        )
+      );
+
+      if (editingItem?.id === itemToDelete.id) {
+        setEditingItem(null);
+      }
+
+      setItemToDelete(null);
+      setDeleteBlockedReason(null);
+    } catch (error) {
+      console.error("Delete error:", error);
+
+      const isForeignKeyViolation =
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        (error as { code?: string }).code === "23503";
+
+      if (isForeignKeyViolation) {
+        setDeleteBlockedReason(
+          `"${itemToDelete.name}" is part of one or more past orders, so it can't be deleted. You can mark it unavailable instead to hide it from customers while keeping order history intact.`
         );
-      },
-    );
-
-    const kanin = menuItems.filter(
-      (item) =>
-        item.category ===
-          "Rice Meals" &&
-        !item.name
-          .toLowerCase()
-          .includes("pancit"),
-    );
-
-    /* Remove soup items from ULAM */
-
-    const finalUlam = ulam.filter(
-      (item) => {
-        const name =
-          item.name.toLowerCase();
-
-        return (
-          !name.includes("sinigang") &&
-          !name.includes("tinola") &&
-          !name.includes("nilaga")
+      } else {
+        Alert.alert(
+          "Error",
+          error instanceof Error
+            ? error.message
+            : "Unable to delete item."
         );
-      },
-    );
 
-    return [
-      {
-        title: "ULAM",
-        items: finalUlam,
-      },
+        setItemToDelete(null);
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
 
-      {
-        title: "SABAW",
-        items: sabaw,
-      },
+  async function markUnavailableFromDeleteModal() {
+    if (!itemToDelete) return;
 
-      {
-        title: "KANIN",
-        items: kanin,
-      },
-    ];
-  }, [menuItems]);
+    try {
+      setSaving(true);
 
-  /* ===================================================
-     RENDER MENU ITEM
-  =================================================== */
+      const updated = await toggleMenuItem(
+        itemToDelete.id,
+        false
+      );
 
-  const renderMenuItem = (
-    item: MenuItem,
-  ) => {
-    const isEditing =
-      editingId === item.id;
+      setMenuItems((items) =>
+        items.map((current) =>
+          current.id === itemToDelete.id ? updated : current
+        )
+      );
+
+      setItemToDelete(null);
+      setDeleteBlockedReason(null);
+    } catch (error) {
+      console.error("Toggle error:", error);
+
+      Alert.alert(
+        "Error",
+        error instanceof Error
+          ? error.message
+          : "Unable to update availability."
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function openPaymentModal() {
+    setLocalQrUri(null);
+    setAccountName(paymentSettings?.account_name || "");
+    setShowPaymentModal(true);
+  }
+
+  async function handlePickQrImage() {
+    const permission =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert(
+        "Permission required",
+        "Please allow photo library access to select your GCash QR."
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+      allowsEditing: true,
+      aspect: [1, 1],
+    });
+
+    if (!result.canceled && result.assets?.[0]?.uri) {
+      setLocalQrUri(result.assets[0].uri);
+    }
+  }
+
+  async function handleSavePayment() {
+    if (!accountName.trim()) {
+      Alert.alert(
+        "Invalid",
+        "Please enter the GCash account name."
+      );
+      return;
+    }
+
+    try {
+      setSavingPayment(true);
+
+      const updated = await savePaymentSettings({
+        qrImageUri: localQrUri,
+        accountName: accountName.trim(),
+      });
+
+      setPaymentSettings(updated);
+      setLocalQrUri(null);
+      setShowPaymentModal(false);
+    } catch (error) {
+      console.error("Failed to save GCash settings:", error);
+
+      Alert.alert(
+        "Error",
+        error instanceof Error
+          ? error.message
+          : "Unable to save GCash settings."
+      );
+    } finally {
+      setSavingPayment(false);
+    }
+  }
+
+  async function handleRemoveQr() {
+    try {
+      setSavingPayment(true);
+
+      const updated = await removePaymentQr();
+
+      setPaymentSettings(updated);
+      setLocalQrUri(null);
+    } catch (error) {
+      console.error("Failed to remove GCash QR:", error);
+
+      Alert.alert(
+        "Error",
+        error instanceof Error
+          ? error.message
+          : "Unable to remove GCash QR."
+      );
+    } finally {
+      setSavingPayment(false);
+    }
+  }
+
+  const qrPreviewUri =
+    localQrUri || paymentSettings?.qr_image_url || null;
+
+  function renderItem({ item }: { item: MenuItem }) {
+    const imageSource = item.image_url || item.icon || null;
 
     return (
       <View
-        key={item.id}
         style={[
-          styles.menuCard,
-
-          !item.available &&
-            styles.menuCardUnavailable,
+          styles.card,
+          !item.available && styles.cardUnavailable,
         ]}
       >
-        {/* ============================================
-            FOOD ICON
-        ============================================= */}
+        <View style={styles.thumbWrap}>
+          {imageSource ? (
+            <Image
+              source={{ uri: imageSource }}
+              style={styles.thumb}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.thumbFallback}>
+              <Text style={styles.thumbFallbackIcon}>
+                🍽️
+              </Text>
+            </View>
+          )}
 
-        <View style={styles.foodIconBox}>
-          <Text style={styles.foodIcon}>
-            {item.icon || "🍽️"}
-          </Text>
+          {!item.available && (
+            <View style={styles.unavailableBadge}>
+              <Text style={styles.unavailableBadgeText}>
+                Sold out
+              </Text>
+            </View>
+          )}
         </View>
 
-        {/* ============================================
-            EDITING MODE
-        ============================================= */}
-
-        {isEditing ? (
-          <View style={styles.editInfo}>
-            {/* NAME */}
-
-            <TextInput
-              value={editName}
-              onChangeText={setEditName}
-              style={styles.inlineEditName}
-              placeholder="Pangalan"
-              placeholderTextColor="#999"
-              autoCapitalize="words"
-              selectTextOnFocus
-            />
-
-            {/* PRICE */}
-
-            <View
-              style={styles.inlinePriceRow}
-            >
-              <Text
-                style={styles.pesoSymbol}
-              >
-                ₱
-              </Text>
-
-              <TextInput
-                value={editPrice}
-                onChangeText={
-                  setEditPrice
-                }
-                style={
-                  styles.inlineEditPrice
-                }
-                keyboardType="numeric"
-                placeholder="0"
-                placeholderTextColor="#999"
-              />
-            </View>
-          </View>
-        ) : (
-          /* ==========================================
-             NORMAL MODE
-          =========================================== */
-
-          <View style={styles.menuInfo}>
+        <View style={styles.cardBody}>
+          <View style={styles.cardTopRow}>
             <Text
               style={[
-                styles.foodName,
-
-                !item.available &&
-                  styles.unavailableText,
+                styles.itemName,
+                !item.available && styles.textMuted,
               ]}
               numberOfLines={1}
             >
               {item.name}
             </Text>
 
-            <Text
-              style={styles.foodPrice}
+            <Pressable
+              style={[
+                styles.toggle,
+                item.available
+                  ? styles.toggleOn
+                  : styles.toggleOff,
+              ]}
+              onPress={() => handleToggle(item)}
+              disabled={saving}
             >
-              ₱{item.price}
+              <View
+                style={[
+                  styles.toggleKnob,
+                  item.available
+                    ? styles.toggleKnobOn
+                    : styles.toggleKnobOff,
+                ]}
+              />
+            </Pressable>
+          </View>
+
+          <View style={styles.categoryPill}>
+            <Text
+              style={styles.categoryPillText}
+              numberOfLines={1}
+            >
+              {item.category}
             </Text>
           </View>
-        )}
 
-        {/* ============================================
-            ACTIONS
-        ============================================= */}
-
-        <View
-          style={styles.menuActions}
-        >
-          {/* ==========================================
-              AVAILABILITY
-          =========================================== */}
-
-          <Pressable
-            onPress={() =>
-              toggleAvailability(
-                item.id,
-              )
-            }
-            style={[
-              styles.statusButton,
-
-              item.available
-                ? styles.statusOn
-                : styles.statusOff,
-            ]}
-          >
+          <View style={styles.cardBottomRow}>
             <Text
               style={[
-                styles.statusText,
-
-                item.available
-                  ? styles.statusOnText
-                  : styles.statusOffText,
+                styles.itemPrice,
+                !item.available && styles.textMuted,
               ]}
             >
-              {item.available
-                ? "ON"
-                : "OFF"}
+              ₱{Number(item.price).toFixed(2)}
             </Text>
-          </Pressable>
 
-          {/* ==========================================
-              EDIT / SAVE
-          =========================================== */}
-
-          {isEditing ? (
-            <Pressable
-              onPress={() =>
-                handleSaveEdit(
-                  item.id,
-                )
-              }
-              style={
-                styles.saveEditButton
-              }
-            >
-              <Text
-                style={
-                  styles.saveEditIcon
-                }
+            <View style={styles.cardActions}>
+              <Pressable
+                style={styles.iconButton}
+                onPress={() => setEditingItem(item)}
+                disabled={saving}
               >
-                ✓
-              </Text>
-            </Pressable>
-          ) : (
-            <Pressable
-              onPress={() =>
-                handleStartEdit(
-                  item,
-                )
-              }
-              style={styles.editButton}
-            >
-              <Text
-                style={styles.editIcon}
+                <Text style={styles.iconButtonText}>
+                  ✎
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={[
+                  styles.iconButton,
+                  styles.iconButtonDanger,
+                ]}
+                onPress={() => handleDelete(item)}
+                disabled={saving}
               >
-                ✎
-              </Text>
-            </Pressable>
-          )}
-
-          {/* ==========================================
-              DELETE
-          =========================================== */}
-
-          <Pressable
-            onPress={() =>
-              handleDelete(item.id)
-            }
-            style={
-              styles.deleteButton
-            }
-          >
-            <Text
-              style={styles.deleteIcon}
-            >
-              🗑
-            </Text>
-          </Pressable>
+                <Text style={styles.iconButtonDangerText}>
+                  🗑
+                </Text>
+              </Pressable>
+            </View>
+          </View>
         </View>
       </View>
     );
-  };
+  }
 
-  /* ===================================================
-     SCREEN
-  =================================================== */
+  if (loading) {
+    return (
+      <View style={styles.loadingScreen}>
+        <ActivityIndicator
+          size="large"
+          color={COLORS.primary}
+        />
+
+        <Text style={styles.loadingText}>
+          Loading menu...
+        </Text>
+
+        <AdminBottomNav />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      {/* =================================================
-          HEADER
-      ================================================= */}
-
-      <View style={styles.orangeHeader}>
-        {/* TITLE */}
-
+      {/* Header */}
+      <View
+        style={[
+          styles.header,
+          {
+            paddingHorizontal: pad,
+            paddingTop:
+              (isTablet ? 18 : 14) + insets.top,
+          },
+        ]}
+      >
         <View>
-          <Text
-            style={styles.pageTitle}
-          >
+          <Text style={styles.headerTitle}>
             Menu
           </Text>
 
-          <Text
-            style={styles.itemCount}
-          >
-            {menuItems.length} pagkain
+          <Text style={styles.headerDate}>
+            {headerDateLabel}
           </Text>
         </View>
 
-        {/* ADD BUTTON */}
-
         <Pressable
-          onPress={() =>
-            setShowAddForm(
-              (current) => !current,
-            )
-          }
-          style={styles.addButton}
+          onPress={loadMenu}
+          style={({ pressed }) => [
+            styles.refreshButton,
+            pressed && styles.pressed,
+          ]}
         >
-          <Text
-            style={styles.addButtonText}
-          >
-            + Dagdag
+          <MaterialIcons
+            name="refresh"
+            size={19}
+            color={COLORS.text}
+          />
+
+          <Text style={styles.refreshText}>
+            Refresh
           </Text>
         </Pressable>
       </View>
 
-      {/* =================================================
-          ADD FOOD FORM
-          ONLY VISIBLE WHEN + DAGDAG IS PRESSED
-      ================================================= */}
+      {/* GCash */}
+      <Pressable
+        style={styles.paymentQrRow}
+        onPress={openPaymentModal}
+      >
+        <View style={styles.paymentQrThumbWrap}>
+          {paymentSettings?.qr_image_url ? (
+            <Image
+              source={{
+                uri: paymentSettings.qr_image_url,
+              }}
+              style={styles.paymentQrThumb}
+              resizeMode="cover"
+            />
+          ) : (
+            <Text style={styles.paymentQrThumbIcon}>
+              ▦
+            </Text>
+          )}
+        </View>
 
-      {showAddForm && (
-        <View style={styles.addForm}>
-          {/* TITLE */}
-
-          <Text
-            style={styles.addFormTitle}
-          >
-            Bagong Pagkain
+        <View style={styles.paymentQrInfo}>
+          <Text style={styles.paymentQrTitle}>
+            GCash QR
           </Text>
 
-          {/* INPUT ROW */}
-
-          <View
-            style={styles.addInputRow}
+          <Text
+            style={styles.paymentQrSubtitle}
+            numberOfLines={1}
           >
-            {/* ICON */}
+            {paymentSettings?.qr_image_url
+              ? paymentSettings.account_name ||
+                "GCash account name not set"
+              : "Not set up yet — tap to add"}
+          </Text>
+        </View>
 
-            <View
-              style={styles.addIconBox}
-            >
-              <Text
-                style={
-                  styles.addFoodIcon
-                }
-              >
-                {getCategoryIcon(
-                  newCategory,
-                )}
+        <Text style={styles.paymentQrChevron}>
+          ›
+        </Text>
+      </Pressable>
+
+      {/* Add Menu Modal */}
+      <AddMenuModal
+        visible={showAddModal}
+        categories={categories}
+        onClose={() => setShowAddModal(false)}
+        onSave={handleAdd}
+        saving={saving}
+      />
+
+      {/* Edit Menu Modal */}
+      <EditMenuModal
+        visible={editingItem !== null}
+        item={editingItem}
+        categories={categories}
+        onClose={() => {
+          if (!saving) setEditingItem(null);
+        }}
+        onSave={saveEdit}
+        saving={saving}
+      />
+
+      {/* Delete Menu Modal */}
+      <DeleteMenuModal
+        visible={itemToDelete !== null}
+        item={itemToDelete}
+        saving={saving}
+        blockedReason={deleteBlockedReason}
+        onClose={() => {
+          if (!saving) {
+            setItemToDelete(null);
+            setDeleteBlockedReason(null);
+          }
+        }}
+        onConfirm={confirmDelete}
+        onMarkUnavailable={
+          markUnavailableFromDeleteModal
+        }
+      />
+
+      {/* GCash Modal */}
+      <Modal
+        visible={showPaymentModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => {
+          if (!savingPayment) {
+            setShowPaymentModal(false);
+          }
+        }}
+      >
+        <View style={styles.paymentBackdrop}>
+          <View style={styles.paymentSheet}>
+            <View style={styles.paymentHeader}>
+              <Text style={styles.paymentTitle}>
+                GCash Payment
               </Text>
+
+              <Pressable
+                onPress={() =>
+                  setShowPaymentModal(false)
+                }
+                disabled={savingPayment}
+                hitSlop={8}
+              >
+                <Text style={styles.paymentCloseIcon}>
+                  ×
+                </Text>
+              </Pressable>
             </View>
 
-            {/* NAME */}
-
-            <TextInput
-              value={newName}
-              onChangeText={setNewName}
-              style={
-                styles.addNameInput
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={
+                styles.paymentScrollContent
               }
-              placeholder="Pangalan ng pagkain"
-              placeholderTextColor="#B7A9A0"
-              autoCapitalize="words"
-            />
-
-            {/* PRICE */}
-
-            <View
-              style={styles.addPriceBox}
             >
-              <Text
-                style={styles.pricePrefix}
+              <Text style={styles.paymentLabel}>
+                GCash QR Code
+              </Text>
+
+              <Pressable
+                style={styles.qrPickerBox}
+                onPress={handlePickQrImage}
+                disabled={savingPayment}
               >
-                ₱
+                {qrPreviewUri ? (
+                  <Image
+                    source={{ uri: qrPreviewUri }}
+                    style={styles.qrImage}
+                    resizeMode="contain"
+                  />
+                ) : (
+                  <View style={styles.qrEmpty}>
+                    <Text style={styles.qrEmptyIcon}>
+                      ▦
+                    </Text>
+
+                    <Text style={styles.qrEmptyText}>
+                      Tap to upload GCash QR
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+
+              <Text style={styles.paymentHint}>
+                Upload the GCash QR code customers can
+                scan when paying their order.
+              </Text>
+
+              <Text style={styles.paymentLabel}>
+                GCash Account Name
               </Text>
 
               <TextInput
-                value={newPrice}
-                onChangeText={
-                  setNewPrice
-                }
-                style={
-                  styles.addPriceInput
-                }
-                keyboardType="numeric"
-                placeholder="0"
-                placeholderTextColor="#B7A9A0"
+                style={styles.paymentInput}
+                value={accountName}
+                onChangeText={setAccountName}
+                placeholder="e.g. Juan Dela Cruz"
+                placeholderTextColor={COLORS.muted}
+                autoCapitalize="words"
               />
-            </View>
-          </View>
+            </ScrollView>
 
-          {/* CATEGORY */}
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={
-              false
-            }
-            contentContainerStyle={
-              styles.categoryList
-            }
-          >
-            {(
-              [
-                "Pork",
-                "Chicken",
-                "Fish",
-                "Rice Meals",
-                "Drinks",
-              ] as ActualCategory[]
-            ).map((category) => (
-              <Pressable
-                key={category}
-                onPress={() =>
-                  setNewCategory(
-                    category,
-                  )
-                }
-                style={[
-                  styles.categoryButton,
-
-                  newCategory ===
-                    category &&
-                    styles.categoryButtonActive,
-                ]}
-              >
-                <Text
+            <View style={styles.paymentActions}>
+              {paymentSettings?.qr_image_url && (
+                <Pressable
                   style={[
-                    styles.categoryText,
-
-                    newCategory ===
-                      category &&
-                      styles.categoryTextActive,
+                    styles.paymentButton,
+                    styles.removeButton,
                   ]}
+                  onPress={handleRemoveQr}
+                  disabled={savingPayment}
                 >
-                  {category}
-                </Text>
+                  <Text style={styles.removeButtonText}>
+                    Remove QR
+                  </Text>
+                </Pressable>
+              )}
+
+              <Pressable
+                style={[
+                  styles.paymentButton,
+                  styles.saveButton,
+                  (savingPayment ||
+                    !accountName.trim()) &&
+                    styles.saveButtonDisabled,
+                ]}
+                onPress={handleSavePayment}
+                disabled={
+                  savingPayment ||
+                  !accountName.trim()
+                }
+              >
+                {savingPayment ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={COLORS.text}
+                  />
+                ) : (
+                  <Text style={styles.saveButtonText}>
+                    Save GCash Settings
+                  </Text>
+                )}
               </Pressable>
-            ))}
-          </ScrollView>
-
-          {/* FORM ACTIONS */}
-
-          <View
-            style={styles.formActions}
-          >
-            {/* CANCEL */}
-
-            <Pressable
-              onPress={
-                handleClearAddForm
-              }
-              style={
-                styles.cancelButton
-              }
-            >
-              <Text
-                style={styles.cancelText}
-              >
-                Clear
-              </Text>
-            </Pressable>
-
-            {/* SAVE */}
-
-            <Pressable
-              onPress={handleAdd}
-              style={
-                styles.saveButton
-              }
-            >
-              <Text
-                style={styles.saveText}
-              >
-                I-save
-              </Text>
-            </Pressable>
+            </View>
           </View>
         </View>
-      )}
+      </Modal>
 
-      {/* =================================================
-          MENU LIST
-      ================================================= */}
-
-      <ScrollView
-        style={styles.menuScroll}
+      {/* Categories */}
+      <FlatList
+        horizontal
+        data={["All", ...categories]}
+        keyExtractor={(category) => category}
+        showsHorizontalScrollIndicator={false}
         contentContainerStyle={
-          styles.menuContent
+          styles.categoryListContent
         }
-        showsVerticalScrollIndicator={
-          false
-        }
-      >
-        {/* =================================================
-            SECTIONS
-        ================================================= */}
-
-        {sections.map((section) => {
-          if (
-            section.items.length ===
-            0
-          ) {
-            return null;
-          }
+        style={styles.categoryList}
+        renderItem={({ item: category }) => {
+          const active =
+            selectedCategory === category;
 
           return (
-            <View
-              key={section.title}
-              style={styles.section}
-            >
-              <Text
-                style={
-                  styles.sectionTitle
-                }
-              >
-                {section.title}
-              </Text>
-
-              {section.items.map(
-                renderMenuItem,
-              )}
-            </View>
-          );
-        })}
-
-        {/* =================================================
-            OTHER ITEMS
-        ================================================= */}
-
-        {menuItems.some(
-          (item) =>
-            item.category ===
-              "Drinks" ||
-            item.name ===
-              "Pancit Bihon",
-        ) && (
-          <View
-            style={styles.section}
-          >
-            <Text
-              style={
-                styles.sectionTitle
+            <Pressable
+              style={[
+                styles.categoryButton,
+                active &&
+                  styles.categoryButtonActive,
+              ]}
+              onPress={() =>
+                setSelectedCategory(category)
               }
             >
-              IBA PA
+              <Text
+                style={[
+                  styles.categoryButtonText,
+                  active &&
+                    styles.categoryButtonTextActive,
+                ]}
+              >
+                {category}
+              </Text>
+            </Pressable>
+          );
+        }}
+      />
+
+      {/* Menu */}
+      <FlatList
+        data={filteredItems}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={renderItem}
+        contentContainerStyle={
+          styles.menuListContent
+        }
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateIcon}>
+              🍽️
             </Text>
 
-            {menuItems
-              .filter(
-                (item) =>
-                  item.category ===
-                    "Drinks" ||
-                  item.name ===
-                    "Pancit Bihon",
-              )
-              .map(
-                renderMenuItem,
-              )}
+            <Text style={styles.emptyStateText}>
+              Wala pang menu items.
+            </Text>
           </View>
-        )}
+        }
+      />
 
-        {/* BOTTOM SPACE */}
-
-        <View
-          style={styles.bottomSpacer}
-        />
-      </ScrollView>
-
-      {/* =================================================
-          BOTTOM NAV
-      ================================================= */}
+      {/* Floating Add Menu Button */}
+      <Pressable
+        style={[
+          styles.fab,
+          (saving || categories.length === 0) &&
+            styles.fabDisabled,
+        ]}
+        onPress={() =>
+          setShowAddModal(true)
+        }
+        disabled={
+          saving || categories.length === 0
+        }
+        hitSlop={6}
+      >
+        <Text style={styles.fabIcon}>
+          +
+        </Text>
+      </Pressable>
 
       <AdminBottomNav />
     </View>

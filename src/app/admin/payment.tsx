@@ -1,416 +1,724 @@
-import React, { useMemo, useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
+import { Alert, Image, Pressable, ScrollView, Text, useWindowDimensions, View, } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ArrowLeft, Banknote, Check, ChevronRight, Smartphone, } from "lucide-react-native";
 
-import { paymentStyles as styles } from "@/styles/admin/payment.styles";
+import { getPaymentSettings, PaymentSettings } from "@/lib/paymentSetting";
+import { supabase } from "@/lib/supabase";
 
-export default function PaymentPage() {
+import CashPaymentModal from "@/components/admin/modals/payment/CashPaymentModal";
+import GCashPaymentModal from "@/components/admin/modals/payment/GCashPaymentModal";
+import ReceiptModal, {  ReceiptData, } from "@/components/admin/modals/ReceiptModal";
+import { createPaymentStyles } from "@/styles/admin/payment.styles";
+
+type OrderItem = {
+  id: string;
+  name: string;
+  quantity: number;
+  price: number;
+  image: string | null;
+};
+
+type PaymentMethod = "cash" | "gcash";
+
+export default function PaymentScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams();
+  const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
-  /* =====================================================
-     ORDER DATA
-  ===================================================== */
+  const isTablet = width >= 768;
+  const styles = createPaymentStyles(isTablet);
 
+  const params = useLocalSearchParams<{
+    orderId?: string;
+    total?: string;
+    customerName?: string;
+    orderType?: string;
+    orderItems?: string;
+  }>();
+
+  const orderId = params.orderId ?? "";
+  const customerName = params.customerName ?? "Walk-in Customer";
+  const orderType = params.orderType ?? "Dine In";
   const total = Number(params.total ?? 0);
 
-  const itemName = params.itemName
-    ? String(params.itemName)
-    : "Order";
+  const orderItems: OrderItem[] = useMemo(() => {
+    if (!params.orderItems) return [];
 
-  const quantity = Number(
-    params.quantity ?? 1
-  );
+    try {
+      const parsed = JSON.parse(params.orderItems);
 
-  const itemPrice = Number(
-    params.itemPrice ?? total
-  );
+      if (!Array.isArray(parsed)) return [];
 
-  /* =====================================================
-     CASH RECEIVED
-  ===================================================== */
-
-  const [cashReceived, setCashReceived] =
-    useState("");
-
-  const receivedAmount = Number(
-    cashReceived
-  );
-
-  /* =====================================================
-     CHANGE / SUKLI
-  ===================================================== */
-
-  const change = useMemo(() => {
-    if (
-      Number.isNaN(receivedAmount) ||
-      receivedAmount <= 0
-    ) {
-      return 0;
+      return parsed.map((item) => ({
+        id: String(item.id ?? ""),
+        name: String(item.name ?? ""),
+        quantity: Number(item.quantity ?? 0),
+        price: Number(item.price ?? 0),
+        image: item.image ?? null,
+      }));
+    } catch (error) {
+      console.error("Failed to parse order items:", error);
+      return [];
     }
+  }, [params.orderItems]);
 
-    return Math.max(
-      receivedAmount - total,
-      0
-    );
-  }, [
-    receivedAmount,
-    total,
-  ]);
+  const [paymentMethod, setPaymentMethod] =
+    useState<PaymentMethod | null>(null);
 
-  /* =====================================================
-     PAYMENT VALIDATION
-  ===================================================== */
+  const [paymentSettings, setPaymentSettings] =
+    useState<PaymentSettings | null>(null);
 
-  const canConfirm =
-    total > 0 &&
-    receivedAmount >= total;
+  const [showCashModal, setShowCashModal] = useState(false);
+  const [showGcashModal, setShowGcashModal] = useState(false);
 
-  /* =====================================================
-     QUICK AMOUNT
-  ===================================================== */
+  const [cashReceived, setCashReceived] = useState(0);
+  const [change, setChange] = useState(0);
 
-  const handleQuickAmount = (
-    amount: number
-  ) => {
-    setCashReceived(
-      String(amount)
-    );
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [receiptData, setReceiptData] =
+    useState<ReceiptData | null>(null);
+
+  useEffect(() => {
+    getPaymentSettings()
+      .then(setPaymentSettings)
+      .catch((error) =>
+        console.error("Failed to load payment settings:", error)
+      );
+  }, []);
+
+  const gcashQrUri = paymentSettings?.qr_image_url ?? null;
+
+  const handleSelectCash = () => {
+    if (isProcessing) return;
+
+    setPaymentMethod("cash");
+    setShowCashModal(true);
   };
 
-  const isSelected = (
-    amount: number
-  ) => {
-    return receivedAmount === amount;
-  };
+  const handleSelectGCash = () => {
+    if (isProcessing) return;
 
-  /* =====================================================
-     CONFIRM PAYMENT
-  ===================================================== */
-
-  const handleConfirmPayment = () => {
-    if (!canConfirm) {
+    if (!paymentSettings?.qr_image_url) {
+      Alert.alert(
+        "No QR Code",
+        "Please upload a GCash QR code in Menu first."
+      );
       return;
     }
 
-    /*
-      After payment is confirmed,
-      go to Receipt screen.
+    setPaymentMethod("gcash");
+    setShowGcashModal(true);
+  };
 
-      The following values are passed
-      to the Receipt page.
-    */
+  const handleCashConfirm = (
+    receivedAmount: number,
+    calculatedChange: number
+  ) => {
+    setPaymentMethod("cash");
+    setCashReceived(receivedAmount);
+    setChange(calculatedChange);
+    setShowCashModal(false);
+  };
 
-    router.replace({
-      pathname: "/admin/receipt",
-      params: {
-        transactionId: "TXN-0043",
-        itemName: itemName,
-        quantity: String(quantity),
-        itemPrice: String(itemPrice),
-        total: String(total),
-        cash: String(receivedAmount),
-        change: String(change),
-      },
-    });
+  const handleGCashConfirm = () => {
+    setPaymentMethod("gcash");
+    setCashReceived(total);
+    setChange(0);
+    setShowGcashModal(false);
+  };
+
+  const handleChangePayment = () => {
+    if (isProcessing) return;
+
+    setPaymentMethod(null);
+    setCashReceived(0);
+    setChange(0);
+  };
+
+  const handleConfirmPayment = async () => {
+    if (isProcessing) return;
+
+    if (!orderId) {
+      Alert.alert(
+        "Missing Order",
+        "The order ID is missing. Please go back and create the order again."
+      );
+      return;
+    }
+
+    if (!orderItems.length) {
+      Alert.alert(
+        "Empty Order",
+        "There are no items in this order."
+      );
+      return;
+    }
+
+    if (!Number.isFinite(total) || total <= 0) {
+      Alert.alert(
+        "Invalid Total",
+        "The order total is invalid."
+      );
+      return;
+    }
+
+    if (!paymentMethod) {
+      Alert.alert(
+        "Payment Method Required",
+        "Please select Cash or GCash."
+      );
+      return;
+    }
+
+    if (
+      paymentMethod === "cash" &&
+      cashReceived < total
+    ) {
+      Alert.alert(
+        "Insufficient Cash",
+        "The cash received is not enough to complete this payment."
+      );
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+
+      const { error: orderError } = await supabase
+        .from("orders")
+        .update({
+          status: "ongoing",
+          completed_at: new Date().toISOString(),
+        })
+        .eq("id", orderId);
+
+      if (orderError) throw orderError;
+
+      const {
+        data: existingSale,
+        error: existingSaleError,
+      } = await supabase
+        .from("sales")
+        .select("id")
+        .eq("order_id", orderId)
+        .maybeSingle();
+
+      if (existingSaleError) throw existingSaleError;
+
+      if (!existingSale) {
+        const { error: saleError } = await supabase
+          .from("sales")
+          .insert({
+            order_id: orderId,
+            total: Number(total.toFixed(2)),
+            payment_method: paymentMethod,
+          });
+
+        if (saleError) throw saleError;
+      }
+
+      const newReceiptData: ReceiptData = {
+        orderId,
+        items: orderItems.map((item) => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        total: Number(total.toFixed(2)),
+        paymentMethod,
+        cashReceived:
+          paymentMethod === "gcash"
+            ? null
+            : cashReceived,
+        change:
+          paymentMethod === "gcash"
+            ? null
+            : change,
+        soldAt: new Date().toISOString(),
+      };
+
+      setReceiptData(newReceiptData);
+      setShowReceipt(true);
+    } catch (error) {
+      console.error("Confirm payment error:", error);
+
+      Alert.alert(
+        "Payment Failed",
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while processing the payment."
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (isProcessing) return;
+    
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/admin/orders")
+    }
+  };
+
+  const handleReceiptClose = () => {
+    setShowReceipt(false);
+    router.replace("/admin/orders");
+  };
+
+  const handleNewOrder = () => {
+    setShowReceipt(false);
+    router.replace("/admin/orders");
+  };
+
+  const isPaymentReady =
+    paymentMethod !== null &&
+    (
+      paymentMethod === "gcash" ||
+      (
+        paymentMethod === "cash" &&
+        cashReceived >= total
+      )
+    );
+
+  const PaymentMethodCard = ({
+    method,
+    title,
+    description,
+    icon: Icon,
+    onPress,
+  }: {
+    method: PaymentMethod;
+    title: string;
+    description: string;
+    icon: typeof Banknote;
+    onPress: () => void;
+  }) => {
+    const selected = paymentMethod === method;
+
+    return (
+      <Pressable
+        onPress={onPress}
+        disabled={isProcessing}
+        style={[
+          styles.paymentMethodCard,
+          selected && styles.paymentMethodCardSelected,
+          isProcessing && styles.paymentMethodCardDisabled,
+        ]}
+      >
+        <View
+          style={[
+            styles.paymentMethodIcon,
+            selected && styles.paymentMethodIconSelected,
+          ]}
+        >
+          <Icon
+            size={23}
+            strokeWidth={2}
+            color={selected ? "#FFFFFF" : "#9CA3AF"}
+          />
+        </View>
+
+        <View style={styles.paymentMethodContent}>
+          <Text
+            style={[
+              styles.paymentMethodTitle,
+              selected && styles.paymentMethodTitleSelected,
+            ]}
+          >
+            {title}
+          </Text>
+
+          <Text style={styles.paymentMethodDescription}>
+            {description}
+          </Text>
+        </View>
+
+        {selected ? (
+          <View style={styles.paymentMethodCheck}>
+            <Check
+              size={15}
+              color="#FFFFFF"
+              strokeWidth={3}
+            />
+          </View>
+        ) : (
+          <ChevronRight
+            size={20}
+            color="#9CA3AF"
+          />
+        )}
+      </Pressable>
+    );
   };
 
   return (
-    <View style={styles.container}>
-
-      {/* =================================================
-          HEADER
-      ================================================= */}
-
-      <View style={styles.header}>
-
+    <View
+      style={[
+        styles.container,
+        {
+          paddingLeft: insets.left,
+          paddingRight: insets.right,
+        },
+      ]}
+    >
+      <View
+        style={[
+          styles.header,
+          {
+            paddingTop: insets.top + 18,
+          },
+        ]}
+      >
         <Pressable
+          onPress={handleCancel}
+          disabled={isProcessing}
           style={styles.backButton}
-          onPress={() => router.back()}
         >
-          <Text style={styles.backText}>
-            ←
-          </Text>
+          <ArrowLeft
+            size={18}
+            color="#FFFFFF"
+            strokeWidth={2.5}
+          />
         </Pressable>
 
-        <Text style={styles.headerTitle}>
-          Payment
-        </Text>
-
-      </View>
-
-      {/* =================================================
-          CONTENT
-      ================================================= */}
-
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={
-          styles.scrollContent
-        }
-        showsVerticalScrollIndicator={false}
-      >
-
-        {/* =================================================
-            ORDER SUMMARY
-        ================================================= */}
-
-        <View style={styles.card}>
-
-          <Text style={styles.sectionTitle}>
-            ORDER SUMMARY
+        <View style={styles.headerTextWrap}>
+          <Text style={styles.headerTitle}>
+            Payment
           </Text>
 
-          <View style={styles.summaryRow}>
+          <Text style={styles.headerSubtitle}>
+            Complete the customer's payment
+          </Text>
+        </View>
+      </View>
 
-            <Text style={styles.itemName}>
-              {itemName} × {quantity}
+      <ScrollView
+        style={styles.mainScroll}
+        contentContainerStyle={[
+          styles.mainContent,
+          {
+            paddingBottom: 30 + insets.bottom,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.topGrid}>
+
+          <View style={styles.orderInfoCard}>
+            <Text style={styles.cardSectionTitle}>
+              Order Information
             </Text>
 
-            <Text style={styles.itemPrice}>
-              ₱{itemPrice.toFixed(0)}
-            </Text>
+            <View style={styles.infoGrid}>
+              <View style={styles.infoColumn}>
+                <Text style={styles.orderInfoLabel}>
+                  Customer
+                </Text>
 
+                <Text style={styles.orderInfoValue}>
+                  {customerName}
+                </Text>
+              </View>
+
+              <View style={styles.infoColumnRight}>
+                <Text style={styles.orderInfoLabel}>
+                  Order Type
+                </Text>
+
+                <Text style={styles.orderInfoValueRight}>
+                  {orderType}
+                </Text>
+              </View>
+
+              <View style={styles.infoColumn}>
+                <Text style={styles.orderInfoLabel}>
+                  Order ID
+                </Text>
+
+                <Text style={styles.orderInfoValue}>
+                  #{orderId.slice(0, 8)}
+                </Text>
+              </View>
+
+              <View style={styles.infoColumnRight}>
+                <Text style={styles.orderInfoLabel}>
+                  Items
+                </Text>
+
+                <Text style={styles.orderInfoValueRight}>
+                  {orderItems.length}
+                </Text>
+              </View>
+            </View>
           </View>
 
-          <View style={styles.dashedLine} />
-
-          <View style={styles.totalRow}>
-
+          <View style={styles.totalCard}>
             <Text style={styles.totalLabel}>
-              TOTAL
+              TOTAL AMOUNT
             </Text>
 
-            <Text style={styles.totalAmount}>
+            <Text style={styles.totalValue}>
               ₱{total.toFixed(2)}
             </Text>
 
+            <Text style={styles.totalSubtext}>
+              Amount to be collected from customer
+            </Text>
           </View>
-
         </View>
 
-        {/* =================================================
-            CASH RECEIVED
-        ================================================= */}
-
-        <View style={styles.card}>
-
+        <View style={styles.paymentMethodSection}>
           <Text style={styles.sectionTitle}>
-            CASH RECEIVED
+            Choose Payment Method
           </Text>
+
+          <Text style={styles.sectionSubtitle}>
+            Select how the customer will pay
+          </Text>
+
+          <View style={styles.paymentMethodRow}>
+            <PaymentMethodCard
+              method="cash"
+              title="Cash"
+              description="Customer pays with cash"
+              icon={Banknote}
+              onPress={handleSelectCash}
+            />
+
+            <PaymentMethodCard
+              method="gcash"
+              title="GCash"
+              description="Customer scans the GCash QR"
+              icon={Smartphone}
+              onPress={handleSelectGCash}
+            />
+          </View>
+        </View>
+
+        <View style={styles.bottomGrid}>
+
+          {paymentMethod && (
+            <View style={styles.selectedPaymentCard}>
+              <View style={styles.selectedPaymentHeader}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.selectedPaymentTitle}>
+                    {paymentMethod === "cash"
+                      ? "Cash Payment"
+                      : "GCash Payment"}
+                  </Text>
+
+                  <Text style={styles.selectedPaymentSub}>
+                    {paymentMethod === "cash"
+                      ? "Cash payment details"
+                      : "QR payment details"}
+                  </Text>
+                </View>
+
+                <Pressable
+                  onPress={handleChangePayment}
+                  disabled={isProcessing}
+                  style={styles.changePaymentButton}
+                >
+                  <Text style={styles.changePaymentText}>
+                    Change
+                  </Text>
+                </Pressable>
+              </View>
+
+              {paymentMethod === "cash" && (
+                <>
+                  <View style={styles.selectedPaymentRow}>
+                    <Text style={styles.selectedPaymentLabel}>
+                      Cash Received
+                    </Text>
+
+                    <Text style={styles.selectedPaymentValue}>
+                      ₱{cashReceived.toFixed(2)}
+                    </Text>
+                  </View>
+
+                  <View style={styles.selectedPaymentDivider} />
+
+                  <View style={styles.selectedPaymentRow}>
+                    <Text style={styles.selectedPaymentLabel}>
+                      Change
+                    </Text>
+
+                    <Text style={styles.selectedPaymentValueOrange}>
+                      ₱{change.toFixed(2)}
+                    </Text>
+                  </View>
+                </>
+              )}
+
+              {paymentMethod === "gcash" && (
+                <View style={styles.selectedPaymentRow}>
+                  <Text style={styles.selectedPaymentLabel}>
+                    Payment
+                  </Text>
+
+                  <Text style={styles.selectedPaymentValue}>
+                    GCash QR
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
 
           <View
             style={[
-              styles.cashInputContainer,
-
-              cashReceived.length > 0 &&
-                styles.cashInputActive,
+              styles.summaryCard,
+              !paymentMethod && styles.summaryCardFull,
             ]}
           >
-
-            <Text style={styles.currency}>
-              ₱
+            <Text style={styles.summaryTitle}>
+              Order Summary
             </Text>
 
-            <TextInput
-              value={cashReceived}
-              onChangeText={setCashReceived}
-              keyboardType="decimal-pad"
-              placeholder="0.00"
-              placeholderTextColor="#8E8E8E"
-              style={styles.cashInput}
-            />
+            {orderItems.length === 0 ? (
+              <View style={styles.emptySummary}>
+                <Text style={styles.emptySummaryText}>
+                  No order items found.
+                </Text>
+              </View>
+            ) : (
+              <>
+                {orderItems.map((item) => (
+                  <View
+                    key={item.id}
+                    style={styles.summaryItemRow}
+                  >
+                    {item.image ? (
+                      <Image
+                        source={{ uri: item.image }}
+                        style={styles.summaryItemImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View
+                        style={
+                          styles.summaryItemImagePlaceholder
+                        }
+                      >
+                        <Text
+                          style={
+                            styles.summaryItemImagePlaceholderText
+                          }
+                        >
+                          🍽️
+                        </Text>
+                      </View>
+                    )}
 
+                    <View style={styles.summaryItemTextWrap}>
+                      <Text
+                        style={styles.summaryItemName}
+                        numberOfLines={1}
+                      >
+                        {item.name}
+                      </Text>
+
+                      <Text style={styles.summaryItemSub}>
+                        {item.quantity} × ₱
+                        {item.price.toFixed(2)}
+                      </Text>
+                    </View>
+
+                    <Text style={styles.summaryItemTotal}>
+                      ₱
+                      {(
+                        item.quantity * item.price
+                      ).toFixed(2)}
+                    </Text>
+                  </View>
+                ))}
+
+                <View style={styles.summaryDivider} />
+
+                <View style={styles.summaryTotalRow}>
+                  <Text style={styles.summaryTotalLabel}>
+                    TOTAL
+                  </Text>
+
+                  <Text style={styles.summaryTotalValue}>
+                    ₱{total.toFixed(2)}
+                  </Text>
+                </View>
+              </>
+            )}
           </View>
-
-          {/* =================================================
-              QUICK AMOUNTS
-          ================================================= */}
-
-          <View style={styles.quickAmounts}>
-
-            {/* TOTAL */}
-
-            <Pressable
-              style={[
-                styles.quickButton,
-
-                isSelected(total) &&
-                  styles.quickButtonSelected,
-              ]}
-              onPress={() =>
-                handleQuickAmount(total)
-              }
-            >
-
-              <Text
-                style={[
-                  styles.quickButtonText,
-
-                  isSelected(total) &&
-                    styles.quickButtonTextSelected,
-                ]}
-              >
-                ₱{total.toFixed(0)}
-              </Text>
-
-            </Pressable>
-
-            {/* ₱100 */}
-
-            <Pressable
-              style={[
-                styles.quickButton,
-
-                isSelected(100) &&
-                  styles.quickButtonSelected,
-              ]}
-              onPress={() =>
-                handleQuickAmount(100)
-              }
-            >
-
-              <Text
-                style={[
-                  styles.quickButtonText,
-
-                  isSelected(100) &&
-                    styles.quickButtonTextSelected,
-                ]}
-              >
-                ₱100
-              </Text>
-
-            </Pressable>
-
-            {/* ₱500 */}
-
-            <Pressable
-              style={[
-                styles.quickButton,
-
-                isSelected(500) &&
-                  styles.quickButtonSelected,
-              ]}
-              onPress={() =>
-                handleQuickAmount(500)
-              }
-            >
-
-              <Text
-                style={[
-                  styles.quickButtonText,
-
-                  isSelected(500) &&
-                    styles.quickButtonTextSelected,
-                ]}
-              >
-                ₱500
-              </Text>
-
-            </Pressable>
-
-          </View>
-
         </View>
 
-        {/* =================================================
-            SUKLI / CHANGE
-        ================================================= */}
-
-        <View
-          style={[
-            styles.changeCard,
-
-            /*
-              GREEN CARD ONLY
-              WHEN THERE IS CHANGE
-            */
-            change > 0 &&
-              styles.changeCardPositive,
-          ]}
-        >
-
-          <Text style={styles.changeLabel}>
-            SUKLI (CHANGE)
-          </Text>
-
-          <Text
+        <View style={styles.actionSection}>
+          <Pressable
+            onPress={handleConfirmPayment}
+            disabled={!isPaymentReady || isProcessing}
             style={[
-              styles.changeAmount,
-
-              /*
-                GREEN AMOUNT ONLY
-                WHEN THERE IS CHANGE
-              */
-              change > 0 &&
-                styles.changeAmountPositive,
+              styles.confirmButton,
+              (!isPaymentReady || isProcessing) &&
+                styles.confirmButtonDisabled,
             ]}
           >
-            ₱{change.toFixed(2)}
-          </Text>
+            <Text
+              style={[
+                styles.confirmText,
+                (!isPaymentReady || isProcessing) &&
+                  styles.confirmTextDisabled,
+              ]}
+            >
+              {isProcessing
+                ? "Processing Payment..."
+                : "Confirm Payment"}
+            </Text>
+          </Pressable>
 
+          <Pressable
+            onPress={handleCancel}
+            disabled={isProcessing}
+            style={styles.cancelButton}
+          >
+            <Text style={styles.cancelText}>
+              Cancel
+            </Text>
+          </Pressable>
         </View>
-
       </ScrollView>
 
-      {/* =================================================
-          FOOTER
-      ================================================= */}
+      <CashPaymentModal
+        visible={showCashModal}
+        total={total}
+        isProcessing={isProcessing}
+        onClose={() => setShowCashModal(false)}
+        onConfirm={handleCashConfirm}
+      />
 
-      <View style={styles.footer}>
+      {gcashQrUri && (
+        <GCashPaymentModal
+          visible={showGcashModal}
+          total={total}
+          isProcessing={isProcessing}
+          qrCodeUri={gcashQrUri}
+          onClose={() => setShowGcashModal(false)}
+          onConfirm={handleGCashConfirm}
+        />
+      )}
 
-        {/* =================================================
-            CANCEL
-        ================================================= */}
-
-        <Pressable
-          style={styles.cancelButton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.cancelText}>
-            Cancel
-          </Text>
-        </Pressable>
-
-        {/* =================================================
-            CONFIRM PAYMENT
-        ================================================= */}
-
-        <Pressable
-          disabled={!canConfirm}
-          style={[
-            styles.confirmButton,
-
-            !canConfirm &&
-              styles.confirmButtonDisabled,
-          ]}
-          onPress={
-            handleConfirmPayment
-          }
-        >
-
-          <Text
-            style={[
-              styles.confirmText,
-
-              !canConfirm &&
-                styles.confirmTextDisabled,
-            ]}
-          >
-            ✓ Confirm Payment
-          </Text>
-
-        </Pressable>
-
-      </View>
-
+      {receiptData && (
+        <ReceiptModal
+          visible={showReceipt}
+          data={receiptData}
+          onClose={handleReceiptClose}
+          onNewOrder={handleNewOrder}
+          isHistory={false}
+        />
+      )}
     </View>
   );
 }

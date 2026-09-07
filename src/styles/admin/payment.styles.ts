@@ -1,303 +1,564 @@
 import { StyleSheet } from "react-native";
+import { COLORS } from "./theme";
 
-export const paymentStyles = StyleSheet.create({
-  /* =====================================================
-     MAIN
-  ===================================================== */
+export const createPaymentStyles = (isTablet: boolean) => {
+  const pad = isTablet ? 24 : 16;
 
-  container: {
-    flex: 1,
-    backgroundColor: "#FFF8EF",
-  },
-
-  /* =====================================================
-     HEADER
-  ===================================================== */
-
-  header: {
-    height: 59,
-    backgroundColor: "#F45B00",
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 14,
-  },
-
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: "#F77A32",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 6,
-  },
-
-  backText: {
-    color: "#FFFFFF",
-    fontSize: 27,
-    fontWeight: "300",
-    lineHeight: 30,
-  },
-
-  headerTitle: {
-    color: "#FFFFFF",
-    fontSize: 19,
-    fontWeight: "800",
-  },
-
-  /* =====================================================
-     CONTENT
-  ===================================================== */
-
-  scroll: {
-    flex: 1,
-  },
-
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 15,
-    paddingBottom: 25,
-  },
-
-  /* =====================================================
-     CARD
-  ===================================================== */
-
-  card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 17,
-    padding: 14,
-    marginBottom: 12,
-
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: COLORS.bg,
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
 
-    elevation: 2,
-  },
+    mainScroll: {
+      flex: 1,
+    },
 
-  sectionTitle: {
-    color: "#756B64",
-    fontSize: 13,
-    fontWeight: "600",
-    marginBottom: 13,
-  },
+    mainContent: {
+      paddingHorizontal: pad,
+      paddingTop: 20,
+      paddingBottom: 30,
+    },
 
-  /* =====================================================
-     ORDER SUMMARY
-  ===================================================== */
+    grid: {
+      flexDirection: isTablet ? "row" : "column",
+      alignItems: "flex-start",
+      gap: 16,
+    },
 
-  summaryRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
+    topGrid: {
+      flexDirection: isTablet ? "row" : "column",
+      alignItems: "stretch",
+      gap: 16,
+      marginBottom: 20,
+    },
 
-  itemName: {
-    color: "#5D554F",
-    fontSize: 13,
-    flex: 1,
-  },
+    bottomGrid: {
+      flexDirection: isTablet ? "row" : "column",
+      alignItems: "stretch",
+      gap: 16,
+      marginBottom: 18,
+    },
 
-  itemPrice: {
-    color: "#222222",
-    fontSize: 13,
-    fontWeight: "600",
-  },
+    header: {
+      backgroundColor: COLORS.bg,
+      paddingHorizontal: 16,
+      paddingBottom: 16,
+      flexDirection: "row",
+      alignItems: "center",
+      borderBottomWidth: 1,
+      borderBottomColor: COLORS.border,
+    },
 
-  dashedLine: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5DED7",
-    borderStyle: "dashed",
-    marginVertical: 12,
-  },
+    backButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: COLORS.card,
+      borderWidth: 1,
+      borderColor: COLORS.borderLight,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 12,
+    },
 
-  totalRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
+    backText: {
+      color: COLORS.text,
+      fontSize: 18,
+      fontWeight: "700",
+    },
 
-  totalLabel: {
-    color: "#1E1E1E",
-    fontSize: 15,
-    fontWeight: "800",
-  },
+    headerTextWrap: {
+      flex: 1,
+      justifyContent: "center",
+    },
 
-  totalAmount: {
-    color: "#E84B00",
-    fontSize: 21,
-    fontWeight: "800",
-  },
+    headerTitle: {
+      color: COLORS.text,
+      fontSize: 19,
+      fontWeight: "800",
+    },
 
-  /* =====================================================
-     CASH RECEIVED
-  ===================================================== */
+    headerSubtitle: {
+      color: COLORS.muted,
+      fontSize: 12,
+      marginTop: 2,
+    },
 
-  cashInputContainer: {
-    height: 56,
-    borderWidth: 2,
-    borderColor: "#F45B00",
-    borderRadius: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 13,
-    backgroundColor: "#FFFFFF",
-  },
+    cardSection: {
+      backgroundColor: COLORS.card,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: COLORS.border,
+      padding: pad,
+    },
 
-  cashInputActive: {
-    borderColor: "#F45B00",
-  },
+    cardSectionTitle: {
+      color: COLORS.text,
+      fontSize: 15,
+      fontWeight: "800",
+      marginBottom: 12,
+    },
 
-  currency: {
-    color: "#F45B00",
-    fontSize: 20,
-    fontWeight: "700",
-    marginRight: 9,
-    borderWidth: 0,
-  },
+    orderInfoCard: {
+      flex: isTablet ? 1.2 : 1,
+      backgroundColor: COLORS.card,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: COLORS.border,
+      padding: pad,
+    },
 
-  cashInput: {
-    flex: 1,
-    color: "#111111",
-    fontSize: 22,
-    fontWeight: "700",
-    paddingVertical: 0,
-  },
+    orderInfoRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      justifyContent: "space-between",
+      marginBottom: 14,
+    },
 
-  /* =====================================================
-     QUICK AMOUNTS
-  ===================================================== */
+    orderInfoRowLast: {
+      marginBottom: 0,
+    },
 
-  quickAmounts: {
-    flexDirection: "row",
-    gap: 7,
-    marginTop: 10,
-  },
+    orderInfoColumn: {
+      flex: 1,
+      minWidth: 0,
+      alignItems: "flex-start",
+    },
 
-  quickButton: {
-    flex: 1,
-    height: 37,
-    borderRadius: 10,
-    borderWidth: 0,
-    borderColor: "#E2E2E2",
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+    orderInfoColumnRight: {
+      flex: 1,
+      minWidth: 0,
+      alignItems: "flex-end",
+    },
 
-  quickButtonSelected: {
-    backgroundColor: "#FFD7AA",
-    borderWidth: 2,
-  },
+    orderInfoLabel: {
+      color: COLORS.muted,
+      fontSize: 11,
+      fontWeight: "600",
+      marginBottom: 4,
+    },
 
-  quickButtonText: {
-    color: "#5D554F",
-    fontSize: 12,
-    fontWeight: "600",
-  },
+    orderInfoValue: {
+      color: COLORS.text,
+      fontSize: 13,
+      fontWeight: "800",
+      textAlign: "left",
+    },
 
-  quickButtonTextSelected: {
-    color: "#222222",
-    fontWeight: "700",
-  },
+    orderInfoValueRight: {
+      color: COLORS.text,
+      fontSize: 13,
+      fontWeight: "800",
+      textAlign: "right",
+    },
 
-  /* =====================================================
-     CHANGE / SUKLI
-  ===================================================== */
+    infoGrid: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      justifyContent: "space-between",
+      width: "100%",
+      gap: 16,
+    },
 
-  // DEFAULT: walay sukli
-  changeCard: {
-    backgroundColor: "#FFF8EF",
-    borderWidth: 1,
-    borderColor: "#FFC48F",
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 15,
-    marginBottom: 20,
-  },
+    infoColumn: {
+      flex: 1,
+      minWidth: 0,
+      alignItems: "flex-start",
+    },
 
-  // WITH CHANGE: naay sukli
-  changeCardPositive: {
-    backgroundColor: "#EFFCF3",
-    borderColor: "#5CE28C",
-  },
+    infoColumnRight: {
+      flex: 1,
+      minWidth: 0,
+      alignItems: "flex-start",
+      marginLeft: 16,
+    },
 
-  changeLabel: {
-    color: "#756B64",
-    fontSize: 13,
-    fontWeight: "600",
-    marginBottom: 8,
-  },
+    totalCard: {
+      flex: isTablet ? 0.8 : 1,
+      backgroundColor: COLORS.card,
+      borderRadius: 18,
+      borderWidth: 1,
+      borderColor: COLORS.border,
+      paddingHorizontal: isTablet ? 24 : 20,
+      paddingVertical: isTablet ? 22 : 20,
+      justifyContent: "center",
+    },
 
-  // DEFAULT: red
-  changeAmount: {
-    color: "#D92D2D",
-    fontSize: 28,
-    fontWeight: "800",
-  },
+    totalLabel: {
+      color: COLORS.muted,
+      fontSize: 11,
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: 0.6,
+      marginBottom: 5,
+    },
 
-  // WITH CHANGE: green
-  changeAmountPositive: {
-    color: "#0B9E41",
-  },
+    totalValue: {
+      color: COLORS.primary,
+      fontSize: isTablet ? 34 : 30,
+      fontWeight: "900",
+    },
 
-  /* =====================================================
-     FOOTER
-  ===================================================== */
+    totalSubtext: {
+      color: COLORS.mutedLight,
+      fontSize: 11,
+      marginTop: 4,
+      lineHeight: 16,
+    },
 
-  footer: {
-    minHeight: 78,
-    backgroundColor: "#FFFFFF",
-    borderTopWidth: 1,
-    borderTopColor: "#EDE7DF",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: "row",
-    gap: 10,
-  },
+    paymentMethodSection: {
+      width: "100%",
+      marginBottom: 20,
+    },
 
-  cancelButton: {
-    flex: 0.95,
-    height: 50,
-    borderRadius: 13,
-    borderWidth: 1,
-    borderColor: "#DDDDDD",
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+    paymentMethodSectionTitle: {
+      color: COLORS.text,
+      fontSize: 15,
+      fontWeight: "800",
+      marginBottom: 5,
+    },
 
-  cancelText: {
-    color: "#403A36",
-    fontSize: 14,
-    fontWeight: "600",
-  },
+    paymentMethodSectionSubtitle: {
+      color: COLORS.muted,
+      fontSize: 12,
+      marginBottom: 12,
+    },
 
-  confirmButton: {
-    flex: 1.8,
-    height: 50,
-    borderRadius: 13,
-    backgroundColor: "#F45B00",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+    paymentMethodRow: {
+      flexDirection: isTablet ? "row" : "column",
+      gap: 12,
+      width: "100%",
+    },
 
-  confirmButtonDisabled: {
-    backgroundColor: "#D3D0CF",
-  },
+    paymentMethodCard: {
+      flex: 1,
+      minHeight: isTablet ? 112 : 90,
+      backgroundColor: COLORS.card,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: COLORS.border,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      flexDirection: "row",
+      alignItems: "center",
+    },
 
-  confirmText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "800",
-  },
+    paymentMethodCardSelected: {
+      borderColor: COLORS.primary,
+      borderWidth: 2,
+      backgroundColor: COLORS.primaryMuted,
+    },
 
-  confirmTextDisabled: {
-    color: "#FFFFFF",
-  },
-});
+    paymentMethodCardDisabled: {
+      opacity: 0.5,
+    },
+
+    paymentMethodIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 14,
+      backgroundColor: COLORS.cardAlt,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 13,
+    },
+
+    paymentMethodIconSelected: {
+      backgroundColor: COLORS.primary,
+    },
+
+    paymentMethodEmoji: {
+      fontSize: 21,
+    },
+
+    paymentMethodContent: {
+      flex: 1,
+      minWidth: 0,
+    },
+
+    paymentMethodTitle: {
+      color: COLORS.text,
+      fontSize: 14,
+      fontWeight: "800",
+      marginBottom: 3,
+    },
+
+    paymentMethodTitleSelected: {
+      color: COLORS.primary,
+    },
+
+    paymentMethodDescription: {
+      color: COLORS.muted,
+      fontSize: 11,
+      lineHeight: 16,
+    },
+
+    paymentMethodArrow: {
+      color: COLORS.primary,
+      fontSize: 20,
+      fontWeight: "700",
+      marginLeft: 8,
+    },
+
+    paymentMethodCheck: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: COLORS.primary,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    selectedPaymentCard: {
+      flex: 1,
+      backgroundColor: COLORS.card,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: COLORS.border,
+      borderLeftWidth: 3,
+      borderLeftColor: COLORS.primary,
+      padding: 16,
+    },
+
+    selectedPaymentHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: 10,
+    },
+
+    selectedPaymentTitle: {
+      color: COLORS.text,
+      fontSize: 13,
+      fontWeight: "800",
+    },
+
+    selectedPaymentSub: {
+      color: COLORS.muted,
+      fontSize: 11,
+      marginTop: 2,
+    },
+
+    changePaymentButton: {
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 10,
+      backgroundColor: COLORS.cardAlt,
+      borderWidth: 1,
+      borderColor: COLORS.borderLight,
+    },
+
+    changePaymentText: {
+      color: COLORS.primary,
+      fontSize: 11,
+      fontWeight: "800",
+    },
+
+    selectedPaymentRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: 7,
+    },
+
+    selectedPaymentLabel: {
+      color: COLORS.muted,
+      fontSize: 12,
+      fontWeight: "600",
+    },
+
+    selectedPaymentValue: {
+      color: COLORS.text,
+      fontSize: 13,
+      fontWeight: "800",
+    },
+
+    selectedPaymentValueOrange: {
+      color: COLORS.primary,
+      fontSize: 15,
+      fontWeight: "900",
+    },
+
+    selectedPaymentDivider: {
+      height: 1,
+      backgroundColor: COLORS.border,
+      marginVertical: 9,
+    },
+
+    summaryCard: {
+      flex: 1,
+      backgroundColor: COLORS.card,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: COLORS.border,
+      padding: pad,
+    },
+
+    summaryCardFull: {
+      width: "100%",
+      backgroundColor: COLORS.card,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: COLORS.border,
+      padding: pad,
+      marginBottom: 18,
+    },
+
+    summaryTitle: {
+      color: COLORS.text,
+      fontSize: 15,
+      fontWeight: "800",
+      marginBottom: 14,
+    },
+
+    summaryItemRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 9,
+    },
+
+    summaryItemTextWrap: {
+      flex: 1,
+      minWidth: 0,
+      marginLeft: 12,
+    },
+
+    summaryItemName: {
+      color: COLORS.text,
+      fontSize: 13,
+      fontWeight: "700",
+    },
+
+    summaryItemSub: {
+      color: COLORS.muted,
+      fontSize: 11,
+      marginTop: 2,
+    },
+
+    summaryItemTotal: {
+      color: COLORS.text,
+      fontSize: 13,
+      fontWeight: "800",
+      marginLeft: 8,
+    },
+
+    summaryItemImage: {
+      width: 45,
+      height: 45,
+      borderRadius: 8,
+      backgroundColor: COLORS.cardAlt,
+      borderWidth: 1,
+      borderColor: COLORS.borderLight,
+    },
+
+    summaryItemImagePlaceholder: {
+      width: 45,
+      height: 45,
+      borderRadius: 8,
+      backgroundColor: COLORS.cardAlt,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    summaryItemImagePlaceholderText: {
+      fontSize: 20,
+    },
+
+    summaryDivider: {
+      height: 1,
+      backgroundColor: COLORS.border,
+      marginVertical: 5,
+    },
+
+    summaryTotalRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingTop: 12,
+    },
+
+    summaryTotalLabel: {
+      color: COLORS.muted,
+      fontSize: 11.5,
+      fontWeight: "800",
+      letterSpacing: 0.5,
+    },
+
+    summaryTotalValue: {
+      color: COLORS.primary,
+      fontSize: 19,
+      fontWeight: "900",
+    },
+
+    emptySummary: {
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 25,
+    },
+
+    emptySummaryText: {
+      color: COLORS.muted,
+      fontSize: 12,
+    },
+
+    actionSection: {
+      width: "100%",
+      marginTop: 2,
+    },
+
+    confirmButton: {
+      height: 52,
+      borderRadius: 14,
+      backgroundColor: COLORS.primary,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 10,
+    },
+
+    confirmButtonDisabled: {
+      backgroundColor: COLORS.primaryDisabled,
+    },
+
+    confirmText: {
+      color: COLORS.text,
+      fontSize: 15,
+      fontWeight: "800",
+      letterSpacing: 0.3,
+    },
+
+    confirmTextDisabled: {
+      color: COLORS.text,
+      opacity: 0.85,
+    },
+
+    cancelButton: {
+      height: 46,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: COLORS.border,
+      backgroundColor: COLORS.card,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    cancelText: {
+      color: COLORS.muted,
+      fontSize: 14,
+      fontWeight: "700",
+    },
+
+    sectionTitle: {
+      color: COLORS.text,
+      fontSize: 15,
+      fontWeight: "800",
+      marginBottom: 10,
+    },
+
+    sectionSubtitle: {
+      color: COLORS.muted,
+      fontSize: 12,
+      marginBottom: 14,
+    },
+  });
+};

@@ -1,282 +1,120 @@
 import { StyleSheet } from "react-native";
+import { COLORS } from "./theme"
 
-export const salesStyles = StyleSheet.create({
+export { COLORS };
 
-  /* =====================================================
-     PAGE
-  ===================================================== */
+export const createSalesStyles = (isTablet: boolean) => {
+  const pad = isTablet ? 24 : 16;
+  const summaryColumns = isTablet ? 4 : 2;
+  const summaryCardWidth = `${100 / summaryColumns - 2}%` as const;
+  const dashboardCardFlex = isTablet ? { flex: 1 } : {};
 
-  page: {
-    flex: 1,
-    backgroundColor: "#FFF8EF",
-  },
+  return StyleSheet.create({
+    /* ROOT */
+    page: { flex: 1, backgroundColor: COLORS.bg },
+    centered: { justifyContent: "center", alignItems: "center" },
+    loadingText: { marginTop: 12, fontSize: 14, color: COLORS.muted },
+    container: { flex: 1 },
+    content: { paddingBottom: 32 },
+    contentInner: { paddingHorizontal: pad, paddingTop: 20, gap: 20 },
 
-  container: {
-    flex: 1,
-    backgroundColor: "#FFF8EF",
-  },
+    /* HEADER */
+    header: { paddingHorizontal: pad, paddingVertical: isTablet ? 18 : 14, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderBottomWidth: 1, borderBottomColor: COLORS.border },
+    headerTitle: { color: COLORS.text, fontSize: isTablet ? 22 : 19, fontWeight: "800" },
+    headerDate: { color: COLORS.muted, fontSize: 12, marginTop: 2 },
+    refreshButton: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 10, backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.borderLight },
+    pressed: { opacity: 0.7 },
+    refreshText: { color: COLORS.text, fontSize: 13, fontWeight: "600" },
 
-  content: {
-    paddingBottom: 20,
-  },
+    /* SECTION LABEL */
+    sectionLabel: { color: COLORS.muted, fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.6 },
 
-  /* =====================================================
-     HEADER
-  ===================================================== */
+    /* SUMMARY GRID */
+    summaryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", rowGap: 12 },
+    summaryCard: { width: summaryCardWidth, backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.border, borderLeftWidth: 3, padding: 16, gap: 6 },
+    salesCard: { borderLeftColor: COLORS.primary },
+    transactionCard: { borderLeftColor: "#5B8DEF" },
+    averageCard: { borderLeftColor: "#B084F5" },
+    itemsCard: { borderLeftColor: COLORS.success },
 
-  header: {
-    height: 74,
-    backgroundColor: "#F45B00",
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    justifyContent: "flex-start",
-  },
+    summaryTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+    summaryIcon: { width: 34, height: 34, borderRadius: 10, backgroundColor: COLORS.cardAlt, alignItems: "center", justifyContent: "center" },
+    summaryTrend: { color: COLORS.textFaint, fontSize: 10, fontWeight: "700", letterSpacing: 0.5 },
+    summaryCardLabel: { color: COLORS.muted, fontSize: 12.5, fontWeight: "600" },
+    salesAmount: { color: COLORS.text, fontSize: isTablet ? 24 : 20, fontWeight: "800" },
+    transactionAmount: { color: COLORS.text, fontSize: isTablet ? 24 : 20, fontWeight: "800" },
+    averageAmount: { color: COLORS.text, fontSize: isTablet ? 24 : 20, fontWeight: "800" },
+    itemsAmount: { color: COLORS.text, fontSize: isTablet ? 24 : 20, fontWeight: "800" },
+    summaryCaption: { color: COLORS.mutedLight, fontSize: 11 },
 
-  title: {
-    color: "#FFFFFF",
-    fontSize: 20,
-    fontWeight: "800",
-  },
+    /* DASHBOARD GRID */
+    dashboardGrid: { flexDirection: isTablet ? "row" : "column", gap: 16 },
+    salesWeekCard: { ...dashboardCardFlex, backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.border, padding: pad },
+    topSellingCard: { ...dashboardCardFlex, backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.border, padding: pad },
+    transactionsCard: { backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.border, padding: pad },
 
-  date: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    marginTop: 4,
-  },
+    dashboardCardHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 },
+    dashboardCardHeaderText: { flex: 1, paddingRight: 12 },
+    dashboardCardTitle: { color: COLORS.text, fontSize: 16, fontWeight: "700" },
+    dashboardCardSubtitle: { color: COLORS.muted, fontSize: 12, marginTop: 2 },
+    cardHeaderIcon: { width: 32, height: 32, borderRadius: 9, backgroundColor: COLORS.cardAlt, alignItems: "center", justifyContent: "center" },
 
-  /* =====================================================
-     SUMMARY
-  ===================================================== */
+    /* WEEK CHART */
+    weekContainer: { gap: 10 },
+    weekRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+    dayText: { width: 32, color: COLORS.muted, fontSize: 12, fontWeight: "600" },
+    progressBackground: { flex: 1, height: 8, borderRadius: 4, backgroundColor: COLORS.borderLight, overflow: "hidden" },
+    progressBar: { height: 8, borderRadius: 4, backgroundColor: COLORS.primary },
+    weekAmount: { width: 68, textAlign: "right", color: COLORS.muted, fontSize: 12, fontWeight: "600" },
 
-  summaryRow: {
-    flexDirection: "row",
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 1,
-    gap: 8,
-  },
+    /* EMPTY STATE */
+    emptyBlock: { alignItems: "center", justifyContent: "center", paddingVertical: 36, gap: 8 },
+    emptyText: { color: COLORS.muted, fontSize: 13 },
 
-  summaryCard: {
-    flex: 1,
-    height: 92,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+    /* TOP SELLING ITEMS */
+    topItemRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: COLORS.border },
+    lastRow: { borderBottomWidth: 0 },
+    rankBadge: { width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+    rankBadgeText: { color: "#14161A", fontSize: 11, fontWeight: "800" },
+    topItemInfo: { flex: 1, marginHorizontal: 10, gap: 5 },
+    topItemName: { color: COLORS.text, fontSize: 13, fontWeight: "600" },
+    topItemBarBackground: { height: 6, borderRadius: 3, backgroundColor: COLORS.borderLight, overflow: "hidden" },
+    topItemBar: { height: 6, borderRadius: 3, backgroundColor: COLORS.primary },
+    topItemStats: { alignItems: "flex-end" },
+    topItemQuantity: { color: COLORS.text, fontSize: 12, fontWeight: "700" },
+    topItemRevenue: { color: COLORS.muted, fontSize: 11, marginTop: 2 },
 
-  salesCard: {
-    backgroundColor: "#FFF3E6",
-  },
+    /* RECENT TRANSACTIONS */
+    viewAllButton: { flexDirection: "row", alignItems: "center", gap: 4 },
+    viewAllLink: { color: COLORS.primary, fontSize: 12.5, fontWeight: "600" },
 
-  transactionCard: {
-    backgroundColor: "#F5F0FF",
-  },
+    transactionTable: { marginTop: 4 },
+    transactionTableHeader: { flexDirection: "row", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight },
+    tableHeaderTransaction: { flex: 2, color: COLORS.textFaint, fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.4 },
+    tableHeaderItems: { flex: 1, color: COLORS.textFaint, fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.4 },
+    tableHeaderTime: { flex: 1, color: COLORS.textFaint, fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.4 },
+    tableHeaderPayment: { flex: 1, color: COLORS.textFaint, fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.4 },
+    tableHeaderAmount: { flex: 1, color: COLORS.textFaint, fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.4 },
+    amountColumn: { textAlign: "right" },
 
-  averageCard: {
-    backgroundColor: "#EEF9FF",
-  },
+    transactionTableRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: COLORS.border },
+    lastTransactionRow: { borderBottomWidth: 0 },
 
-  summaryIcon: {
-    fontSize: 20,
-    marginBottom: 3,
-  },
+    tableTransaction: { flex: 2, flexDirection: "row", alignItems: "center", gap: 8 },
+    transactionIcon: { width: 28, height: 28, borderRadius: 8, backgroundColor: COLORS.cardAlt, alignItems: "center", justifyContent: "center" },
+    transactionInfo: { gap: 2 },
+    transactionId: { color: COLORS.text, fontSize: 12, fontWeight: "700" },
+    transactionDate: { color: COLORS.muted, fontSize: 10 },
 
-  salesAmount: {
-    color: "#F45B00",
-    fontSize: 13,
-    fontWeight: "800",
-  },
-
-  transactionAmount: {
-    color: "#855DE0",
-    fontSize: 14,
-    fontWeight: "800",
-  },
-
-  averageAmount: {
-    color: "#008DAF",
-    fontSize: 13,
-    fontWeight: "800",
-  },
-
-  summaryLabel: {
-    color: "#756B64",
-    fontSize: 10,
-    marginTop: 2,
-  },
-
-  /* =====================================================
-     SECTION CARD
-  ===================================================== */
-
-  sectionCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    marginHorizontal: 16,
-    marginTop: 12,
-
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.04,
-    shadowRadius: 5,
-
-    elevation: 2,
-
-    overflow: "hidden",
-  },
-
-  sectionTitle: {
-    color: "#222222",
-    fontSize: 14,
-    fontWeight: "800",
-    paddingHorizontal: 16,
-    paddingTop: 15,
-    paddingBottom: 13,
-  },
-
-  sectionDivider: {
-    height: 1,
-    backgroundColor: "#F0ECE8",
-  },
-
-  /* =====================================================
-     RECENT TRANSACTIONS
-  ===================================================== */
-
-  transactionRow: {
-    minHeight: 57,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-
-    borderBottomWidth: 1,
-    borderBottomColor: "#F2EEEA",
-  },
-
-  lastTransactionRow: {
-    borderBottomWidth: 0,
-  },
-
-  transactionIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 11,
-
-    backgroundColor: "#FFF5EA",
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    marginRight: 10,
-  },
-
-  receiptIcon: {
-    fontSize: 17,
-  },
-
-  transactionInfo: {
-    flex: 1,
-  },
-
-  transactionId: {
-    color: "#222222",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-
-  transactionDate: {
-    color: "#A09791",
-    fontSize: 10,
-    marginTop: 3,
-  },
-
-  transactionAmountValue: {
-    color: "#F45B00",
-    fontSize: 13,
-    fontWeight: "800",
-    marginLeft: 8,
-  },
-
-  /* =====================================================
-     SALES THIS WEEK
-  ===================================================== */
-
-  weekContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 11,
-  },
-
-  weekRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 9,
-  },
-
-  dayText: {
-    width: 37,
-    color: "#5D554F",
-    fontSize: 11,
-  },
-
-  progressBackground: {
-    flex: 1,
-    height: 9,
-    backgroundColor: "#F0F0F0",
-    borderRadius: 10,
-    overflow: "hidden",
-  },
-
-  progressBar: {
-    height: "100%",
-    backgroundColor: "#FFD09F",
-    borderRadius: 10,
-  },
-
-  weekAmount: {
-    width: 48,
-    textAlign: "right",
-    color: "#403A36",
-    fontSize: 10,
-  },
-  /* =====================================================
-   BOTTOM NAV
-===================================================== */
-
-bottomNav: {
-  height: 51,
-  backgroundColor: "#FFF8EF",
-
-  borderTopWidth: 1,
-  borderTopColor: "#EDE7DF",
-
-  flexDirection: "row",
-},
-
-navItem: {
-  flex: 1,
-
-  alignItems: "center",
-  justifyContent: "center",
-
-  borderTopWidth: 2,
-  borderTopColor: "transparent",
-},
-
-activeNavItem: {
-  borderTopColor: "#F45B00",
-},
-
-navText: {
-  color: "#A39A93",
-  fontSize: 12,
-},
-
-activeNavText: {
-  color: "#F45B00",
-  fontSize: 12,
-  fontWeight: "700",
-},
-});
+    tableCell: { flex: 1, color: COLORS.muted, fontSize: 12 },
+    itemsColumn: {},
+    timeColumn: {},
+    paymentCell: { flex: 1 },
+    paymentBadge: { alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+    paidBadge: { backgroundColor: COLORS.successBg },
+    unpaidBadge: { backgroundColor: COLORS.warningBg },
+    paidLabel: { color: COLORS.success, fontSize: 10, fontWeight: "700" },
+    unpaidLabel: { color: COLORS.warning, fontSize: 10, fontWeight: "700" },
+    tableAmount: { flex: 1, color: COLORS.text, fontSize: 13, fontWeight: "700" },
+  });
+};
