@@ -1,15 +1,15 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { Banknote, Check, ChevronRight, Smartphone } from "lucide-react-native";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Image, Pressable, ScrollView, Text, useWindowDimensions, View, } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeft, Banknote, Check, ChevronRight, Smartphone, } from "lucide-react-native";
 
 import { getPaymentSettings, PaymentSettings } from "@/lib/paymentSetting";
 import { supabase } from "@/lib/supabase";
 
 import CashPaymentModal from "@/components/admin/modals/payment/CashPaymentModal";
 import GCashPaymentModal from "@/components/admin/modals/payment/GCashPaymentModal";
-import ReceiptModal, {  ReceiptData, } from "@/components/admin/modals/ReceiptModal";
+import ReceiptModal, { ReceiptData, } from "@/components/admin/modals/ReceiptModal";
 import { createPaymentStyles } from "@/styles/admin/payment.styles";
 
 type OrderItem = {
@@ -376,17 +376,6 @@ export default function PaymentScreen() {
           },
         ]}
       >
-        <Pressable
-          onPress={handleCancel}
-          disabled={isProcessing}
-          style={styles.backButton}
-        >
-          <ArrowLeft
-            size={18}
-            color="#FFFFFF"
-            strokeWidth={2.5}
-          />
-        </Pressable>
 
         <View style={styles.headerTextWrap}>
           <Text style={styles.headerTitle}>
