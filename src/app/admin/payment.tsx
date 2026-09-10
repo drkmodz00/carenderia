@@ -376,7 +376,6 @@ export default function PaymentScreen() {
           },
         ]}
       >
-
         <View style={styles.headerTextWrap}>
           <Text style={styles.headerTitle}>
             Payment

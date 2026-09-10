@@ -28,7 +28,7 @@ export default function MenuManagement() {
 
   const headerDateLabel = new Date().toLocaleDateString("en-PH", {
     weekday: "long",
-    month: "short",
+    month: "long",
     day: "numeric",
     year: "numeric",
   });

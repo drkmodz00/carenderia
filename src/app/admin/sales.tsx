@@ -230,7 +230,7 @@ export default function Sales() {
       {/* HEADER */}
       <View style={[styles.header, { paddingTop: (isTablet ? 18 : 14) + insets.top }]}>
         <View>
-          <Text style={styles.headerTitle}>Mga Benta</Text>
+          <Text style={styles.headerTitle}>Sales</Text>
           <Text style={styles.headerDate}>{headerDateLabel}</Text>
         </View>
 

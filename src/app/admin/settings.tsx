@@ -1,221 +1,206 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Modal,
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
-  Platform,
 } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-
-import * as XLSX from "xlsx";
+import NetInfo from "@react-native-community/netinfo";
 
 import { supabase } from "@/lib/supabase";
+import { syncData } from "@/lib/database/sync";
+import { backupData } from "@/lib/backup/backupService";
+import { restoreData } from "@/lib/backup/restoreService";
+
 import AdminBottomNav from "@/components/admin/AdminBottomNav";
+import StoreSettings from "@/components/admin/settings/StoreSettings";
+import PrinterSettings from "@/components/admin/settings/PrinterSettings";
+import PaymentSettings from "@/components/admin/settings/PaymentSettings";
+import AccountSettings from "@/components/admin/settings/AccountSettings";
+import TwoStepVerification from "@/components/admin/settings/TwoStepVerification";
+import SystemStatus from "@/components/admin/settings/SystemStatus";
+import BackupSettings from "@/components/admin/settings/BackupSettings";
+import ResetSystemCard from "@/components/admin/settings/ResetSystemCard";
+import SaveSuccessModal from "@/components/admin/toast/SaveSuccessToast";
 
 import { settingStyles as styles } from "@/styles/admin/settings.styles";
-import SaveSuccessModal from "@/components/admin/toast/SaveSuccessToast";
 
 export default function SettingsScreen() {
   const router = useRouter();
+
+  // =========================================================
+  // STORE
+  // =========================================================
+
+  const [storeName, setStoreName] = useState("");
+  const [storeAddress, setStoreAddress] = useState("");
+  const [storePhone, setStorePhone] = useState("");
+
+  const [receiptFooterEnabled, setReceiptFooterEnabled] =
+    useState(true);
+
+  const [receiptFooter, setReceiptFooter] = useState(
+    "Thank you for your purchase!"
+  );
+
+  // =========================================================
+  // PRINTER
+  // =========================================================
+
+  const [printerEnabled, setPrinterEnabled] = useState(false);
+  const [autoPrintReceipt, setAutoPrintReceipt] = useState(true);
+  const [printerName, setPrinterName] = useState("");
+  const [printerAddress, setPrinterAddress] = useState("");
+
+  const [paperSize, setPaperSize] =
+    useState<"58mm" | "80mm">("58mm");
+
+  const [printerTesting, setPrinterTesting] = useState(false);
+
+  // =========================================================
+  // PAYMENT
+  // =========================================================
+
+  const [cashEnabled, setCashEnabled] = useState(true);
+  const [gcashEnabled, setGcashEnabled] = useState(true);
 
   // =========================================================
   // ACCOUNT
   // =========================================================
 
   const [ownerName, setOwnerName] = useState("");
-
+  const [role, setRole] = useState("admin");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
   // =========================================================
-  // TWO-STEP VERIFICATION
+  // TWO STEP
   // =========================================================
 
   const [verificationCode, setVerificationCode] = useState("");
   const [generatingCode, setGeneratingCode] = useState(false);
 
   // =========================================================
+  // SYSTEM
+  // =========================================================
+
+  const [syncing, setSyncing] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+  const [pendingSync, setPendingSync] = useState(0);
+  const [lastSync, setLastSync] = useState("");
+
+  // =========================================================
   // BACKUP
   // =========================================================
 
   const [backingUp, setBackingUp] = useState(false);
+  const [restoring, setRestoring] = useState(false);
 
   // =========================================================
   // RESET
   // =========================================================
 
-  const [showResetModal, setShowResetModal] = useState(false);
-
+  const [resetModalVisible, setResetModalVisible] = useState(false);
   const [resetPassword, setResetPassword] = useState("");
   const [resetCode, setResetCode] = useState("");
-
   const [resetError, setResetError] = useState("");
   const [resetting, setResetting] = useState(false);
 
   // =========================================================
-  // SAVE SUCCESS MODAL
+  // SAVE MODAL
   // =========================================================
 
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const [saveMessage, setSaveMessage] = useState("");
+  const [saveMessage, setSaveMessage] =
+    useState("Settings saved successfully.");
+
+  // =========================================================
+  // LOADING
+  // =========================================================
+
+  const [loading, setLoading] = useState(true);
 
   // =========================================================
   // LOAD SETTINGS
   // =========================================================
 
-  useEffect(() => {
-    loadProfile();
-    generateVerificationCode();
-  }, []);
-
-  const loadProfile = async () => {
+  const loadSettings = async () => {
     try {
       setLoading(true);
 
       const {
         data: { user },
-        error: userError,
       } = await supabase.auth.getUser();
 
-      if (userError) {
-        throw userError;
-      }
+      if (user) {
+        const metadata = user.user_metadata ?? {};
 
-      if (!user) {
-        router.replace("/login");
-        return;
+        setOwnerName(
+          metadata.owner_name ||
+            metadata.full_name ||
+            ""
+        );
+
+        setRole(metadata.role || "admin");
       }
 
       const { data, error } = await supabase
-        .from("profiles")
-        .select("name, role")
-        .eq("id", user.id)
-        .single();
+        .from("restaurant_settings")
+        .select("*")
+        .limit(1)
+        .maybeSingle();
 
       if (error) {
-        throw error;
+        console.error("Load settings error:", error);
+        return;
       }
 
-      setOwnerName(data?.name ?? "");
-    } catch (error) {
-      console.error("Failed to load profile:", error);
+      if (!data) return;
 
-      Alert.alert(
-        "Error",
-        error instanceof Error
-          ? error.message
-          : "Unable to load account settings."
+      setStoreName(data.name || "");
+      setStoreAddress(data.address || "");
+      setStorePhone(data.phone || "");
+
+      setReceiptFooterEnabled(
+        data.receipt_footer_enabled ?? true
       );
+
+      setReceiptFooter(
+        data.receipt_footer ||
+          "Thank you for your purchase!"
+      );
+
+      setPrinterEnabled(
+        data.printer_enabled ?? false
+      );
+
+      setAutoPrintReceipt(
+        data.auto_print_receipt ?? true
+      );
+
+      setPrinterName(data.printer_name || "");
+      setPrinterAddress(data.printer_address || "");
+
+      setPaperSize(
+        data.printer_paper_width === 80
+          ? "80mm"
+          : "58mm"
+      );
+
+      setCashEnabled(data.cash_enabled ?? true);
+      setGcashEnabled(data.gcash_enabled ?? true);
+    } catch (error) {
+      console.error("Load settings failed:", error);
     } finally {
       setLoading(false);
     }
   };
 
   // =========================================================
-  // SAVE ACCOUNT SETTINGS
-  // =========================================================
-
-  const handleSaveAccount = async () => {
-    const cleanOwnerName = ownerName.trim();
-
-    if (!cleanOwnerName) {
-      Alert.alert("Required", "Please enter the owner name.");
-      return;
-    }
-
-    // Password validation only if user entered one
-    if (newPassword || confirmPassword) {
-      if (newPassword.length < 6) {
-        Alert.alert(
-          "Invalid Password",
-          "Password must be at least 6 characters."
-        );
-        return;
-      }
-
-      if (newPassword !== confirmPassword) {
-        Alert.alert(
-          "Password Mismatch",
-          "New password and confirm password do not match."
-        );
-        return;
-      }
-    }
-
-    try {
-      setSaving(true);
-
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (userError) {
-        throw userError;
-      }
-
-      if (!user) {
-        router.replace("/login");
-        return;
-      }
-
-
-      // =====================================================
-      // UPDATE PASSWORD
-      // =====================================================
-
-      if (newPassword) {
-        const { error: passwordError } =
-          await supabase.auth.updateUser({
-            password: newPassword,
-          });
-
-        if (passwordError) {
-          throw passwordError;
-        }
-      }
-
-      // Clear password fields after success
-      setNewPassword("");
-      setConfirmPassword("");
-
-      // =====================================================
-      // SUCCESS MODAL
-      // =====================================================
-
-      setSaveMessage(
-        "Your account settings have been updated successfully."
-      );
-
-      setShowSaveModal(true);
-    } catch (error) {
-      console.error(
-        "Failed to save account settings:",
-        error
-      );
-
-      Alert.alert(
-        "Save Failed",
-        error instanceof Error
-          ? error.message
-          : "Unable to save account settings."
-      );
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // =========================================================
-  // GENERATE VERIFICATION CODE
+  // VERIFICATION CODE
   // =========================================================
 
   const generateVerificationCode = () => {
@@ -233,336 +218,432 @@ export default function SettingsScreen() {
   };
 
   // =========================================================
-  // BACKUP DATA
+  // SAVE SETTINGS
   // =========================================================
 
-const handleBackupData = async () => {
-  try {
-    setBackingUp(true);
-
-    // =====================================================
-    // FETCH DATA FROM SUPABASE
-    // =====================================================
-
-    const [
-      ordersResult,
-      orderItemsResult,
-      salesResult,
-      menuItemsResult,
-    ] = await Promise.all([
-      supabase.from("orders").select("*"),
-      supabase.from("order_items").select("*"),
-      supabase.from("sales").select("*"),
-      supabase.from("menu_items").select("*"),
-    ]);
-
-    if (ordersResult.error) {
-      throw ordersResult.error;
-    }
-
-    if (orderItemsResult.error) {
-      throw orderItemsResult.error;
-    }
-
-    if (salesResult.error) {
-      throw salesResult.error;
-    }
-
-    if (menuItemsResult.error) {
-      throw menuItemsResult.error;
-    }
-
-    const orders = ordersResult.data ?? [];
-    const orderItems = orderItemsResult.data ?? [];
-    const sales = salesResult.data ?? [];
-    const menuItems = menuItemsResult.data ?? [];
-
-    // =====================================================
-    // CREATE EXCEL WORKBOOK
-    // =====================================================
-
-    const workbook = XLSX.utils.book_new();
-
-    // =====================================================
-    // ORDERS SHEET
-    // =====================================================
-
-    const ordersSheet = XLSX.utils.json_to_sheet(orders);
-
-    XLSX.utils.book_append_sheet(
-      workbook,
-      ordersSheet,
-      "Orders"
-    );
-
-    // =====================================================
-    // ORDER ITEMS SHEET
-    // =====================================================
-
-    const orderItemsSheet =
-      XLSX.utils.json_to_sheet(orderItems);
-
-    XLSX.utils.book_append_sheet(
-      workbook,
-      orderItemsSheet,
-      "Order Items"
-    );
-
-    // =====================================================
-    // SALES SHEET
-    // =====================================================
-
-    const salesSheet = XLSX.utils.json_to_sheet(sales);
-
-    XLSX.utils.book_append_sheet(
-      workbook,
-      salesSheet,
-      "Sales"
-    );
-
-    // =====================================================
-    // MENU ITEMS SHEET
-    // =====================================================
-
-    const menuItemsSheet =
-      XLSX.utils.json_to_sheet(menuItems);
-
-    XLSX.utils.book_append_sheet(
-      workbook,
-      menuItemsSheet,
-      "Menu Items"
-    );
-
-    // =====================================================
-    // FILE NAME
-    // =====================================================
-
-    const now = new Date();
-
-    const dateString = now
-      .toISOString()
-      .slice(0, 10);
-
-    const fileName =
-      `Carenderia_Backup_${dateString}.xlsx`;
-
-    // =====================================================
-    // WEB
-    // =====================================================
-
-    if (Platform.OS === "web") {
-      const excelBuffer = XLSX.write(workbook, {
-        bookType: "xlsx",
-        type: "array",
-      });
-
-      const blob = new Blob(
-        [excelBuffer],
-        {
-          type:
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        }
-      );
-
-      const url = window.URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-
-      link.href = url;
-      link.download = fileName;
-
-      document.body.appendChild(link);
-
-      link.click();
-
-      document.body.removeChild(link);
-
-      window.URL.revokeObjectURL(url);
-
-      Alert.alert(
-        "Backup Successful",
-        `${fileName} has been downloaded successfully.`
-      );
-
-      return;
-    }
-
-    // =====================================================
-    // ANDROID / IOS
-    // =====================================================
-
-    const base64 = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "base64",
-    });
-
-    // Import native-only modules dynamically.
-    // This prevents expo-file-system from being used on web.
-    const FileSystem =
-      await import("expo-file-system/legacy");
-
-    const Sharing =
-      await import("expo-sharing");
-
-    const fileUri =
-      `${FileSystem.cacheDirectory}${fileName}`;
-
-    // Write XLSX to temporary native storage
-    await FileSystem.writeAsStringAsync(
-      fileUri,
-      base64,
-      {
-        encoding:
-          FileSystem.EncodingType.Base64,
+  const handleSaveSettings = async () => {
+    try {
+      if (
+        newPassword &&
+        newPassword !== confirmPassword
+      ) {
+        Alert.alert(
+          "Password Error",
+          "New password and confirm password do not match."
+        );
+        return;
       }
-    );
 
-    // =====================================================
-    // SHARE FILE
-    // =====================================================
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    const canShare =
-      await Sharing.isAvailableAsync();
+      if (!user) {
+        Alert.alert(
+          "Error",
+          "No authenticated user found."
+        );
+        return;
+      }
 
-    if (canShare) {
-      await Sharing.shareAsync(
-        fileUri,
-        {
-          mimeType:
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          dialogTitle:
-            "Export Carenderia Backup",
-          UTI:
-            "org.openxmlformats.spreadsheetml.sheet",
-        }
+      // Update account metadata
+      const metadataUpdate = {
+        ...user.user_metadata,
+        owner_name: ownerName,
+        role: "admin",
+      };
+
+      const authUpdate: {
+        data: typeof metadataUpdate;
+        password?: string;
+      } = {
+        data: metadataUpdate,
+      };
+
+      if (newPassword) {
+        authUpdate.password = newPassword;
+      }
+
+      const { error: authError } =
+        await supabase.auth.updateUser(authUpdate);
+
+      if (authError) {
+        Alert.alert(
+          "Account Update Failed",
+          authError.message
+        );
+        return;
+      }
+
+      // Find restaurant settings row
+      const {
+        data: existingSettings,
+        error: findError,
+      } = await supabase
+        .from("restaurant_settings")
+        .select("id")
+        .limit(1)
+        .maybeSingle();
+
+      if (findError) {
+        console.error(
+          "Find settings error:",
+          findError
+        );
+      }
+
+      const settingsPayload = {
+        name: storeName,
+        address: storeAddress || null,
+        phone: storePhone || null,
+
+        receipt_footer_enabled:
+          receiptFooterEnabled,
+
+        receipt_footer:
+          receiptFooter || null,
+
+        printer_enabled:
+          printerEnabled,
+
+        auto_print_receipt:
+          autoPrintReceipt,
+
+        printer_name:
+          printerName || null,
+
+        printer_address:
+          printerAddress || null,
+
+        printer_type: "bluetooth",
+
+        printer_paper_width:
+          paperSize === "80mm" ? 80 : 58,
+
+        cash_enabled:
+          cashEnabled,
+
+        gcash_enabled:
+          gcashEnabled,
+
+        updated_at:
+          new Date().toISOString(),
+      };
+
+      let settingsError;
+
+      if (existingSettings?.id) {
+        const result = await supabase
+          .from("restaurant_settings")
+          .update(settingsPayload)
+          .eq("id", existingSettings.id);
+
+        settingsError = result.error;
+      } else {
+        const result = await supabase
+          .from("restaurant_settings")
+          .insert(settingsPayload);
+
+        settingsError = result.error;
+      }
+
+      if (settingsError) {
+        console.error(
+          "Settings update error:",
+          settingsError
+        );
+
+        Alert.alert(
+          "Save Failed",
+          settingsError.message
+        );
+
+        return;
+      }
+
+      setNewPassword("");
+      setConfirmPassword("");
+
+      setSaveMessage(
+        "Settings saved successfully."
       );
-    } else {
+
+      setShowSaveModal(true);
+    } catch (error) {
+      console.error(
+        "Save settings failed:",
+        error
+      );
+
       Alert.alert(
-        "Backup Created",
-        `${fileName} was created successfully.`
+        "Error",
+        "Failed to save settings."
       );
     }
-  } catch (error) {
-    console.error(
-      "Excel backup failed:",
-      error
-    );
+  };
 
-    Alert.alert(
-      "Backup Failed",
-      error instanceof Error
-        ? error.message
-        : "Unable to create Excel backup."
-    );
-  } finally {
-    setBackingUp(false);
-  }
-};
   // =========================================================
-  // OPEN RESET MODAL
+  // PRINTER
+  // =========================================================
+
+  const handleSelectPrinter = () => {
+    Alert.alert(
+      "Bluetooth Printer",
+      "Printer selection will connect to the Bluetooth ESC/POS printer service."
+    );
+  };
+
+  const handleTestPrint = async () => {
+    try {
+      setPrinterTesting(true);
+
+      if (!printerEnabled) {
+        Alert.alert(
+          "Printer Disabled",
+          "Enable Bluetooth Printer first."
+        );
+        return;
+      }
+
+      if (!printerAddress) {
+        Alert.alert(
+          "No Printer",
+          "Please select a Bluetooth printer first."
+        );
+        return;
+      }
+
+      Alert.alert(
+        "Test Print",
+        "Printer service is not connected yet."
+      );
+    } finally {
+      setPrinterTesting(false);
+    }
+  };
+
+  // =========================================================
+  // SYNC
+  // =========================================================
+
+  const refreshSyncStatus = async () => {
+    try {
+      const state = await NetInfo.fetch();
+
+      const online = Boolean(
+        state.isConnected &&
+          state.isInternetReachable !== false
+      );
+
+      setIsOnline(online);
+    } catch (error) {
+      console.error(
+        "Network status error:",
+        error
+      );
+    }
+  };
+
+  const handleSync = async () => {
+    try {
+      setSyncing(true);
+
+      const state = await NetInfo.fetch();
+
+      const online = Boolean(
+        state.isConnected &&
+          state.isInternetReachable !== false
+      );
+
+      setIsOnline(online);
+
+      if (!online) {
+        Alert.alert(
+          "Offline",
+          "Internet connection is required to synchronize with Supabase."
+        );
+        return;
+      }
+
+      await syncData();
+
+      setLastSync(new Date().toLocaleString());
+      setPendingSync(0);
+
+      Alert.alert(
+        "Sync Complete",
+        "Local data has been synchronized."
+      );
+    } catch (error) {
+      console.error("Sync failed:", error);
+
+      Alert.alert(
+        "Sync Failed",
+        "Unable to synchronize data."
+      );
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  // =========================================================
+  // BACKUP
+  // =========================================================
+
+  const handleBackupData = async () => {
+    try {
+      setBackingUp(true);
+
+      await backupData();
+
+      Alert.alert(
+        "Backup Complete",
+        "Your system data has been exported successfully."
+      );
+    } catch (error) {
+      console.error(
+        "Backup failed:",
+        error
+      );
+
+      Alert.alert(
+        "Backup Failed",
+        "Unable to create the Excel backup."
+      );
+    } finally {
+      setBackingUp(false);
+    }
+  };
+
+  // =========================================================
+  // RESTORE
+  // =========================================================
+
+  const handleRestoreData = async () => {
+    try {
+      setRestoring(true);
+
+      await restoreData();
+
+      Alert.alert(
+        "Restore Complete",
+        "Your backup data has been restored successfully."
+      );
+    } catch (error) {
+      console.error(
+        "Restore failed:",
+        error
+      );
+
+      Alert.alert(
+        "Restore Failed",
+        "Unable to restore the selected backup."
+      );
+    } finally {
+      setRestoring(false);
+    }
+  };
+
+  // =========================================================
+  // RESET
   // =========================================================
 
   const openResetModal = () => {
     setResetPassword("");
     setResetCode("");
     setResetError("");
-    setShowResetModal(true);
+    setResetModalVisible(true);
   };
-
-  // =========================================================
-  // CLOSE RESET MODAL
-  // =========================================================
-
-  const closeResetModal = () => {
-    if (resetting) return;
-
-    setShowResetModal(false);
-    setResetPassword("");
-    setResetCode("");
-    setResetError("");
-  };
-
-  // =========================================================
-  // RESET SYSTEM DATA
-  // =========================================================
 
   const handleResetSystem = async () => {
-    setResetError("");
-
-    if (!resetPassword.trim()) {
-      setResetError("Please enter your account password.");
-      return;
-    }
-
-    if (resetCode.trim().length !== 6) {
-      setResetError("Please enter the 6-digit verification code.");
-      return;
-    }
-
-    if (resetCode.trim() !== verificationCode) {
-      setResetError("The verification code is incorrect.");
-      return;
-    }
-
     try {
-      setResetting(true);
+      setResetError("");
+
+      if (!resetPassword) {
+        setResetError(
+          "Enter your password."
+        );
+        return;
+      }
+
+      if (resetCode !== verificationCode) {
+        setResetError(
+          "Invalid verification code."
+        );
+        return;
+      }
 
       const {
         data: { user },
-        error: userError,
       } = await supabase.auth.getUser();
 
-      if (userError) {
-        throw userError;
-      }
-
       if (!user?.email) {
-        throw new Error(
-          "Unable to verify the current account."
+        setResetError(
+          "No authenticated account found."
         );
+        return;
       }
 
-      // =====================================================
-      // VERIFY PASSWORD
-      // =====================================================
+      setResetting(true);
 
-      const { error: loginError } =
+      const { error: signInError } =
         await supabase.auth.signInWithPassword({
           email: user.email,
           password: resetPassword,
         });
 
-      if (loginError) {
-        setResetError("Incorrect account password.");
+      if (signInError) {
+        setResetError(
+          "Incorrect password."
+        );
         return;
       }
 
-      // =====================================================
-      // DELETE ORDER ITEMS
-      // =====================================================
+      // Delete child records first
+      const { error: orderItemsError } =
+        await supabase
+          .from("order_items")
+          .delete()
+          .neq(
+            "id",
+            "00000000-0000-0000-0000-000000000000"
+          );
 
-      const { error: resetError } =
-        await supabase.rpc("reset_system_data");
-
-      if (resetError) {
-        throw resetError;
+      if (orderItemsError) {
+        throw orderItemsError;
       }
 
-      // =====================================================
-      // RESET UI
-      // =====================================================
+      const { error: ordersError } =
+        await supabase
+          .from("orders")
+          .delete()
+          .neq(
+            "id",
+            "00000000-0000-0000-0000-000000000000"
+          );
 
-      setResetPassword("");
-      setResetCode("");
-      setResetError("");
-      setShowResetModal(false);
+      if (ordersError) {
+        throw ordersError;
+      }
 
-      // Generate a new verification code after reset
-      generateVerificationCode();
+      const { error: salesError } =
+        await supabase
+          .from("sales")
+          .delete()
+          .neq(
+            "id",
+            "00000000-0000-0000-0000-000000000000"
+          );
+
+      if (salesError) {
+        throw salesError;
+      }
+
+      setResetModalVisible(false);
 
       Alert.alert(
         "System Reset",
-        "All order, order item, and sales records have been deleted successfully."
+        "Order and sales data have been reset successfully."
       );
     } catch (error) {
       console.error(
@@ -571,9 +652,7 @@ const handleBackupData = async () => {
       );
 
       setResetError(
-        error instanceof Error
-          ? error.message
-          : "Unable to reset system data."
+        "Failed to reset system data."
       );
     } finally {
       setResetting(false);
@@ -581,29 +660,28 @@ const handleBackupData = async () => {
   };
 
   // =========================================================
-  // LOGOUT
+  // INITIALIZATION
   // =========================================================
 
-  const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
+  useEffect(() => {
+    loadSettings();
+    generateVerificationCode();
+    refreshSyncStatus();
 
-      if (error) {
-        throw error;
-      }
+    const unsubscribe =
+      NetInfo.addEventListener((state) => {
+        const online = Boolean(
+          state.isConnected &&
+            state.isInternetReachable !== false
+        );
 
-      router.replace("/login");
-    } catch (error) {
-      console.error("Logout failed:", error);
+        setIsOnline(online);
+      });
 
-      Alert.alert(
-        "Logout Failed",
-        error instanceof Error
-          ? error.message
-          : "Unable to log out."
-      );
-    }
-  };
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   // =========================================================
   // LOADING
@@ -635,9 +713,7 @@ const handleBackupData = async () => {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* ===================================================
-            HEADER
-        =================================================== */}
+        {/* HEADER */}
 
         <View style={styles.header}>
           <Text style={styles.pageTitle}>
@@ -645,456 +721,155 @@ const handleBackupData = async () => {
           </Text>
 
           <Text style={styles.pageSubtitle}>
-            Manage your account, owner information, and
-            system data.
+            Manage your store, printer,
+            payments, account, and system
+            data.
           </Text>
         </View>
 
-        {/* ===================================================
-            ACCOUNT & SECURITY
-        =================================================== */}
+        {/* STORE */}
 
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.iconBox}>
-              <MaterialIcons
-                name="person"
-                size={23}
-                color="#f28a00"
-              />
-            </View>
+        <StoreSettings
+          storeName={storeName}
+          setStoreName={setStoreName}
+          storeAddress={storeAddress}
+          setStoreAddress={setStoreAddress}
+          storePhone={storePhone}
+          setStorePhone={setStorePhone}
+          receiptFooterEnabled={
+            receiptFooterEnabled
+          }
+          setReceiptFooterEnabled={
+            setReceiptFooterEnabled
+          }
+          receiptFooter={receiptFooter}
+          setReceiptFooter={setReceiptFooter}
+        />
 
-            <View style={styles.cardHeaderText}>
-              <Text style={styles.cardTitle}>
-                Account & Security
-              </Text>
+        {/* PRINTER */}
 
-              <Text style={styles.cardDescription}>
-                Update your account information and password.
-              </Text>
-            </View>
-          </View>
+        <PrinterSettings
+          printerEnabled={printerEnabled}
+          setPrinterEnabled={setPrinterEnabled}
+          autoPrintReceipt={autoPrintReceipt}
+          setAutoPrintReceipt={
+            setAutoPrintReceipt
+          }
+          printerName={printerName}
+          printerAddress={printerAddress}
+          paperSize={paperSize}
+          setPaperSize={setPaperSize}
+          printerTesting={printerTesting}
+          handleSelectPrinter={
+            handleSelectPrinter
+          }
+          handleTestPrint={handleTestPrint}
+        />
 
-          <View style={styles.formGrid}>
-            {/* USERNAME */}
+        {/* PAYMENT */}
 
-            {/* OWNER NAME */}
+        <PaymentSettings
+          cashEnabled={cashEnabled}
+          setCashEnabled={setCashEnabled}
+          gcashEnabled={gcashEnabled}
+          setGcashEnabled={setGcashEnabled}
+          onManageGCash={() =>
+            router.push("/admin/menu")
+          }
+        />
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                Owner Name
-              </Text>
+        {/* ACCOUNT */}
 
-              <TextInput
-                style={styles.input}
-                value={ownerName}
-                onChangeText={setOwnerName}
-                placeholder="Enter owner name"
-                placeholderTextColor="#aaa"
-              />
-            </View>
+        <AccountSettings
+          ownerName={ownerName}
+          setOwnerName={setOwnerName}
+          role={role}
+          newPassword={newPassword}
+          setNewPassword={setNewPassword}
+          confirmPassword={confirmPassword}
+          setConfirmPassword={
+            setConfirmPassword
+          }
+        />
 
-            {/* NEW PASSWORD */}
+        {/* TWO STEP VERIFICATION */}
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                New Password
-              </Text>
+        <TwoStepVerification
+          verificationCode={verificationCode}
+          generatingCode={generatingCode}
+          generateVerificationCode={
+            generateVerificationCode
+          }
+        />
 
-              <TextInput
-                style={styles.input}
-                value={newPassword}
-                onChangeText={setNewPassword}
-                placeholder="Leave blank to keep current"
-                placeholderTextColor="#aaa"
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
+        {/* SYSTEM */}
 
-            {/* CONFIRM PASSWORD */}
+        <SystemStatus
+          isOnline={isOnline}
+          pendingSync={pendingSync}
+          lastSync={lastSync}
+          syncing={syncing}
+          handleSync={handleSync}
+        />
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                Confirm Password
-              </Text>
+        {/* BACKUP */}
 
-              <TextInput
-                style={styles.input}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                placeholder="Confirm new password"
-                placeholderTextColor="#aaa"
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
-          </View>
+        <BackupSettings
+          backingUp={backingUp}
+          restoring={restoring}
+          handleBackupData={handleBackupData}
+          handleRestoreData={handleRestoreData}
+        />
 
-          <Pressable
-            style={[
-              styles.primaryButton,
-              saving && styles.disabledButton,
-            ]}
-            onPress={handleSaveAccount}
-            disabled={saving}
-          >
-            {saving ? (
-              <ActivityIndicator
-                size="small"
-                color="#ffffff"
-              />
-            ) : (
-              <Text style={styles.primaryButtonText}>
-                Save Account Settings
-              </Text>
-            )}
-          </Pressable>
-        </View>
+        {/* RESET */}
 
-        {/* ===================================================
-            TWO-STEP VERIFICATION
-        =================================================== */}
+        <ResetSystemCard
+          resetModalVisible={resetModalVisible}
+          resetPassword={resetPassword}
+          setResetPassword={setResetPassword}
+          resetCode={resetCode}
+          setResetCode={setResetCode}
+          resetError={resetError}
+          resetting={resetting}
+          openResetModal={openResetModal}
+          setResetModalVisible={
+            setResetModalVisible
+          }
+          handleResetSystem={
+            handleResetSystem
+          }
+        />
 
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.iconBox}>
-              <MaterialIcons
-                name="security"
-                size={23}
-                color="#f28a00"
-              />
-            </View>
+        {/* SAVE */}
 
-            <View style={styles.cardHeaderText}>
-              <Text style={styles.cardTitle}>
-                Two-Step Verification
-              </Text>
-
-              <Text style={styles.cardDescription}>
-                Use a verification code for sensitive system
-                actions.
-              </Text>
-            </View>
-          </View>
-
-          {/* STATUS */}
-
-          <View style={styles.twoFactorStatus}>
-            <Text style={styles.enabledDot}>
-              ●
-            </Text>
-
-            <Text style={styles.enabledText}>
-              Ready
-            </Text>
-
-            <Text style={styles.statusDescription}>
-              Verification is available on this device.
-            </Text>
-          </View>
-
-          {/* CODE */}
-
-          <View style={styles.setupBox}>
-            <Text style={styles.setupTitle}>
-              Verification Code
-            </Text>
-
-            <Text style={styles.setupDescription}>
-              This code is generated locally and is required
-              for sensitive system actions such as resetting
-              system data.
-            </Text>
-
-            <View style={styles.codeRow}>
-              <View style={styles.codeBox}>
-                {generatingCode ? (
-                  <ActivityIndicator
-                    size="small"
-                    color="#f28a00"
-                  />
-                ) : (
-                  <Text style={styles.codeText}>
-                    {verificationCode || "------"}
-                  </Text>
-                )}
-              </View>
-
-              <Pressable
-                style={styles.secondaryButton}
-                onPress={generateVerificationCode}
-                disabled={generatingCode}
-              >
-                <Text style={styles.secondaryButtonText}>
-                  Generate New Code
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-
-        {/* ===================================================
-            BACKUP DATA
-        =================================================== */}
-
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.iconBox}>
-              <MaterialIcons
-                name="backup"
-                size={23}
-                color="#f28a00"
-              />
-            </View>
-
-            <View style={styles.cardHeaderText}>
-              <Text style={styles.cardTitle}>
-                Backup Data
-              </Text>
-
-              <Text style={styles.cardDescription}>
-                Create a backup of your current system data.
-              </Text>
-            </View>
-          </View>
-
-          <Pressable
-            style={[
-              styles.secondaryButton,
-              backingUp && styles.disabledButton,
-            ]}
-            onPress={handleBackupData}
-            disabled={backingUp}
-          >
-            {backingUp ? (
-              <ActivityIndicator
-                size="small"
-                color="#423b35"
-              />
-            ) : (
-              <Text style={styles.secondaryButtonText}>
-                Backup Data
-              </Text>
-            )}
-          </Pressable>
-        </View>
-
-        {/* ===================================================
-            RESET SYSTEM DATA
-        =================================================== */}
-
-        <View style={[styles.card, styles.dangerCard]}>
-          <View style={styles.cardHeader}>
-            <View
-              style={[
-                styles.iconBox,
-                styles.dangerIconBox,
-              ]}
-            >
-              <MaterialIcons
-                name="warning"
-                size={23}
-                color="#c9362b"
-              />
-            </View>
-
-            <View style={styles.cardHeaderText}>
-              <Text style={styles.cardTitle}>
-                Reset System Data
-              </Text>
-
-              <Text style={styles.cardDescription}>
-                Permanently remove order and sales records
-                from the system.
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.warningBox}>
-            <Text style={styles.warningText}>
-              Warning:
-            </Text>
-
-            <Text style={styles.warningDescription}>
-              This action cannot be undone. Make sure you
-              have a backup before continuing.
-            </Text>
-          </View>
-
-          <Pressable
-            style={styles.dangerButton}
-            onPress={openResetModal}
-          >
-            <Text style={styles.dangerButtonText}>
-              Reset System Data
-            </Text>
-          </Pressable>
-        </View>
-
-        {/* ===================================================
-            LOGOUT
-        =================================================== */}
-
-        <Pressable
-          style={styles.logoutButton}
-          onPress={handleLogout}
+        <View
+          style={{
+            marginTop: 16,
+            marginBottom: 30,
+          }}
         >
-          <Text style={styles.logoutText}>
-            Logout
-          </Text>
-        </Pressable>
-
-        <Text style={styles.version}>
-          Carenderia POS • Admin Settings
-        </Text>
+          <Pressable
+            style={styles.primaryButton}
+            onPress={handleSaveSettings}
+          >
+            <Text
+              style={styles.primaryButtonText}
+            >
+              Save Changes
+            </Text>
+          </Pressable>
+        </View>
       </ScrollView>
 
-      {/* =====================================================
-          SAVE SUCCESS MODAL
-      ===================================================== */}
+      <AdminBottomNav />
 
       <SaveSuccessModal
         visible={showSaveModal}
         message={saveMessage}
-        onClose={() => setShowSaveModal(false)}
+        onClose={() =>
+          setShowSaveModal(false)
+        }
       />
-
-      {/* =====================================================
-          RESET MODAL
-      ===================================================== */}
-
-      <Modal
-        visible={showResetModal}
-        transparent
-        animationType="fade"
-        onRequestClose={closeResetModal}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            {/* TITLE */}
-
-            <Text style={styles.modalTitle}>
-              Reset System Data
-            </Text>
-
-            <Text style={styles.modalDescription}>
-              This action will permanently delete all order,
-              order item, and sales records. This cannot be
-              undone.
-            </Text>
-
-            {/* AUTH NOTE */}
-
-            <View style={styles.authNote}>
-              <Text style={styles.authNoteTitle}>
-                Verification Required
-              </Text>
-
-              <Text style={styles.authNoteText}>
-                Enter your account password and the current
-                6-digit verification code to continue.
-              </Text>
-            </View>
-
-            {/* PASSWORD */}
-
-            <View style={styles.modalInputGroup}>
-              <Text style={styles.label}>
-                Account Password
-              </Text>
-
-              <TextInput
-                style={styles.input}
-                value={resetPassword}
-                onChangeText={setResetPassword}
-                placeholder="Enter your password"
-                placeholderTextColor="#aaa"
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                editable={!resetting}
-              />
-            </View>
-
-            {/* VERIFICATION CODE */}
-
-            <View style={styles.modalInputGroup}>
-              <Text style={styles.label}>
-                Verification Code
-              </Text>
-
-              <TextInput
-                style={[
-                  styles.input,
-                  styles.verificationInput,
-                ]}
-                value={resetCode}
-                onChangeText={(text) => {
-                  setResetCode(
-                    text
-                      .replace(/[^0-9]/g, "")
-                      .slice(0, 6)
-                  );
-
-                  setResetError("");
-                }}
-                placeholder="Enter 6-digit code"
-                placeholderTextColor="#aaa"
-                keyboardType="number-pad"
-                maxLength={6}
-                editable={!resetting}
-              />
-            </View>
-
-            {/* ERROR */}
-
-            {resetError ? (
-              <Text style={styles.errorText}>
-                {resetError}
-              </Text>
-            ) : null}
-
-            {/* BUTTONS */}
-
-            <View style={styles.modalButtons}>
-              <Pressable
-                style={styles.cancelButton}
-                onPress={closeResetModal}
-                disabled={resetting}
-              >
-                <Text style={styles.cancelButtonText}>
-                  Cancel
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={[
-                  styles.dangerButton,
-                  styles.verifyButton,
-                  resetting && styles.disabledButton,
-                ]}
-                onPress={handleResetSystem}
-                disabled={resetting}
-              >
-                {resetting ? (
-                  <ActivityIndicator
-                    size="small"
-                    color="#ffffff"
-                  />
-                ) : (
-                  <Text style={styles.dangerButtonText}>
-                    Confirm Reset
-                  </Text>
-                )}
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
-      <AdminBottomNav />
     </View>
   );
 }
