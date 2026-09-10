@@ -1,15 +1,34 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Banknote, Check, ChevronRight, Smartphone } from "lucide-react-native";
+import {
+  Banknote,
+  Check,
+  ChevronRight,
+  Smartphone,
+} from "lucide-react-native";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Image, Pressable, ScrollView, Text, useWindowDimensions, View, } from "react-native";
+import {
+  Alert,
+  Image,
+  Pressable,
+  ScrollView,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { getPaymentSettings, PaymentSettings } from "@/lib/paymentSetting";
+import {
+  getPaymentSettings,
+  PaymentSettings,
+} from "@/lib/paymentSetting";
 import { supabase } from "@/lib/supabase";
 
 import CashPaymentModal from "@/components/admin/modals/payment/CashPaymentModal";
 import GCashPaymentModal from "@/components/admin/modals/payment/GCashPaymentModal";
-import ReceiptModal, { ReceiptData, } from "@/components/admin/modals/ReceiptModal";
+import ReceiptModal, {
+  ReceiptData,
+} from "@/components/admin/modals/ReceiptModal";
+import ErrorToast from "@/components/admin/toast/ErrorToast";
 import { createPaymentStyles } from "@/styles/admin/payment.styles";
 
 type OrderItem = {
@@ -39,17 +58,87 @@ export default function PaymentScreen() {
   }>();
 
   const orderId = params.orderId ?? "";
-  const customerName = params.customerName ?? "Walk-in Customer";
-  const orderType = params.orderType ?? "Dine In";
+
+  const customerName =
+    params.customerName ?? "Walk-in Customer";
+
+  const orderType =
+    params.orderType ?? "Dine In";
+
   const total = Number(params.total ?? 0);
 
+  const [orderNumber, setOrderNumber] =
+    useState<number | null>(null);
+
+  const [isLoadingOrderNumber, setIsLoadingOrderNumber] =
+    useState(false);
+
+  useEffect(() => {
+    const loadOrderNumber = async () => {
+      if (!orderId) {
+        setOrderNumber(null);
+        return;
+      }
+
+      try {
+        setIsLoadingOrderNumber(true);
+
+        const {
+          data,
+          error,
+        } = await supabase
+          .from("orders")
+          .select("order_number")
+          .eq("id", orderId)
+          .single();
+
+        if (error) {
+          throw error;
+        }
+
+        if (
+          data?.order_number !== null &&
+          data?.order_number !== undefined
+        ) {
+          setOrderNumber(
+            Number(data.order_number)
+          );
+        } else {
+          setOrderNumber(null);
+        }
+      } catch (error) {
+        console.error(
+          "Failed to load order number:",
+          error
+        );
+
+        setOrderNumber(null);
+      } finally {
+        setIsLoadingOrderNumber(false);
+      }
+    };
+
+    loadOrderNumber();
+  }, [orderId]);
+
+  const formattedOrderNumber =
+    orderNumber !== null
+      ? `#${String(orderNumber).padStart(4, "0")}`
+      : "#0000";
+
   const orderItems: OrderItem[] = useMemo(() => {
-    if (!params.orderItems) return [];
+    if (!params.orderItems) {
+      return [];
+    }
 
     try {
-      const parsed = JSON.parse(params.orderItems);
+      const parsed = JSON.parse(
+        params.orderItems
+      );
 
-      if (!Array.isArray(parsed)) return [];
+      if (!Array.isArray(parsed)) {
+        return [];
+      }
 
       return parsed.map((item) => ({
         id: String(item.id ?? ""),
@@ -59,54 +148,115 @@ export default function PaymentScreen() {
         image: item.image ?? null,
       }));
     } catch (error) {
-      console.error("Failed to parse order items:", error);
+      console.error(
+        "Failed to parse order items:",
+        error
+      );
+
       return [];
     }
   }, [params.orderItems]);
 
-  const [paymentMethod, setPaymentMethod] =
-    useState<PaymentMethod | null>(null);
+  const [
+    paymentMethod,
+    setPaymentMethod,
+  ] = useState<PaymentMethod | null>(null);
 
-  const [paymentSettings, setPaymentSettings] =
-    useState<PaymentSettings | null>(null);
+  const [
+    paymentSettings,
+    setPaymentSettings,
+  ] = useState<PaymentSettings | null>(null);
 
-  const [showCashModal, setShowCashModal] = useState(false);
-  const [showGcashModal, setShowGcashModal] = useState(false);
+  const [
+    showCashModal,
+    setShowCashModal,
+  ] = useState(false);
 
-  const [cashReceived, setCashReceived] = useState(0);
-  const [change, setChange] = useState(0);
+  const [
+    showGcashModal,
+    setShowGcashModal,
+  ] = useState(false);
 
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [
+    cashReceived,
+    setCashReceived,
+  ] = useState(0);
 
-  const [showReceipt, setShowReceipt] = useState(false);
-  const [receiptData, setReceiptData] =
-    useState<ReceiptData | null>(null);
+  const [
+    change,
+    setChange,
+  ] = useState(0);
+
+  const [
+    isProcessing,
+    setIsProcessing,
+  ] = useState(false);
+
+  const [
+    showReceipt,
+    setShowReceipt,
+  ] = useState(false);
+
+  const [
+    receiptData,
+    setReceiptData,
+  ] = useState<ReceiptData | null>(null);
+
+  const [
+    showErrorToast,
+    setShowErrorToast,
+  ] = useState(false);
+
+  const [
+    errorToastMessage,
+    setErrorToastMessage,
+  ] = useState("");
+
+  const showPaymentError = (
+    message: string
+  ) => {
+    setErrorToastMessage(message);
+    setShowErrorToast(true);
+
+    setTimeout(() => {
+      setShowErrorToast(false);
+    }, 3000);
+  };
 
   useEffect(() => {
     getPaymentSettings()
       .then(setPaymentSettings)
-      .catch((error) =>
-        console.error("Failed to load payment settings:", error)
-      );
+      .catch((error) => {
+        console.error(
+          "Failed to load payment settings:",
+          error
+        );
+      });
   }, []);
 
-  const gcashQrUri = paymentSettings?.qr_image_url ?? null;
+  const gcashQrUri =
+    paymentSettings?.qr_image_url ?? null;
 
   const handleSelectCash = () => {
-    if (isProcessing) return;
+    if (isProcessing) {
+      return;
+    }
 
     setPaymentMethod("cash");
     setShowCashModal(true);
   };
 
   const handleSelectGCash = () => {
-    if (isProcessing) return;
+    if (isProcessing) {
+      return;
+    }
 
     if (!paymentSettings?.qr_image_url) {
       Alert.alert(
         "No QR Code",
         "Please upload a GCash QR code in Menu first."
       );
+
       return;
     }
 
@@ -132,7 +282,9 @@ export default function PaymentScreen() {
   };
 
   const handleChangePayment = () => {
-    if (isProcessing) return;
+    if (isProcessing) {
+      return;
+    }
 
     setPaymentMethod(null);
     setCashReceived(0);
@@ -140,37 +292,50 @@ export default function PaymentScreen() {
   };
 
   const handleConfirmPayment = async () => {
-    if (isProcessing) return;
-
-    if (!orderId) {
-      Alert.alert(
-        "Missing Order",
-        "The order ID is missing. Please go back and create the order again."
-      );
-      return;
-    }
-
-    if (!orderItems.length) {
-      Alert.alert(
-        "Empty Order",
-        "There are no items in this order."
-      );
-      return;
-    }
-
-    if (!Number.isFinite(total) || total <= 0) {
-      Alert.alert(
-        "Invalid Total",
-        "The order total is invalid."
-      );
+    if (isProcessing) {
       return;
     }
 
     if (!paymentMethod) {
-      Alert.alert(
-        "Payment Method Required",
-        "Please select Cash or GCash."
+      showPaymentError(
+        "Please choose a payment method before continuing."
       );
+
+      return;
+    }
+
+    if (!orderId) {
+      showPaymentError(
+        "The order ID is missing. Please go back and create the order again."
+      );
+
+      return;
+    }
+
+    if (orderNumber === null) {
+      showPaymentError(
+        "The order number could not be found. Please go back and try again."
+      );
+
+      return;
+    }
+
+    if (!orderItems.length) {
+      showPaymentError(
+        "There are no items in this order."
+      );
+
+      return;
+    }
+
+    if (
+      !Number.isFinite(total) ||
+      total <= 0
+    ) {
+      showPaymentError(
+        "The order total is invalid."
+      );
+
       return;
     }
 
@@ -178,25 +343,77 @@ export default function PaymentScreen() {
       paymentMethod === "cash" &&
       cashReceived < total
     ) {
-      Alert.alert(
-        "Insufficient Cash",
+      showPaymentError(
         "The cash received is not enough to complete this payment."
       );
+
       return;
     }
 
     try {
       setIsProcessing(true);
 
-      const { error: orderError } = await supabase
+      const {
+        data: existingOrder,
+        error: fetchOrderError,
+      } = await supabase
+        .from("orders")
+        .select("id, order_number")
+        .eq("id", orderId)
+        .single();
+
+      if (fetchOrderError) {
+        throw fetchOrderError;
+      }
+
+      if (!existingOrder) {
+        throw new Error(
+          "Order could not be found."
+        );
+      }
+
+      if (
+        existingOrder.order_number === null ||
+        existingOrder.order_number === undefined
+      ) {
+        throw new Error(
+          "This order does not have an order number."
+        );
+      }
+
+      // Use the database value.
+      const databaseOrderNumber =
+        Number(existingOrder.order_number);
+
+      // Keep state synchronized.
+      setOrderNumber(
+        databaseOrderNumber
+      );
+
+      console.log(
+        "Order ID:",
+        existingOrder.id
+      );
+
+      console.log(
+        "Order Number:",
+        databaseOrderNumber
+      );
+
+      const {
+        error: updateOrderError,
+      } = await supabase
         .from("orders")
         .update({
           status: "ongoing",
-          completed_at: new Date().toISOString(),
+          completed_at:
+            new Date().toISOString(),
         })
         .eq("id", orderId);
 
-      if (orderError) throw orderError;
+      if (updateOrderError) {
+        throw updateOrderError;
+      }
 
       const {
         data: existingSale,
@@ -207,47 +424,80 @@ export default function PaymentScreen() {
         .eq("order_id", orderId)
         .maybeSingle();
 
-      if (existingSaleError) throw existingSaleError;
+      if (existingSaleError) {
+        throw existingSaleError;
+      }
 
       if (!existingSale) {
-        const { error: saleError } = await supabase
+        const {
+          error: saleError,
+        } = await supabase
           .from("sales")
           .insert({
             order_id: orderId,
-            total: Number(total.toFixed(2)),
-            payment_method: paymentMethod,
+            total: Number(
+              total.toFixed(2)
+            ),
+            payment_method:
+              paymentMethod,
           });
 
-        if (saleError) throw saleError;
+        if (saleError) {
+          throw saleError;
+        }
       }
 
       const newReceiptData: ReceiptData = {
         orderId,
-        items: orderItems.map((item) => ({
-          name: item.name,
-          quantity: item.quantity,
-          price: item.price,
-        })),
-        total: Number(total.toFixed(2)),
+
+        orderNumber:
+          databaseOrderNumber,
+
+        items: orderItems.map(
+          (item) => ({
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+          })
+        ),
+
+        total: Number(
+          total.toFixed(2)
+        ),
+
         paymentMethod,
+
         cashReceived:
           paymentMethod === "gcash"
             ? null
             : cashReceived,
+
         change:
           paymentMethod === "gcash"
             ? null
             : change,
-        soldAt: new Date().toISOString(),
+
+        soldAt:
+          new Date().toISOString(),
       };
 
-      setReceiptData(newReceiptData);
+      console.log(
+        "Receipt Data:",
+        newReceiptData
+      );
+
+      setReceiptData(
+        newReceiptData
+      );
+
       setShowReceipt(true);
     } catch (error) {
-      console.error("Confirm payment error:", error);
+      console.error(
+        "Confirm payment error:",
+        error
+      );
 
-      Alert.alert(
-        "Payment Failed",
+      showPaymentError(
         error instanceof Error
           ? error.message
           : "Something went wrong while processing the payment."
@@ -257,24 +507,35 @@ export default function PaymentScreen() {
     }
   };
 
+
   const handleCancel = () => {
-    if (isProcessing) return;
-    
+    if (isProcessing) {
+      return;
+    }
+
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace("/admin/orders")
+      router.replace(
+        "/admin/orders"
+      );
     }
   };
 
   const handleReceiptClose = () => {
     setShowReceipt(false);
-    router.replace("/admin/orders");
+
+    router.replace(
+      "/admin/orders"
+    );
   };
 
   const handleNewOrder = () => {
     setShowReceipt(false);
-    router.replace("/admin/orders");
+
+    router.replace(
+      "/admin/orders"
+    );
   };
 
   const isPaymentReady =
@@ -300,7 +561,8 @@ export default function PaymentScreen() {
     icon: typeof Banknote;
     onPress: () => void;
   }) => {
-    const selected = paymentMethod === method;
+    const selected =
+      paymentMethod === method;
 
     return (
       <Pressable
@@ -308,40 +570,60 @@ export default function PaymentScreen() {
         disabled={isProcessing}
         style={[
           styles.paymentMethodCard,
-          selected && styles.paymentMethodCardSelected,
-          isProcessing && styles.paymentMethodCardDisabled,
+          selected &&
+            styles.paymentMethodCardSelected,
+          isProcessing &&
+            styles.paymentMethodCardDisabled,
         ]}
       >
         <View
           style={[
             styles.paymentMethodIcon,
-            selected && styles.paymentMethodIconSelected,
+            selected &&
+              styles.paymentMethodIconSelected,
           ]}
         >
           <Icon
             size={23}
             strokeWidth={2}
-            color={selected ? "#FFFFFF" : "#9CA3AF"}
+            color={
+              selected
+                ? "#FFFFFF"
+                : "#9CA3AF"
+            }
           />
         </View>
 
-        <View style={styles.paymentMethodContent}>
+        <View
+          style={
+            styles.paymentMethodContent
+          }
+        >
           <Text
             style={[
               styles.paymentMethodTitle,
-              selected && styles.paymentMethodTitleSelected,
+              selected &&
+                styles.paymentMethodTitleSelected,
             ]}
           >
             {title}
           </Text>
 
-          <Text style={styles.paymentMethodDescription}>
+          <Text
+            style={
+              styles.paymentMethodDescription
+            }
+          >
             {description}
           </Text>
         </View>
 
         {selected ? (
-          <View style={styles.paymentMethodCheck}>
+          <View
+            style={
+              styles.paymentMethodCheck
+            }
+          >
             <Check
               size={15}
               color="#FFFFFF"
@@ -363,121 +645,256 @@ export default function PaymentScreen() {
       style={[
         styles.container,
         {
-          paddingLeft: insets.left,
-          paddingRight: insets.right,
+          paddingLeft:
+            insets.left,
+          paddingRight:
+            insets.right,
         },
       ]}
     >
+      {/* HEADER */}
+
       <View
         style={[
           styles.header,
           {
-            paddingTop: insets.top + 18,
+            paddingTop:
+              insets.top + 18,
           },
         ]}
       >
-        <View style={styles.headerTextWrap}>
-          <Text style={styles.headerTitle}>
+        <View
+          style={
+            styles.headerTextWrap
+          }
+        >
+          <Text
+            style={
+              styles.headerTitle
+            }
+          >
             Payment
           </Text>
 
-          <Text style={styles.headerSubtitle}>
+          <Text
+            style={
+              styles.headerSubtitle
+            }
+          >
             Complete the customer's payment
           </Text>
         </View>
       </View>
 
+      {/* MAIN */}
+
       <ScrollView
-        style={styles.mainScroll}
+        style={
+          styles.mainScroll
+        }
         contentContainerStyle={[
           styles.mainContent,
           {
-            paddingBottom: 30 + insets.bottom,
+            paddingBottom:
+              30 +
+              insets.bottom,
           },
         ]}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={
+          false
+        }
       >
-        <View style={styles.topGrid}>
+        {/* ORDER INFORMATION */}
 
-          <View style={styles.orderInfoCard}>
-            <Text style={styles.cardSectionTitle}>
+        <View
+          style={
+            styles.topGrid
+          }
+        >
+          <View
+            style={
+              styles.orderInfoCard
+            }
+          >
+            <Text
+              style={
+                styles.cardSectionTitle
+              }
+            >
               Order Information
             </Text>
 
-            <View style={styles.infoGrid}>
-              <View style={styles.infoColumn}>
-                <Text style={styles.orderInfoLabel}>
+            <View
+              style={
+                styles.infoGrid
+              }
+            >
+              <View
+                style={
+                  styles.infoColumn
+                }
+              >
+                <Text
+                  style={
+                    styles.orderInfoLabel
+                  }
+                >
                   Customer
                 </Text>
 
-                <Text style={styles.orderInfoValue}>
+                <Text
+                  style={
+                    styles.orderInfoValue
+                  }
+                >
                   {customerName}
                 </Text>
               </View>
 
-              <View style={styles.infoColumnRight}>
-                <Text style={styles.orderInfoLabel}>
+              <View
+                style={
+                  styles.infoColumnRight
+                }
+              >
+                <Text
+                  style={
+                    styles.orderInfoLabel
+                  }
+                >
                   Order Type
                 </Text>
 
-                <Text style={styles.orderInfoValueRight}>
+                <Text
+                  style={
+                    styles.orderInfoValueRight
+                  }
+                >
                   {orderType}
                 </Text>
               </View>
 
-              <View style={styles.infoColumn}>
-                <Text style={styles.orderInfoLabel}>
+              <View
+                style={
+                  styles.infoColumn
+                }
+              >
+                <Text
+                  style={
+                    styles.orderInfoLabel
+                  }
+                >
                   Order ID
                 </Text>
 
-                <Text style={styles.orderInfoValue}>
-                  #{orderId.slice(0, 8)}
+                <Text
+                  style={
+                    styles.orderInfoValue
+                  }
+                >
+                  {isLoadingOrderNumber
+                    ? "Loading..."
+                    : formattedOrderNumber}
                 </Text>
               </View>
 
-              <View style={styles.infoColumnRight}>
-                <Text style={styles.orderInfoLabel}>
+              <View
+                style={
+                  styles.infoColumnRight
+                }
+              >
+                <Text
+                  style={
+                    styles.orderInfoLabel
+                  }
+                >
                   Items
                 </Text>
 
-                <Text style={styles.orderInfoValueRight}>
-                  {orderItems.length}
+                <Text
+                  style={
+                    styles.orderInfoValueRight
+                  }
+                >
+                  {
+                    orderItems.length
+                  }
                 </Text>
               </View>
             </View>
           </View>
 
-          <View style={styles.totalCard}>
-            <Text style={styles.totalLabel}>
+          {/* TOTAL */}
+
+          <View
+            style={
+              styles.totalCard
+            }
+          >
+            <Text
+              style={
+                styles.totalLabel
+              }
+            >
               TOTAL AMOUNT
             </Text>
 
-            <Text style={styles.totalValue}>
-              ₱{total.toFixed(2)}
+            <Text
+              style={
+                styles.totalValue
+              }
+            >
+              ₱
+              {total.toFixed(
+                2
+              )}
             </Text>
 
-            <Text style={styles.totalSubtext}>
+            <Text
+              style={
+                styles.totalSubtext
+              }
+            >
               Amount to be collected from customer
             </Text>
           </View>
         </View>
 
-        <View style={styles.paymentMethodSection}>
-          <Text style={styles.sectionTitle}>
+        {/* PAYMENT METHOD */}
+
+        <View
+          style={
+            styles.paymentMethodSection
+          }
+        >
+          <Text
+            style={
+              styles.sectionTitle
+            }
+          >
             Choose Payment Method
           </Text>
 
-          <Text style={styles.sectionSubtitle}>
+          <Text
+            style={
+              styles.sectionSubtitle
+            }
+          >
             Select how the customer will pay
           </Text>
 
-          <View style={styles.paymentMethodRow}>
+          <View
+            style={
+              styles.paymentMethodRow
+            }
+          >
             <PaymentMethodCard
               method="cash"
               title="Cash"
               description="Customer pays with cash"
               icon={Banknote}
-              onPress={handleSelectCash}
+              onPress={
+                handleSelectCash
+              }
             />
 
             <PaymentMethodCard
@@ -485,74 +902,167 @@ export default function PaymentScreen() {
               title="GCash"
               description="Customer scans the GCash QR"
               icon={Smartphone}
-              onPress={handleSelectGCash}
+              onPress={
+                handleSelectGCash
+              }
             />
           </View>
         </View>
 
-        <View style={styles.bottomGrid}>
+        {/* BOTTOM GRID */}
+
+        <View
+          style={
+            styles.bottomGrid
+          }
+        >
+          {/* SELECTED PAYMENT */}
 
           {paymentMethod && (
-            <View style={styles.selectedPaymentCard}>
-              <View style={styles.selectedPaymentHeader}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.selectedPaymentTitle}>
-                    {paymentMethod === "cash"
+            <View
+              style={
+                styles.selectedPaymentCard
+              }
+            >
+              <View
+                style={
+                  styles.selectedPaymentHeader
+                }
+              >
+                <View
+                  style={{
+                    flex: 1,
+                  }}
+                >
+                  <Text
+                    style={
+                      styles.selectedPaymentTitle
+                    }
+                  >
+                    {paymentMethod ===
+                    "cash"
                       ? "Cash Payment"
                       : "GCash Payment"}
                   </Text>
 
-                  <Text style={styles.selectedPaymentSub}>
-                    {paymentMethod === "cash"
+                  <Text
+                    style={
+                      styles.selectedPaymentSub
+                    }
+                  >
+                    {paymentMethod ===
+                    "cash"
                       ? "Cash payment details"
                       : "QR payment details"}
                   </Text>
                 </View>
 
                 <Pressable
-                  onPress={handleChangePayment}
-                  disabled={isProcessing}
-                  style={styles.changePaymentButton}
+                  onPress={
+                    handleChangePayment
+                  }
+                  disabled={
+                    isProcessing
+                  }
+                  style={
+                    styles.changePaymentButton
+                  }
                 >
-                  <Text style={styles.changePaymentText}>
+                  <Text
+                    style={
+                      styles.changePaymentText
+                    }
+                  >
                     Change
                   </Text>
                 </Pressable>
               </View>
 
-              {paymentMethod === "cash" && (
+              {/* CASH */}
+
+              {paymentMethod ===
+                "cash" && (
                 <>
-                  <View style={styles.selectedPaymentRow}>
-                    <Text style={styles.selectedPaymentLabel}>
+                  <View
+                    style={
+                      styles.selectedPaymentRow
+                    }
+                  >
+                    <Text
+                      style={
+                        styles.selectedPaymentLabel
+                      }
+                    >
                       Cash Received
                     </Text>
 
-                    <Text style={styles.selectedPaymentValue}>
-                      ₱{cashReceived.toFixed(2)}
+                    <Text
+                      style={
+                        styles.selectedPaymentValue
+                      }
+                    >
+                      ₱
+                      {cashReceived.toFixed(
+                        2
+                      )}
                     </Text>
                   </View>
 
-                  <View style={styles.selectedPaymentDivider} />
+                  <View
+                    style={
+                      styles.selectedPaymentDivider
+                    }
+                  />
 
-                  <View style={styles.selectedPaymentRow}>
-                    <Text style={styles.selectedPaymentLabel}>
+                  <View
+                    style={
+                      styles.selectedPaymentRow
+                    }
+                  >
+                    <Text
+                      style={
+                        styles.selectedPaymentLabel
+                      }
+                    >
                       Change
                     </Text>
 
-                    <Text style={styles.selectedPaymentValueOrange}>
-                      ₱{change.toFixed(2)}
+                    <Text
+                      style={
+                        styles.selectedPaymentValueOrange
+                      }
+                    >
+                      ₱
+                      {change.toFixed(
+                        2
+                      )}
                     </Text>
                   </View>
                 </>
               )}
 
-              {paymentMethod === "gcash" && (
-                <View style={styles.selectedPaymentRow}>
-                  <Text style={styles.selectedPaymentLabel}>
+              {/* GCASH */}
+
+              {paymentMethod ===
+                "gcash" && (
+                <View
+                  style={
+                    styles.selectedPaymentRow
+                  }
+                >
+                  <Text
+                    style={
+                      styles.selectedPaymentLabel
+                    }
+                  >
                     Payment
                   </Text>
 
-                  <Text style={styles.selectedPaymentValue}>
+                  <Text
+                    style={
+                      styles.selectedPaymentValue
+                    }
+                  >
                     GCash QR
                   </Text>
                 </View>
@@ -560,83 +1070,154 @@ export default function PaymentScreen() {
             </View>
           )}
 
+          {/* ORDER SUMMARY */}
+
           <View
             style={[
               styles.summaryCard,
-              !paymentMethod && styles.summaryCardFull,
+              !paymentMethod &&
+                styles.summaryCardFull,
             ]}
           >
-            <Text style={styles.summaryTitle}>
+            <Text
+              style={
+                styles.summaryTitle
+              }
+            >
               Order Summary
             </Text>
 
-            {orderItems.length === 0 ? (
-              <View style={styles.emptySummary}>
-                <Text style={styles.emptySummaryText}>
+            {orderItems.length ===
+            0 ? (
+              <View
+                style={
+                  styles.emptySummary
+                }
+              >
+                <Text
+                  style={
+                    styles.emptySummaryText
+                  }
+                >
                   No order items found.
                 </Text>
               </View>
             ) : (
               <>
-                {orderItems.map((item) => (
-                  <View
-                    key={item.id}
-                    style={styles.summaryItemRow}
-                  >
-                    {item.image ? (
-                      <Image
-                        source={{ uri: item.image }}
-                        style={styles.summaryItemImage}
-                        resizeMode="cover"
-                      />
-                    ) : (
+                {orderItems.map(
+                  (item) => (
+                    <View
+                      key={
+                        item.id
+                      }
+                      style={
+                        styles.summaryItemRow
+                      }
+                    >
+                      {item.image ? (
+                        <Image
+                          source={{
+                            uri: item.image,
+                          }}
+                          style={
+                            styles.summaryItemImage
+                          }
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <View
+                          style={
+                            styles.summaryItemImagePlaceholder
+                          }
+                        >
+                          <Text
+                            style={
+                              styles.summaryItemImagePlaceholderText
+                            }
+                          >
+                            🍽️
+                          </Text>
+                        </View>
+                      )}
+
                       <View
                         style={
-                          styles.summaryItemImagePlaceholder
+                          styles.summaryItemTextWrap
                         }
                       >
                         <Text
                           style={
-                            styles.summaryItemImagePlaceholderText
+                            styles.summaryItemName
+                          }
+                          numberOfLines={
+                            1
                           }
                         >
-                          🍽️
+                          {
+                            item.name
+                          }
+                        </Text>
+
+                        <Text
+                          style={
+                            styles.summaryItemSub
+                          }
+                        >
+                          {
+                            item.quantity
+                          }{" "}
+                          × ₱
+                          {item.price.toFixed(
+                            2
+                          )}
                         </Text>
                       </View>
-                    )}
 
-                    <View style={styles.summaryItemTextWrap}>
                       <Text
-                        style={styles.summaryItemName}
-                        numberOfLines={1}
+                        style={
+                          styles.summaryItemTotal
+                        }
                       >
-                        {item.name}
-                      </Text>
-
-                      <Text style={styles.summaryItemSub}>
-                        {item.quantity} × ₱
-                        {item.price.toFixed(2)}
+                        ₱
+                        {(
+                          item.quantity *
+                          item.price
+                        ).toFixed(
+                          2
+                        )}
                       </Text>
                     </View>
+                  )
+                )}
 
-                    <Text style={styles.summaryItemTotal}>
-                      ₱
-                      {(
-                        item.quantity * item.price
-                      ).toFixed(2)}
-                    </Text>
-                  </View>
-                ))}
+                <View
+                  style={
+                    styles.summaryDivider
+                  }
+                />
 
-                <View style={styles.summaryDivider} />
-
-                <View style={styles.summaryTotalRow}>
-                  <Text style={styles.summaryTotalLabel}>
+                <View
+                  style={
+                    styles.summaryTotalRow
+                  }
+                >
+                  <Text
+                    style={
+                      styles.summaryTotalLabel
+                    }
+                  >
                     TOTAL
                   </Text>
 
-                  <Text style={styles.summaryTotalValue}>
-                    ₱{total.toFixed(2)}
+                  <Text
+                    style={
+                      styles.summaryTotalValue
+                    }
+                  >
+                    ₱
+                    {total.toFixed(
+                      2
+                    )}
                   </Text>
                 </View>
               </>
@@ -644,20 +1225,32 @@ export default function PaymentScreen() {
           </View>
         </View>
 
-        <View style={styles.actionSection}>
+        {/* ACTIONS */}
+
+        <View
+          style={
+            styles.actionSection
+          }
+        >
           <Pressable
-            onPress={handleConfirmPayment}
-            disabled={!isPaymentReady || isProcessing}
+            onPress={
+              handleConfirmPayment
+            }
+            disabled={
+              isProcessing
+            }
             style={[
               styles.confirmButton,
-              (!isPaymentReady || isProcessing) &&
+
+              isProcessing &&
                 styles.confirmButtonDisabled,
             ]}
           >
             <Text
               style={[
                 styles.confirmText,
-                (!isPaymentReady || isProcessing) &&
+
+                isProcessing &&
                   styles.confirmTextDisabled,
               ]}
             >
@@ -668,45 +1261,104 @@ export default function PaymentScreen() {
           </Pressable>
 
           <Pressable
-            onPress={handleCancel}
-            disabled={isProcessing}
-            style={styles.cancelButton}
+            onPress={
+              handleCancel
+            }
+            disabled={
+              isProcessing
+            }
+            style={
+              styles.cancelButton
+            }
           >
-            <Text style={styles.cancelText}>
+            <Text
+              style={
+                styles.cancelText
+              }
+            >
               Cancel
             </Text>
           </Pressable>
         </View>
       </ScrollView>
 
+      {/* CASH MODAL */}
+
       <CashPaymentModal
-        visible={showCashModal}
+        visible={
+          showCashModal
+        }
         total={total}
-        isProcessing={isProcessing}
-        onClose={() => setShowCashModal(false)}
-        onConfirm={handleCashConfirm}
+        isProcessing={
+          isProcessing
+        }
+        onClose={() =>
+          setShowCashModal(
+            false
+          )
+        }
+        onConfirm={
+          handleCashConfirm
+        }
       />
+
+      {/* GCASH MODAL */}
 
       {gcashQrUri && (
         <GCashPaymentModal
-          visible={showGcashModal}
+          visible={
+            showGcashModal
+          }
           total={total}
-          isProcessing={isProcessing}
-          qrCodeUri={gcashQrUri}
-          onClose={() => setShowGcashModal(false)}
-          onConfirm={handleGCashConfirm}
+          isProcessing={
+            isProcessing
+          }
+          qrCodeUri={
+            gcashQrUri
+          }
+          onClose={() =>
+            setShowGcashModal(
+              false
+            )
+          }
+          onConfirm={
+            handleGCashConfirm
+          }
         />
       )}
 
+      {/* RECEIPT */}
+
       {receiptData && (
         <ReceiptModal
-          visible={showReceipt}
-          data={receiptData}
-          onClose={handleReceiptClose}
-          onNewOrder={handleNewOrder}
-          isHistory={false}
+          visible={
+            showReceipt
+          }
+          data={
+            receiptData
+          }
+          onClose={
+            handleReceiptClose
+          }
+          onNewOrder={
+            handleNewOrder
+          }
+          isHistory={
+            false
+          }
         />
       )}
+
+      {/* ERROR TOAST */}
+
+      <ErrorToast
+        visible={
+          showErrorToast
+        }
+        message={
+          errorToastMessage
+        }
+      />
     </View>
   );
 }

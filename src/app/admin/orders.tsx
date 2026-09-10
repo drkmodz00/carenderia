@@ -1,13 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import MobileOrderModal from "@/components/admin/modals/mobile/MobileOrderModal";
+import ErrorToast from "@/components/admin/toast/ErrorToast";
 import { useRouter } from "expo-router";
-
-import React, {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -19,34 +14,14 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-
 import AdminBottomNav from "@/components/admin/AdminBottomNav";
-
 import { createOrder } from "@/lib/order";
-
 import { supabase } from "@/lib/supabase";
+import { getCurrentProfile, getRestaurantSettings } from "@/lib/setting";
+import { createOrderStyles } from "@/styles/admin/order.styles";
+import { createMobileOrderModalStyles } from "@/styles/admin/modals/mobile/mobile-order-modal.styles";
 
-import {
-  getCurrentProfile,
-  getRestaurantSettings,
-} from "@/lib/setting";
-
-import {
-  createOrderStyles,
-} from "@/styles/admin/order.styles";
-
-import {
-  createMobileOrderModalStyles,
-} from "@/styles/admin/modals/mobile/mobile-order-modal.styles";
-
-// =====================================================
-// TYPES
-// =====================================================
-
-type Category = {
-  id: string;
-  name: string;
-};
+type Category = { id: string; name: string };
 
 type MenuItem = {
   id: string;
@@ -58,197 +33,88 @@ type MenuItem = {
   image: string | null;
 };
 
-type OrderItem = MenuItem & {
-  quantity: number;
-};
+type OrderItem = MenuItem & { quantity: number };
 
-type HeaderData = {
-  storeName: string;
-  cashierName: string;
-};
+type HeaderData = { storeName: string; cashierName: string };
 
-type OrderType =
-  | "Dine In"
-  | "Take Out";
-
-// =====================================================
-// SCREEN
-// =====================================================
+type OrderType = "Dine In" | "Take Out";
 
 export default function OrderScreen() {
   const router = useRouter();
-
-  // ===================================================
-  // SCREEN DIMENSIONS
-  // ===================================================
-
-  const {
-    width,
-    height,
-  } = useWindowDimensions();
-
-  // ===================================================
-  // RESPONSIVE DEVICE
-  // ===================================================
+  const { width, height } = useWindowDimensions();
 
   const responsive = useMemo(
     () => ({
       width,
       height,
-
-      isSmallPhone:
-        width < 360,
-
-      isPhone:
-        width < 768,
-
-      isTablet:
-        width >= 768 &&
-        width < 1024,
-
-      isLargeTablet:
-        width >= 1024 &&
-        width < 1200,
-
-      isDesktop:
-        width >= 1200,
-
-      isLargeDesktop:
-        width >= 1440,
+      isSmallPhone: width < 360,
+      isPhone: width < 768,
+      isTablet: width >= 768 && width < 1024,
+      isLargeTablet: width >= 1024 && width < 1200,
+      isDesktop: width >= 1200,
+      isLargeDesktop: width >= 1440,
     }),
     [width, height]
   );
-
-  // ===================================================
-  // TABLET / DESKTOP
-  // ===================================================
 
   const isTablet =
     responsive.isTablet ||
     responsive.isLargeTablet ||
     responsive.isDesktop;
 
-  // ===================================================
-  // MENU COLUMNS
-  // ===================================================
-
-  const numColumns =
-    responsive.isPhone
-      ? 2
-      : responsive.isTablet
-        ? 3
-        : 4;
-
-  // ===================================================
-  // DESKTOP ORDER STYLES
-  // ===================================================
+  const numColumns = responsive.isPhone
+    ? 2
+    : responsive.isTablet
+      ? 3
+      : 4;
 
   const styles = useMemo(
-    () =>
-      createOrderStyles(
-        isTablet,
-        numColumns
-      ),
-    [
-      isTablet,
-      numColumns,
-    ]
+    () => createOrderStyles(isTablet, numColumns),
+    [isTablet, numColumns]
   );
 
-  // ===================================================
-  // MOBILE MODAL STYLES
-  // ===================================================
-
   const mobileStyles = useMemo(
-    () =>
-      createMobileOrderModalStyles(
-        responsive.width
-      ),
+    () => createMobileOrderModalStyles(responsive.width),
     [responsive.width]
   );
 
-  // ===================================================
-  // STATE
-  // ===================================================
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [isLoadingMenu, setIsLoadingMenu] = useState(true);
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [customerName, setCustomerName] = useState("");
+  const [orderType, setOrderType] = useState<OrderType>("Dine In");
+  const [showMobileOrder, setShowMobileOrder] = useState(false);
 
-  const [
-    categories,
-    setCategories,
-  ] = useState<Category[]>([]);
-
-  const [
-    menuItems,
-    setMenuItems,
-  ] = useState<MenuItem[]>([]);
-
-  const [
-    selectedCategory,
-    setSelectedCategory,
-  ] = useState("All");
-
-  const [
-    isLoadingMenu,
-    setIsLoadingMenu,
-  ] = useState(true);
-
-  const [
-    orderItems,
-    setOrderItems,
-  ] = useState<OrderItem[]>([]);
-
-  const [
-    isCreatingOrder,
-    setIsCreatingOrder,
-  ] = useState(false);
-
-  const [
-    customerName,
-    setCustomerName,
-  ] = useState("");
-
-  const [
-    orderType,
-    setOrderType,
-  ] = useState<OrderType>(
-    "Dine In"
-  );
-
-  const [
-    showMobileOrder,
-    setShowMobileOrder,
-  ] = useState(false);
-
-  const [
-    headerData,
-    setHeaderData,
-  ] = useState<HeaderData>({
+  const [headerData, setHeaderData] = useState<HeaderData>({
     storeName: "Restaurant",
     cashierName: "Cashier",
   });
 
-  // ===================================================
-  // LOAD HEADER
-  // ===================================================
+  // ERROR TOAST
+  const [showErrorToast, setShowErrorToast] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const showError = (message: string) => {
+    setErrorMessage(message);
+    setShowErrorToast(true);
+
+    setTimeout(() => {
+      setShowErrorToast(false);
+    }, 3000);
+  };
 
   const loadHeader = async () => {
     try {
-      // ---------------------------------------------
-      // RESTAURANT SETTINGS
-      // ---------------------------------------------
-
       try {
-        const settings =
-          await getRestaurantSettings();
+        const settings = await getRestaurantSettings();
 
-        setHeaderData(
-          (current) => ({
-            ...current,
-
-            storeName:
-              settings.name?.trim() ||
-              "Restaurant",
-          })
-        );
+        setHeaderData((current) => ({
+          ...current,
+          storeName: settings.name?.trim() || "Restaurant",
+        }));
       } catch (error) {
         console.warn(
           "Unable to load restaurant settings:",
@@ -256,34 +122,24 @@ export default function OrderScreen() {
         );
       }
 
-      // ---------------------------------------------
-      // PROFILE
-      // ---------------------------------------------
-
       try {
-        const profile =
-          await getCurrentProfile();
+        const profile = await getCurrentProfile();
 
         if (profile) {
-          const data =
-            profile as {
-              name?: string | null;
-              username?: string | null;
-            };
+          const data = profile as {
+            name?: string | null;
+            username?: string | null;
+          };
 
           const displayName =
             data.name?.trim() ||
             data.username?.trim();
 
           if (displayName) {
-            setHeaderData(
-              (current) => ({
-                ...current,
-
-                cashierName:
-                  displayName,
-              })
-            );
+            setHeaderData((current) => ({
+              ...current,
+              cashierName: displayName,
+            }));
 
             return;
           }
@@ -295,37 +151,22 @@ export default function OrderScreen() {
         );
       }
 
-      // ---------------------------------------------
-      // AUTH FALLBACK
-      // ---------------------------------------------
-
       const {
-        data: {
-          session,
-        },
+        data: { session },
         error,
-      } =
-        await supabase.auth.getSession();
+      } = await supabase.auth.getSession();
 
       if (error) {
-        console.warn(
-          "Session error:",
-          error
-        );
-
+        console.warn("Session error:", error);
         return;
       }
 
       if (session?.user) {
-        setHeaderData(
-          (current) => ({
-            ...current,
-
-            cashierName:
-              session.user.email ??
-              "Cashier",
-          })
-        );
+        setHeaderData((current) => ({
+          ...current,
+          cashierName:
+            session.user.email ?? "Cashier",
+        }));
       }
     } catch (error) {
       console.error(
@@ -335,114 +176,72 @@ export default function OrderScreen() {
     }
   };
 
-  // ===================================================
-  // LOAD MENU
-  // ===================================================
-
   const loadMenu = async () => {
     try {
       setIsLoadingMenu(true);
 
-      const [
-        categoriesResult,
-        menuResult,
-      ] = await Promise.all([
-        supabase
-          .from("categories")
-          .select("id, name")
-          .order("name", {
-            ascending: true,
-          }),
+      const [categoriesResult, menuResult] =
+        await Promise.all([
+          supabase
+            .from("categories")
+            .select("id, name")
+            .order("name", {
+              ascending: true,
+            }),
 
-        supabase
-          .from("menu_items")
-          .select(
-            `
-              id,
-              category_id,
-              name,
-              price,
-              image_url,
-              available,
-              categories (
+          supabase
+            .from("menu_items")
+            .select(
+              `
                 id,
-                name
-              )
-            `
-          )
-          .order("name", {
-            ascending: true,
-          }),
-      ]);
+                category_id,
+                name,
+                price,
+                image_url,
+                available,
+                categories (
+                  id,
+                  name
+                )
+              `
+            )
+            .order("name", {
+              ascending: true,
+            }),
+        ]);
 
-      if (categoriesResult.error) {
+      if (categoriesResult.error)
         throw categoriesResult.error;
-      }
 
-      if (menuResult.error) {
+      if (menuResult.error)
         throw menuResult.error;
-      }
-
-      // ---------------------------------------------
-      // CATEGORIES
-      // ---------------------------------------------
 
       setCategories(
-        (
-          categoriesResult.data ??
-          []
-        ).map(
+        (categoriesResult.data ?? []).map(
           (category) => ({
-            id: String(
-              category.id
-            ),
-
-            name:
-              category.name,
+            id: String(category.id),
+            name: category.name,
           })
         )
       );
 
-      // ---------------------------------------------
-      // MENU
-      // ---------------------------------------------
-
       setMenuItems(
-        (
-          menuResult.data ??
-          []
-        ).map(
+        (menuResult.data ?? []).map(
           (item: any) => ({
-            id: String(
-              item.id
+            id: String(item.id),
+            name: item.name,
+            category_id: String(
+              item.category_id
             ),
-
-            name:
-              item.name,
-
-            category_id:
-              String(
-                item.category_id
-              ),
-
             category_name:
-              item.categories
-                ?.name ??
+              item.categories?.name ??
               "Uncategorized",
-
-            price:
-              Number(
-                item.price
-              ),
-
-            available:
-              Boolean(
-                item.available
-              ),
-
+            price: Number(item.price),
+            available: Boolean(
+              item.available
+            ),
             image:
-              item.image_url ??
-              null,
+              item.image_url ?? null,
           })
         )
       );
@@ -454,7 +253,6 @@ export default function OrderScreen() {
 
       Alert.alert(
         "Menu Error",
-
         error instanceof Error
           ? error.message
           : "Unable to load menu."
@@ -464,51 +262,29 @@ export default function OrderScreen() {
     }
   };
 
-  // ===================================================
-  // INITIAL LOAD
-  // ===================================================
-
   useEffect(() => {
     loadHeader();
     loadMenu();
   }, []);
 
-  // ===================================================
-  // FILTERED MENU
-  // ===================================================
+  const filteredItems = useMemo(() => {
+    if (selectedCategory === "All")
+      return menuItems;
 
-  const filteredItems = useMemo(
-    () => {
-      if (
-        selectedCategory ===
-        "All"
-      ) {
-        return menuItems;
-      }
-
-      return menuItems.filter(
-        (item) =>
-          item.category_id ===
-          selectedCategory
-      );
-    },
-    [
-      menuItems,
-      selectedCategory,
-    ]
-  );
-
-  // ===================================================
-  // TOTAL
-  // ===================================================
+    return menuItems.filter(
+      (item) =>
+        item.category_id ===
+        selectedCategory
+    );
+  }, [
+    menuItems,
+    selectedCategory,
+  ]);
 
   const orderTotal = useMemo(
     () =>
       orderItems.reduce(
-        (
-          total,
-          item
-        ) =>
+        (total, item) =>
           total +
           item.price *
             item.quantity,
@@ -517,27 +293,15 @@ export default function OrderScreen() {
     [orderItems]
   );
 
-  // ===================================================
-  // ORDER COUNT
-  // ===================================================
-
   const orderCount = useMemo(
     () =>
       orderItems.reduce(
-        (
-          total,
-          item
-        ) =>
-          total +
-          item.quantity,
+        (total, item) =>
+          total + item.quantity,
         0
       ),
     [orderItems]
   );
-
-  // ===================================================
-  // ADD TO ORDER
-  // ===================================================
 
   const handleAddToOrder = (
     item: MenuItem
@@ -545,298 +309,187 @@ export default function OrderScreen() {
     if (
       !item.available ||
       isCreatingOrder
-    ) {
+    )
       return;
-    }
 
-    setOrderItems(
-      (current) => {
-        const existing =
-          current.find(
-            (orderItem) =>
-              orderItem.id ===
-              item.id
-          );
+    setOrderItems((current) => {
+      const existing = current.find(
+        (orderItem) =>
+          orderItem.id === item.id
+      );
 
-        if (existing) {
-          return current.map(
-            (orderItem) =>
-              orderItem.id ===
-              item.id
-                ? {
-                    ...orderItem,
-
-                    quantity:
-                      orderItem.quantity +
-                      1,
-                  }
-                : orderItem
-          );
-        }
-
-        return [
-          ...current,
-
-          {
-            ...item,
-
-            quantity: 1,
-          },
-        ];
+      if (existing) {
+        return current.map(
+          (orderItem) =>
+            orderItem.id === item.id
+              ? {
+                  ...orderItem,
+                  quantity:
+                    orderItem.quantity +
+                    1,
+                }
+              : orderItem
+        );
       }
-    );
-  };
 
-  // ===================================================
-  // INCREASE
-  // ===================================================
+      return [
+        ...current,
+        {
+          ...item,
+          quantity: 1,
+        },
+      ];
+    });
+  };
 
   const increaseQuantity = (
     id: string
   ) => {
-    if (
-      isCreatingOrder
-    ) {
-      return;
-    }
+    if (isCreatingOrder) return;
 
-    setOrderItems(
-      (current) =>
-        current.map(
-          (item) =>
-            item.id === id
-              ? {
-                  ...item,
-
-                  quantity:
-                    item.quantity +
-                    1,
-                }
-              : item
-        )
+    setOrderItems((current) =>
+      current.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              quantity:
+                item.quantity + 1,
+            }
+          : item
+      )
     );
   };
-
-  // ===================================================
-  // DECREASE
-  // ===================================================
 
   const decreaseQuantity = (
     id: string
   ) => {
-    if (
-      isCreatingOrder
-    ) {
-      return;
-    }
+    if (isCreatingOrder) return;
 
-    setOrderItems(
-      (current) =>
-        current
-          .map(
-            (item) =>
-              item.id === id
-                ? {
-                    ...item,
-
-                    quantity:
-                      item.quantity -
-                      1,
-                  }
-                : item
-          )
-          .filter(
-            (item) =>
-              item.quantity >
-              0
-          )
+    setOrderItems((current) =>
+      current
+        .map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                quantity:
+                  item.quantity - 1,
+              }
+            : item
+        )
+        .filter(
+          (item) =>
+            item.quantity > 0
+        )
     );
   };
-
-  // ===================================================
-  // ORDER TYPE
-  // ===================================================
 
   const handleSelectOrderType = (
     type: OrderType
   ) => {
-    if (
-      isCreatingOrder
-    ) {
-      return;
-    }
-
+    if (isCreatingOrder) return;
     setOrderType(type);
   };
 
-  // ===================================================
-  // CLEAR
-  // ===================================================
-
   const clearOrder = () => {
-    if (
-      isCreatingOrder
-    ) {
+    if (isCreatingOrder) return;
+
+    setOrderItems([]);
+    setCustomerName("");
+    setOrderType("Dine In");
+  };
+
+  const handleCheckout = async () => {
+    if (isCreatingOrder) return;
+
+    const cleanCustomerName =
+      customerName.trim();
+
+    if (!cleanCustomerName) {
+      showError(
+        "Please enter the customer's name before saving the order."
+      );
       return;
     }
 
-    setOrderItems([]);
+    if (!orderItems.length) {
+      showError(
+        "Please add at least one menu item."
+      );
+      return;
+    }
 
-    setCustomerName("");
+    try {
+      setIsCreatingOrder(true);
 
-    setOrderType(
-      "Dine In"
-    );
-  };
+      const createdOrder =
+        await createOrder(
+          cleanCustomerName,
 
-  // ===================================================
-  // CHECKOUT
-  // ===================================================
+          orderItems.map((item) => ({
+            menu_item_id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            unit_price: item.price,
+            image: item.image,
+          })),
 
-  const handleCheckout =
-    async () => {
-      if (
-        isCreatingOrder
-      ) {
-        return;
-      }
+          orderType,
 
-      const cleanCustomerName =
-        customerName.trim();
-
-      if (
-        !cleanCustomerName
-      ) {
-        Alert.alert(
-          "Customer Name Required",
-
-          "Please enter the customer's name before saving the order."
+          Number(
+            orderTotal.toFixed(2)
+          )
         );
 
-        return;
-      }
+      router.push({
+        pathname:
+          "/admin/payment",
 
-      if (
-        !orderItems.length
-      ) {
-        Alert.alert(
-          "Empty Order",
+        params: {
+          orderId:
+            createdOrder.id,
 
-          "Please add at least one menu item."
-        );
+          total:
+            orderTotal.toFixed(2),
 
-        return;
-      }
-
-      try {
-        setIsCreatingOrder(
-          true
-        );
-
-        const createdOrder =
-          await createOrder(
+          customerName:
             cleanCustomerName,
 
-            orderItems.map(
-              (item) => ({
-                menu_item_id:
-                  item.id,
+          orderType,
 
-                name:
-                  item.name,
-
-                quantity:
-                  item.quantity,
-
-                unit_price:
-                  item.price,
-
-                image:
-                  item.image,
-              })
-            ),
-
-            orderType,
-
-            Number(
-              orderTotal.toFixed(
-                2
+          orderItems:
+            JSON.stringify(
+              orderItems.map(
+                (item) => ({
+                  id: item.id,
+                  name: item.name,
+                  quantity:
+                    item.quantity,
+                  price: item.price,
+                  image: item.image,
+                })
               )
-            )
-          );
+            ),
+        },
+      });
 
-        router.push({
-          pathname:
-            "/admin/payment",
+      setShowMobileOrder(false);
+    } catch (error) {
+      console.error(
+        "Create order error:",
+        error
+      );
 
-          params: {
-            orderId:
-              createdOrder.id,
+      showError(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while creating the order."
+      );
+    } finally {
+      setIsCreatingOrder(false);
+    }
+  };
 
-            total:
-              orderTotal.toFixed(
-                2
-              ),
-
-            customerName:
-              cleanCustomerName,
-
-            orderType,
-
-            orderItems:
-              JSON.stringify(
-                orderItems.map(
-                  (item) => ({
-                    id:
-                      item.id,
-
-                    name:
-                      item.name,
-
-                    quantity:
-                      item.quantity,
-
-                    price:
-                      item.price,
-
-                    image:
-                      item.image,
-                  })
-                )
-              ),
-          },
-        });
-
-        setShowMobileOrder(
-          false
-        );
-      } catch (error) {
-        console.error(
-          "Create order error:",
-          error
-        );
-
-        Alert.alert(
-          "Order Error",
-
-          error instanceof Error
-            ? error.message
-            : "Something went wrong while creating the order."
-        );
-      } finally {
-        setIsCreatingOrder(
-          false
-        );
-      }
-    };
-
-  // ===================================================
-  // LOADING
-  // ===================================================
-
-  if (
-    isLoadingMenu
-  ) {
+  if (isLoadingMenu) {
     return (
       <View
         style={[
@@ -862,19 +515,15 @@ export default function OrderScreen() {
     );
   }
 
-  // ===================================================
-  // SCREEN
-  // ===================================================
-
   return (
-    <View
-      style={
-        styles.container
-      }
-    >
-      {/* =================================================
-          HEADER
-      ================================================= */}
+    <View style={styles.container}>
+      {/* ERROR TOAST */}
+
+      <ErrorToast
+        visible={showErrorToast}
+        title="Incomplete Order"
+        message={errorMessage}
+      />
 
       <View
         style={
@@ -898,26 +547,16 @@ export default function OrderScreen() {
         </Text>
       </View>
 
-      {/* =================================================
-          MAIN CONTENT
-      ================================================= */}
-
       <View
         style={
           styles.mainRow
         }
       >
-        {/* ===============================================
-            MENU
-        =============================================== */}
-
         <View
           style={
             styles.leftPane
           }
         >
-          {/* CATEGORY */}
-
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={
@@ -935,52 +574,43 @@ export default function OrderScreen() {
                 id: "All",
                 name: "All",
               },
-
               ...categories,
-            ].map(
-              (
-                category
-              ) => {
-                const active =
-                  selectedCategory ===
-                  category.id;
+            ].map((category) => {
+              const active =
+                selectedCategory ===
+                category.id;
 
-                return (
-                  <Pressable
-                    key={
+              return (
+                <Pressable
+                  key={
+                    category.id
+                  }
+                  onPress={() =>
+                    setSelectedCategory(
                       category.id
-                    }
-                    onPress={() =>
-                      setSelectedCategory(
-                        category.id
-                      )
-                    }
+                    )
+                  }
+                  style={[
+                    styles.categoryTab,
+                    active &&
+                      styles.activeCategoryTab,
+                  ]}
+                >
+                  <Text
                     style={[
-                      styles.categoryTab,
-
+                      styles.categoryTabText,
                       active &&
-                        styles.activeCategoryTab,
+                        styles.activeCategoryTabText,
                     ]}
                   >
-                    <Text
-                      style={[
-                        styles.categoryTabText,
-
-                        active &&
-                          styles.activeCategoryTabText,
-                      ]}
-                    >
-                      {
-                        category.name
-                      }
-                    </Text>
-                  </Pressable>
-                );
-              }
-            )}
+                    {
+                      category.name
+                    }
+                  </Text>
+                </Pressable>
+              );
+            })}
           </ScrollView>
-
-          {/* MENU GRID */}
 
           <ScrollView
             style={
@@ -1009,18 +639,13 @@ export default function OrderScreen() {
               </View>
             ) : (
               filteredItems.map(
-                (
-                  item
-                ) => {
+                (item) => {
                   const quantityInCart =
                     orderItems.find(
-                      (
-                        orderItem
-                      ) =>
+                      (orderItem) =>
                         orderItem.id ===
                         item.id
-                    )?.quantity ??
-                    0;
+                    )?.quantity ?? 0;
 
                   return (
                     <Pressable
@@ -1038,17 +663,13 @@ export default function OrderScreen() {
                       }
                       style={[
                         styles.foodCard,
-
                         !item.available &&
                           styles.unavailableCard,
-
                         quantityInCart >
                           0 &&
                           styles.foodCardSelected,
                       ]}
                     >
-                      {/* IMAGE */}
-
                       <View
                         style={
                           styles.foodImageWrap
@@ -1080,8 +701,6 @@ export default function OrderScreen() {
                           </View>
                         )}
 
-                        {/* COUNT */}
-
                         {quantityInCart >
                           0 && (
                           <View
@@ -1102,8 +721,6 @@ export default function OrderScreen() {
                           </View>
                         )}
 
-                        {/* SOLD OUT */}
-
                         {!item.available && (
                           <View
                             style={
@@ -1121,8 +738,6 @@ export default function OrderScreen() {
                         )}
                       </View>
 
-                      {/* INFO */}
-
                       <View
                         style={
                           styles.foodCardBody
@@ -1132,9 +747,7 @@ export default function OrderScreen() {
                           style={
                             styles.foodName
                           }
-                          numberOfLines={
-                            1
-                          }
+                          numberOfLines={1}
                         >
                           {
                             item.name
@@ -1159,10 +772,6 @@ export default function OrderScreen() {
             )}
           </ScrollView>
         </View>
-
-        {/* =================================================
-            TABLET / DESKTOP ORDER PANEL
-        ================================================= */}
 
         {isTablet && (
           <View
@@ -1209,8 +818,6 @@ export default function OrderScreen() {
               />
             </View>
 
-            {/* ORDER TYPE */}
-
             <View
               style={
                 styles.orderTypeSection
@@ -1232,7 +839,6 @@ export default function OrderScreen() {
                 <Pressable
                   style={[
                     styles.orderTypeButton,
-
                     orderType ===
                       "Dine In" &&
                       styles.orderTypeButtonActive,
@@ -1246,7 +852,6 @@ export default function OrderScreen() {
                   <Text
                     style={[
                       styles.orderTypeButtonText,
-
                       orderType ===
                         "Dine In" &&
                         styles.orderTypeButtonTextActive,
@@ -1259,7 +864,6 @@ export default function OrderScreen() {
                 <Pressable
                   style={[
                     styles.orderTypeButton,
-
                     orderType ===
                       "Take Out" &&
                       styles.orderTypeButtonActive,
@@ -1273,7 +877,6 @@ export default function OrderScreen() {
                   <Text
                     style={[
                       styles.orderTypeButtonText,
-
                       orderType ===
                         "Take Out" &&
                         styles.orderTypeButtonTextActive,
@@ -1284,8 +887,6 @@ export default function OrderScreen() {
                 </Pressable>
               </View>
             </View>
-
-            {/* ORDER ITEMS */}
 
             {!orderItems.length ? (
               <View
@@ -1306,7 +907,7 @@ export default function OrderScreen() {
                     styles.emptyOrderTitle
                   }
                 >
-                  Walang laman ang order
+                  No Item
                 </Text>
 
                 <Text
@@ -1314,7 +915,7 @@ export default function OrderScreen() {
                     styles.emptyOrderSubtitle
                   }
                 >
-                  Pumili ng pagkain mula sa menu
+                  Choose item from the menu
                 </Text>
               </View>
             ) : (
@@ -1327,9 +928,7 @@ export default function OrderScreen() {
                 }
               >
                 {orderItems.map(
-                  (
-                    item
-                  ) => (
+                  (item) => (
                     <View
                       key={
                         item.id
@@ -1403,7 +1002,6 @@ export default function OrderScreen() {
                         <Pressable
                           style={[
                             styles.stepperButton,
-
                             styles.stepperButtonPlus,
                           ]}
                           onPress={() =>
@@ -1415,7 +1013,6 @@ export default function OrderScreen() {
                           <Text
                             style={[
                               styles.stepperButtonText,
-
                               styles.stepperButtonTextPlus,
                             ]}
                           >
@@ -1442,8 +1039,6 @@ export default function OrderScreen() {
                 )}
               </ScrollView>
             )}
-
-            {/* FOOTER */}
 
             <View
               style={
@@ -1503,7 +1098,6 @@ export default function OrderScreen() {
               <Pressable
                 style={[
                   styles.saveOrderButton,
-
                   (!orderItems.length ||
                     isCreatingOrder) &&
                     styles.saveOrderButtonDisabled,
@@ -1569,10 +1163,6 @@ export default function OrderScreen() {
         )}
       </View>
 
-      {/* =================================================
-          MOBILE CART BUTTON
-      ================================================= */}
-
       {responsive.isPhone && (
         <Pressable
           onPress={() =>
@@ -1585,7 +1175,6 @@ export default function OrderScreen() {
           }
           style={[
             mobileStyles.cartButton,
-
             isCreatingOrder &&
               mobileStyles.cartButtonDisabled,
           ]}
@@ -1597,8 +1186,6 @@ export default function OrderScreen() {
             size={24}
             color="#FFFFFF"
           />
-
-          {/* CART QUANTITY */}
 
           {orderCount > 0 && (
             <View
@@ -1617,10 +1204,6 @@ export default function OrderScreen() {
           )}
         </Pressable>
       )}
-
-      {/* =================================================
-          MOBILE ORDER MODAL
-      ================================================= */}
 
       <MobileOrderModal
         visible={
@@ -1666,10 +1249,6 @@ export default function OrderScreen() {
           handleCheckout
         }
       />
-
-      {/* =================================================
-          BOTTOM NAV
-      ================================================= */}
 
       <AdminBottomNav />
     </View>

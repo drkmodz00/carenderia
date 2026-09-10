@@ -25,6 +25,7 @@ type SaleItem = {
 type Sale = {
   id: string;
   orderId: string;
+  orderNumber: number | null;
   date: string;
   total: number;
   paymentMethod: string | null;
@@ -36,13 +37,7 @@ export default function Sales() {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
-  // IMPORTANT:
-  // createSalesStyles expects { width }, not isTablet.
-  // This also makes the styles responsive to orientation changes.
-  const styles = useMemo(
-    () => createSalesStyles({ width }),
-    [width]
-  );
+  const styles = useMemo(() => createSalesStyles({ width }), [width]);
 
   const [sales, setSales] = useState<Sale[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,6 +60,7 @@ export default function Sales() {
           sold_at,
           orders (
             id,
+            order_number,
             status,
             order_type,
             created_at,
@@ -90,16 +86,12 @@ export default function Sales() {
       const loadedSales = data ?? [];
 
       const formattedSales: Sale[] = loadedSales.map((sale: any) => {
-        const order = Array.isArray(sale.orders)
-          ? sale.orders[0]
-          : sale.orders;
+        const order = Array.isArray(sale.orders) ? sale.orders[0] : sale.orders;
 
         const orderItems = order?.order_items ?? [];
 
         const items: SaleItem[] = orderItems.map((item: any) => {
-          const menuItem = Array.isArray(item.menu_items)
-            ? item.menu_items?.[0]
-            : item.menu_items;
+          const menuItem = Array.isArray(item.menu_items) ? item.menu_items?.[0] : item.menu_items;
 
           return {
             product: menuItem?.name ?? "Unknown Item",
@@ -111,10 +103,8 @@ export default function Sales() {
         return {
           id: sale.id,
           orderId: sale.order_id,
-          date:
-            sale.sold_at ??
-            order?.created_at ??
-            new Date().toISOString(),
+          orderNumber: order?.order_number ?? null,
+          date: sale.sold_at ?? order?.created_at ?? new Date().toISOString(),
           total: Number(sale.total),
           paymentMethod: sale.payment_method,
           items,
@@ -123,15 +113,9 @@ export default function Sales() {
 
       setSales(formattedSales);
     } catch (error) {
-      console.error(
-        "Failed to load sales dashboard:",
-        error
-      );
+      console.error("Failed to load sales dashboard:", error);
 
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Unable to load sales dashboard.";
+      const message = error instanceof Error ? error.message : "Unable to load sales dashboard.";
 
       Alert.alert("Sales Error", message);
     } finally {
@@ -139,12 +123,12 @@ export default function Sales() {
     }
   };
 
-  // =====================================================
-  // FORMATTERS
-  // =====================================================
+  const formatCurrency = (amount: number) => `₱${amount.toFixed(2)}`;
 
-  const formatCurrency = (amount: number) =>
-    `₱${amount.toFixed(2)}`;
+  const formatOrderNumber = (orderNumber: number | null | undefined) =>
+    orderNumber !== null && orderNumber !== undefined
+      ? `#${String(orderNumber).padStart(4, "0")}`
+      : "#0000";
 
   const formatTransactionTime = (date: string) =>
     new Date(date).toLocaleTimeString("en-US", {
@@ -152,10 +136,6 @@ export default function Sales() {
       minute: "2-digit",
       hour12: true,
     });
-
-  // =====================================================
-  // DASHBOARD DATE
-  // =====================================================
 
   const dashboardDate = new Date();
 
@@ -166,21 +146,14 @@ export default function Sales() {
       day: "numeric",
       year: "numeric",
     });
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // =====================================================
-  // TODAY'S SALES
-  // =====================================================
 
   const todaySales = useMemo(() => {
     return sales.filter((sale) => {
       const date = new Date(sale.date);
 
       return (
-        date.getFullYear() ===
-          dashboardDate.getFullYear() &&
+        date.getFullYear() === dashboardDate.getFullYear() &&
         date.getMonth() === dashboardDate.getMonth() &&
         date.getDate() === dashboardDate.getDate()
       );
@@ -188,38 +161,20 @@ export default function Sales() {
   }, [sales]);
 
   const totalSales = useMemo(
-    () =>
-      todaySales.reduce(
-        (total, sale) =>
-          total + Number(sale.total),
-        0
-      ),
+    () => todaySales.reduce((total, sale) => total + Number(sale.total), 0),
     [todaySales]
   );
 
   const totalTransactions = todaySales.length;
 
-  const averageSale =
-    totalTransactions > 0
-      ? totalSales / totalTransactions
-      : 0;
+  const averageSale = totalTransactions > 0 ? totalSales / totalTransactions : 0;
 
   const itemsSoldToday = useMemo(() => {
     return todaySales.reduce(
-      (total, sale) =>
-        total +
-        sale.items.reduce(
-          (sum, item) =>
-            sum + item.quantity,
-          0
-        ),
+      (total, sale) => total + sale.items.reduce((sum, item) => sum + item.quantity, 0),
       0
     );
   }, [todaySales]);
-
-  // =====================================================
-  // TOP SELLING ITEMS
-  // =====================================================
 
   const topSellingItems = useMemo(() => {
     const totals = new Map<
@@ -233,12 +188,9 @@ export default function Sales() {
 
     sales.forEach((sale) => {
       sale.items.forEach((item) => {
-        const existing = totals.get(
-          item.product
-        );
+        const existing = totals.get(item.product);
 
-        const revenue =
-          item.price * item.quantity;
+        const revenue = item.price * item.quantity;
 
         if (existing) {
           existing.quantity += item.quantity;
@@ -254,43 +206,19 @@ export default function Sales() {
     });
 
     return Array.from(totals.values())
-      .sort(
-        (a, b) =>
-          b.quantity - a.quantity
-      )
+      .sort((a, b) => b.quantity - a.quantity)
       .slice(0, 5);
   }, [sales]);
 
-  const maxTopItemQuantity = Math.max(
-    ...topSellingItems.map(
-      (item) => item.quantity
-    ),
-    1
-  );
+  const maxTopItemQuantity = Math.max(...topSellingItems.map((item) => item.quantity), 1);
 
-  const RANK_BADGE_COLORS = [
-    "#D99A00",
-    "#8D969F",
-    "#B96D32",
-  ];
-
-  // =====================================================
-  // RECENT TRANSACTIONS
-  // =====================================================
+  const RANK_BADGE_COLORS = ["#D99A00", "#8D969F", "#B96D32"];
 
   const recentTransactions = useMemo(() => {
     return [...sales]
-      .sort(
-        (a, b) =>
-          new Date(b.date).getTime() -
-          new Date(a.date).getTime()
-      )
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 5);
   }, [sales]);
-
-  // =====================================================
-  // SALES THIS WEEK
-  // =====================================================
 
   const weekSales = useMemo(() => {
     const result = [
@@ -309,72 +237,36 @@ export default function Sales() {
 
     const monday = new Date(today);
 
-    const daysFromMonday =
-      currentDay === 0
-        ? 6
-        : currentDay - 1;
+    const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1;
 
-    monday.setDate(
-      today.getDate() -
-        daysFromMonday
-    );
+    monday.setDate(today.getDate() - daysFromMonday);
 
-    monday.setHours(
-      0,
-      0,
-      0,
-      0
-    );
+    monday.setHours(0, 0, 0, 0);
 
     const sunday = new Date(monday);
 
-    sunday.setDate(
-      monday.getDate() + 6
-    );
+    sunday.setDate(monday.getDate() + 6);
 
-    sunday.setHours(
-      23,
-      59,
-      59,
-      999
-    );
+    sunday.setHours(23, 59, 59, 999);
 
     sales.forEach((sale) => {
-      const date = new Date(
-        sale.date
-      );
+      const date = new Date(sale.date);
 
-      if (
-        date < monday ||
-        date > sunday
-      ) {
+      if (date < monday || date > sunday) {
         return;
       }
 
       const jsDay = date.getDay();
 
-      const dayIndex =
-        jsDay === 0
-          ? 6
-          : jsDay - 1;
+      const dayIndex = jsDay === 0 ? 6 : jsDay - 1;
 
-      result[dayIndex].amount +=
-        Number(sale.total);
+      result[dayIndex].amount += Number(sale.total);
     });
 
     return result;
   }, [sales]);
 
-  const maxWeekSales = Math.max(
-    ...weekSales.map(
-      (item) => item.amount
-    ),
-    1
-  );
-
-  // =====================================================
-  // LOADING
-  // =====================================================
+  const maxWeekSales = Math.max(...weekSales.map((item) => item.amount), 1);
 
   if (isLoading) {
     return (
@@ -388,23 +280,14 @@ export default function Sales() {
           },
         ]}
       >
-        <ActivityIndicator
-          size="large"
-          color={COLORS.primary}
-        />
+        <ActivityIndicator size="large" color={COLORS.primary} />
 
-        <Text style={styles.loadingText}>
-          Loading sales...
-        </Text>
+        <Text style={styles.loadingText}>Loading sales...</Text>
 
         <AdminBottomNav />
       </View>
     );
   }
-
-  // =====================================================
-  // MAIN
-  // =====================================================
 
   return (
     <View
@@ -416,17 +299,11 @@ export default function Sales() {
         },
       ]}
     >
-      {/* =================================================
-          HEADER
-      ================================================= */}
-
       <View
         style={[
           styles.header,
           {
-            paddingTop:
-              styles.header.paddingVertical +
-              insets.top,
+            paddingTop: styles.header.paddingVertical + insets.top,
           },
         ]}
       >
@@ -436,893 +313,341 @@ export default function Sales() {
             minWidth: 0,
           }}
         >
-          <Text style={styles.headerTitle}>
-            Sales
-          </Text>
+          <Text style={styles.headerTitle}>Sales</Text>
 
-          <Text style={styles.headerDate}>
-            {headerDateLabel}
-          </Text>
+          <Text style={styles.headerDate}>{headerDateLabel}</Text>
         </View>
 
         <Pressable
           onPress={loadSales}
-          style={({ pressed }) => [
-            styles.refreshButton,
-            pressed && styles.pressed,
-          ]}
+          style={({ pressed }) => [styles.refreshButton, pressed && styles.pressed]}
         >
-          <MaterialIcons
-            name="refresh"
-            size={19}
-            color={COLORS.text}
-          />
+          <MaterialIcons name="refresh" size={19} color={COLORS.text} />
 
-          <Text style={styles.refreshText}>
-            Refresh
-          </Text>
+          <Text style={styles.refreshText}>Refresh</Text>
         </Pressable>
       </View>
-
-      {/* =================================================
-          CONTENT
-      ================================================= */}
 
       <ScrollView
         style={styles.container}
         contentContainerStyle={[
           styles.content,
           {
-            paddingBottom:
-              32 + insets.bottom,
+            paddingBottom: 32 + insets.bottom,
           },
         ]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.contentInner}>
-          {/* =================================================
-              TODAY
-          ================================================= */}
-
-          <Text style={styles.sectionLabel}>
-            Ngayong Araw
-          </Text>
+          <Text style={styles.sectionLabel}>Today</Text>
 
           <View style={styles.summaryGrid}>
             {/* TOTAL SALES */}
 
-            <View
-              style={[
-                styles.summaryCard,
-                styles.salesCard,
-              ]}
-            >
-              <View
-                style={styles.summaryTopRow}
-              >
-                <View
-                  style={styles.summaryIcon}
-                >
-                  <MaterialIcons
-                    name="payments"
-                    size={21}
-                    color={COLORS.primary}
-                  />
+            <View style={[styles.summaryCard, styles.salesCard]}>
+              <View style={styles.summaryTopRow}>
+                <View style={styles.summaryIcon}>
+                  <MaterialIcons name="payments" size={21} color={COLORS.primary} />
                 </View>
 
-                <Text
-                  style={
-                    styles.summaryTrend
-                  }
-                >
-                  TODAY
-                </Text>
+                <Text style={styles.summaryTrend}>TODAY</Text>
               </View>
 
-              <Text
-                style={
-                  styles.summaryCardLabel
-                }
-              >
-                Kabuuang Benta
+              <Text style={styles.summaryCardLabel}>Total Sale</Text>
+
+              <Text style={styles.salesAmount} numberOfLines={1} adjustsFontSizeToFit>
+                {formatCurrency(totalSales)}
               </Text>
 
-              <Text
-                style={styles.salesAmount}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-              >
-                {formatCurrency(
-                  totalSales
-                )}
-              </Text>
-
-              <Text
-                style={
-                  styles.summaryCaption
-                }
-              >
-                na piso ngayong araw
-              </Text>
+              <Text style={styles.summaryCaption}>in pesos today</Text>
             </View>
 
             {/* TRANSACTIONS */}
 
-            <View
-              style={[
-                styles.summaryCard,
-                styles.transactionCard,
-              ]}
-            >
-              <View
-                style={styles.summaryTopRow}
-              >
-                <View
-                  style={styles.summaryIcon}
-                >
-                  <MaterialIcons
-                    name="receipt-long"
-                    size={21}
-                    color={COLORS.primary}
-                  />
+            <View style={[styles.summaryCard, styles.transactionCard]}>
+              <View style={styles.summaryTopRow}>
+                <View style={styles.summaryIcon}>
+                  <MaterialIcons name="receipt-long" size={21} color={COLORS.primary} />
                 </View>
 
-                <Text
-                  style={
-                    styles.summaryTrend
-                  }
-                >
-                  ORDERS
-                </Text>
+                <Text style={styles.summaryTrend}>ORDERS</Text>
               </View>
 
-              <Text
-                style={
-                  styles.summaryCardLabel
-                }
-              >
-                Transaksyon
-              </Text>
+              <Text style={styles.summaryCardLabel}>Transactions</Text>
 
-              <Text
-                style={
-                  styles.transactionAmount
-                }
-              >
-                {totalTransactions}
-              </Text>
+              <Text style={styles.transactionAmount}>{totalTransactions}</Text>
 
-              <Text
-                style={
-                  styles.summaryCaption
-                }
-              >
-                orders na natapos
-              </Text>
+              <Text style={styles.summaryCaption}>orders completed</Text>
             </View>
 
             {/* AVERAGE */}
 
-            <View
-              style={[
-                styles.summaryCard,
-                styles.averageCard,
-              ]}
-            >
-              <View
-                style={styles.summaryTopRow}
-              >
-                <View
-                  style={styles.summaryIcon}
-                >
-                  <MaterialIcons
-                    name="analytics"
-                    size={21}
-                    color={COLORS.primary}
-                  />
+            <View style={[styles.summaryCard, styles.averageCard]}>
+              <View style={styles.summaryTopRow}>
+                <View style={styles.summaryIcon}>
+                  <MaterialIcons name="analytics" size={21} color={COLORS.primary} />
                 </View>
 
-                <Text
-                  style={
-                    styles.summaryTrend
-                  }
-                >
-                  AVERAGE
-                </Text>
+                <Text style={styles.summaryTrend}>AVERAGE</Text>
               </View>
 
-              <Text
-                style={
-                  styles.summaryCardLabel
-                }
-              >
-                Average na Order
+              <Text style={styles.summaryCardLabel}>Average Order</Text>
+
+              <Text style={styles.averageAmount} numberOfLines={1} adjustsFontSizeToFit>
+                {formatCurrency(averageSale)}
               </Text>
 
-              <Text
-                style={
-                  styles.averageAmount
-                }
-                numberOfLines={1}
-                adjustsFontSizeToFit
-              >
-                {formatCurrency(
-                  averageSale
-                )}
-              </Text>
-
-              <Text
-                style={
-                  styles.summaryCaption
-                }
-              >
-                bawat transaksyon
-              </Text>
+              <Text style={styles.summaryCaption}>per transaction</Text>
             </View>
 
             {/* ITEMS */}
 
-            <View
-              style={[
-                styles.summaryCard,
-                styles.itemsCard,
-              ]}
-            >
-              <View
-                style={styles.summaryTopRow}
-              >
-                <View
-                  style={styles.summaryIcon}
-                >
-                  <MaterialIcons
-                    name="restaurant"
-                    size={21}
-                    color={COLORS.primary}
-                  />
+            <View style={[styles.summaryCard, styles.itemsCard]}>
+              <View style={styles.summaryTopRow}>
+                <View style={styles.summaryIcon}>
+                  <MaterialIcons name="restaurant" size={21} color={COLORS.primary} />
                 </View>
 
-                <Text
-                  style={
-                    styles.summaryTrend
-                  }
-                >
-                  ITEMS
-                </Text>
+                <Text style={styles.summaryTrend}>ITEMS</Text>
               </View>
 
-              <Text
-                style={
-                  styles.summaryCardLabel
-                }
-              >
-                Items na Nabenta
-              </Text>
+              <Text style={styles.summaryCardLabel}>Items Sold</Text>
 
-              <Text
-                style={styles.itemsAmount}
-              >
-                {itemsSoldToday}
-              </Text>
+              <Text style={styles.itemsAmount}>{itemsSoldToday}</Text>
 
-              <Text
-                style={
-                  styles.summaryCaption
-                }
-              >
-                piraso ng pagkain
-              </Text>
+              <Text style={styles.summaryCaption}>pieces of food</Text>
             </View>
           </View>
 
-          {/* =================================================
-              MAIN DASHBOARD
-          ================================================= */}
-
-          <View
-            style={styles.dashboardGrid}
-          >
+          <View style={styles.dashboardGrid}>
             {/* SALES THIS WEEK */}
 
-            <View
-              style={styles.salesWeekCard}
-            >
-              <View
-                style={
-                  styles.dashboardCardHeader
-                }
-              >
-                <View
-                  style={
-                    styles.dashboardCardHeaderText
-                  }
-                >
-                  <Text
-                    style={
-                      styles.dashboardCardTitle
-                    }
-                  >
-                    Benta Ngayong Linggo
-                  </Text>
+            <View style={styles.salesWeekCard}>
+              <View style={styles.dashboardCardHeader}>
+                <View style={styles.dashboardCardHeaderText}>
+                  <Text style={styles.dashboardCardTitle}>Sales This Week</Text>
 
-                  <Text
-                    style={
-                      styles.dashboardCardSubtitle
-                    }
-                  >
-                    Sales performance from
-                    Monday to Sunday
+                  <Text style={styles.dashboardCardSubtitle}>
+                    Sales performance from Monday to Sunday
                   </Text>
                 </View>
 
-                <View
-                  style={
-                    styles.cardHeaderIcon
-                  }
-                >
-                  <MaterialIcons
-                    name="bar-chart"
-                    size={21}
-                    color={COLORS.primary}
-                  />
+                <View style={styles.cardHeaderIcon}>
+                  <MaterialIcons name="bar-chart" size={21} color={COLORS.primary} />
                 </View>
               </View>
 
-              <View
-                style={styles.weekContainer}
-              >
-                {weekSales.map(
-                  (item) => {
-                    const percentage =
-                      (item.amount /
-                        maxWeekSales) *
-                      100;
+              <View style={styles.weekContainer}>
+                {weekSales.map((item) => {
+                  const percentage = (item.amount / maxWeekSales) * 100;
 
-                    return (
+                  return (
+                    <View key={item.day} style={styles.weekRow}>
+                      <Text style={styles.dayText}>{item.day}</Text>
+
+                      <View style={styles.progressBackground}>
+                        <View
+                          style={[
+                            styles.progressBar,
+                            {
+                              width: `${percentage}%`,
+                            },
+                          ]}
+                        />
+                      </View>
+
+                      <Text style={styles.weekAmount}>₱{item.amount.toFixed(0)}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* TOP SELLING */}
+
+            <View style={styles.topSellingCard}>
+              <View style={styles.dashboardCardHeader}>
+                <View style={styles.dashboardCardHeaderText}>
+                  <Text style={styles.dashboardCardTitle}>Top Selling Items</Text>
+
+                  <Text style={styles.dashboardCardSubtitle}>Best performing menu items</Text>
+                </View>
+
+                <View style={styles.cardHeaderIcon}>
+                  <MaterialIcons name="emoji-events" size={21} color={COLORS.primary} />
+                </View>
+              </View>
+
+              {topSellingItems.length === 0 ? (
+                <View style={styles.emptyBlock}>
+                  <MaterialIcons name="restaurant" size={32} color={COLORS.textFaint} />
+
+                  <Text style={styles.emptyText}>No items sold yet.</Text>
+                </View>
+              ) : (
+                topSellingItems.map((item, index) => {
+                  const percentage = (item.quantity / maxTopItemQuantity) * 100;
+
+                  const badgeColor = RANK_BADGE_COLORS[index] ?? "#E5DFD3";
+
+                  const isLast = index === topSellingItems.length - 1;
+
+                  return (
+                    <View key={item.name} style={[styles.topItemRow, isLast && styles.lastRow]}>
                       <View
-                        key={item.day}
-                        style={
-                          styles.weekRow
-                        }
+                        style={[
+                          styles.rankBadge,
+                          {
+                            backgroundColor: badgeColor,
+                          },
+                        ]}
                       >
-                        <Text
-                          style={
-                            styles.dayText
-                          }
-                        >
-                          {item.day}
+                        <Text style={styles.rankBadgeText}>{index + 1}</Text>
+                      </View>
+
+                      <View style={styles.topItemInfo}>
+                        <Text style={styles.topItemName} numberOfLines={1}>
+                          {item.name}
                         </Text>
 
-                        <View
-                          style={
-                            styles.progressBackground
-                          }
-                        >
+                        <View style={styles.topItemBarBackground}>
                           <View
                             style={[
-                              styles.progressBar,
+                              styles.topItemBar,
                               {
                                 width: `${percentage}%`,
                               },
                             ]}
                           />
                         </View>
-
-                        <Text
-                          style={
-                            styles.weekAmount
-                          }
-                        >
-                          ₱
-                          {item.amount.toFixed(
-                            0
-                          )}
-                        </Text>
                       </View>
-                    );
-                  }
-                )}
-              </View>
-            </View>
 
-            {/* TOP SELLING */}
+                      <View style={styles.topItemStats}>
+                        <Text style={styles.topItemQuantity}>{item.quantity} sold</Text>
 
-            <View
-              style={styles.topSellingCard}
-            >
-              <View
-                style={
-                  styles.dashboardCardHeader
-                }
-              >
-                <View
-                  style={
-                    styles.dashboardCardHeaderText
-                  }
-                >
-                  <Text
-                    style={
-                      styles.dashboardCardTitle
-                    }
-                  >
-                    Top Selling Items
-                  </Text>
-
-                  <Text
-                    style={
-                      styles.dashboardCardSubtitle
-                    }
-                  >
-                    Best performing menu items
-                  </Text>
-                </View>
-
-                <View
-                  style={
-                    styles.cardHeaderIcon
-                  }
-                >
-                  <MaterialIcons
-                    name="emoji-events"
-                    size={21}
-                    color={COLORS.primary}
-                  />
-                </View>
-              </View>
-
-              {topSellingItems.length ===
-              0 ? (
-                <View
-                  style={
-                    styles.emptyBlock
-                  }
-                >
-                  <MaterialIcons
-                    name="restaurant"
-                    size={32}
-                    color={
-                      COLORS.textFaint
-                    }
-                  />
-
-                  <Text
-                    style={
-                      styles.emptyText
-                    }
-                  >
-                    No items sold yet.
-                  </Text>
-                </View>
-              ) : (
-                topSellingItems.map(
-                  (item, index) => {
-                    const percentage =
-                      (item.quantity /
-                        maxTopItemQuantity) *
-                      100;
-
-                    const badgeColor =
-                      RANK_BADGE_COLORS[
-                        index
-                      ] ??
-                      "#E5DFD3";
-
-                    const isLast =
-                      index ===
-                      topSellingItems.length -
-                        1;
-
-                    return (
-                      <View
-                        key={item.name}
-                        style={[
-                          styles.topItemRow,
-                          isLast &&
-                            styles.lastRow,
-                        ]}
-                      >
-                        <View
-                          style={[
-                            styles.rankBadge,
-                            {
-                              backgroundColor:
-                                badgeColor,
-                            },
-                          ]}
-                        >
-                          <Text
-                            style={
-                              styles.rankBadgeText
-                            }
-                          >
-                            {index + 1}
-                          </Text>
-                        </View>
-
-                        <View
-                          style={
-                            styles.topItemInfo
-                          }
-                        >
-                          <Text
-                            style={
-                              styles.topItemName
-                            }
-                            numberOfLines={1}
-                          >
-                            {item.name}
-                          </Text>
-
-                          <View
-                            style={
-                              styles.topItemBarBackground
-                            }
-                          >
-                            <View
-                              style={[
-                                styles.topItemBar,
-                                {
-                                  width: `${percentage}%`,
-                                },
-                              ]}
-                            />
-                          </View>
-                        </View>
-
-                        <View
-                          style={
-                            styles.topItemStats
-                          }
-                        >
-                          <Text
-                            style={
-                              styles.topItemQuantity
-                            }
-                          >
-                            {item.quantity}{" "}
-                            sold
-                          </Text>
-
-                          <Text
-                            style={
-                              styles.topItemRevenue
-                            }
-                          >
-                            {formatCurrency(
-                              item.revenue
-                            )}
-                          </Text>
-                        </View>
+                        <Text style={styles.topItemRevenue}>{formatCurrency(item.revenue)}</Text>
                       </View>
-                    );
-                  }
-                )
+                    </View>
+                  );
+                })
               )}
             </View>
           </View>
 
-          {/* =================================================
-              RECENT TRANSACTIONS
-          ================================================= */}
+          <View style={styles.transactionsCard}>
+            <View style={styles.dashboardCardHeader}>
+              <View style={styles.dashboardCardHeaderText}>
+                <Text style={styles.dashboardCardTitle}>Recent Transactions</Text>
 
-          <View
-            style={styles.transactionsCard}
-          >
-            <View
-              style={
-                styles.dashboardCardHeader
-              }
-            >
-              <View
-                style={
-                  styles.dashboardCardHeaderText
-                }
-              >
-                <Text
-                  style={
-                    styles.dashboardCardTitle
-                  }
-                >
-                  Pinakabagong
-                  Transaksyon
-                </Text>
-
-                <Text
-                  style={
-                    styles.dashboardCardSubtitle
-                  }
-                >
-                  Latest sales activity
-                </Text>
+                <Text style={styles.dashboardCardSubtitle}>Latest sales activity</Text>
               </View>
 
               <Pressable
-                onPress={() =>
-                  router.push(
-                    "/admin/history"
-                  )
-                }
-                style={({ pressed }) => [
-                  styles.viewAllButton,
-                  pressed &&
-                    styles.pressed,
-                ]}
+                onPress={() => router.push("/admin/history")}
+                style={({ pressed }) => [styles.viewAllButton, pressed && styles.pressed]}
               >
-                <Text
-                  style={
-                    styles.viewAllLink
-                  }
-                >
-                  Tingnan Lahat
-                </Text>
+                <Text style={styles.viewAllLink}>View All</Text>
 
-                <MaterialIcons
-                  name="arrow-forward"
-                  size={17}
-                  color={COLORS.primary}
-                />
+                <MaterialIcons name="arrow-forward" size={17} color={COLORS.primary} />
               </Pressable>
             </View>
 
-            {recentTransactions.length ===
-            0 ? (
-              <View
-                style={
-                  styles.emptyBlock
-                }
-              >
-                <MaterialIcons
-                  name="receipt-long"
-                  size={32}
-                  color={
-                    COLORS.textFaint
-                  }
-                />
+            {recentTransactions.length === 0 ? (
+              <View style={styles.emptyBlock}>
+                <MaterialIcons name="receipt-long" size={32} color={COLORS.textFaint} />
 
-                <Text
-                  style={
-                    styles.emptyText
-                  }
-                >
-                  No transactions yet.
-                </Text>
+                <Text style={styles.emptyText}>No transactions yet.</Text>
               </View>
             ) : (
-              <View
-                style={
-                  styles.transactionTable
-                }
-              >
+              <View style={styles.transactionTable}>
                 {/* TABLE HEADER */}
 
-                <View
-                  style={
-                    styles.transactionTableHeader
-                  }
-                >
-                  <Text
-                    style={
-                      styles.tableHeaderTransaction
-                    }
-                  >
-                    TRANSACTION
-                  </Text>
+                <View style={styles.transactionTableHeader}>
+                  <Text style={styles.tableHeaderTransaction}>TRANSACTION</Text>
 
-                  <Text
-                    style={
-                      styles.tableHeaderItems
-                    }
-                  >
-                    ITEMS
-                  </Text>
+                  <Text style={styles.tableHeaderItems}>ITEMS</Text>
 
-                  <Text
-                    style={
-                      styles.tableHeaderTime
-                    }
-                  >
-                    TIME
-                  </Text>
+                  <Text style={styles.tableHeaderTime}>TIME</Text>
 
-                  <Text
-                    style={
-                      styles.tableHeaderPayment
-                    }
-                  >
-                    PAYMENT
-                  </Text>
+                  <Text style={styles.tableHeaderPayment}>PAYMENT</Text>
 
-                  <Text
-                    style={[
-                      styles.tableHeaderAmount,
-                      styles.amountColumn,
-                    ]}
-                  >
-                    AMOUNT
-                  </Text>
+                  <Text style={[styles.tableHeaderAmount, styles.amountColumn]}>AMOUNT</Text>
                 </View>
 
                 {/* TABLE ROWS */}
 
-                {recentTransactions.map(
-                  (
-                    transaction,
-                    index
-                  ) => {
-                    const transactionTotal =
-                      Number(
-                        transaction.total
-                      );
+                {recentTransactions.map((transaction, index) => {
+                  const transactionTotal = Number(transaction.total);
 
-                    const itemCount =
-                      transaction.items.reduce(
-                        (
-                          sum,
-                          item
-                        ) =>
-                          sum +
-                          item.quantity,
-                        0
-                      );
+                  const itemCount = transaction.items.reduce((sum, item) => sum + item.quantity, 0);
 
-                    const isLast =
-                      index ===
-                      recentTransactions.length -
-                        1;
+                  const isLast = index === recentTransactions.length - 1;
 
-                    return (
-                      <View
-                        key={
-                          transaction.id
-                        }
-                        style={[
-                          styles.transactionTableRow,
-                          isLast &&
-                            styles.lastTransactionRow,
-                        ]}
-                      >
-                        {/* TRANSACTION */}
+                  return (
+                    <View
+                      key={transaction.id}
+                      style={[styles.transactionTableRow, isLast && styles.lastTransactionRow]}
+                    >
+                      {/* TRANSACTION */}
 
-                        <View
-                          style={
-                            styles.tableTransaction
-                          }
-                        >
-                          <View
-                            style={
-                              styles.transactionIcon
-                            }
-                          >
-                            <MaterialIcons
-                              name="receipt"
-                              size={17}
-                              color={
-                                COLORS.onSurfaceVariant
-                              }
-                            />
-                          </View>
-
-                          <View
-                            style={
-                              styles.transactionInfo
-                            }
-                          >
-                            <Text
-                              style={
-                                styles.transactionId
-                              }
-                              numberOfLines={
-                                1
-                              }
-                            >
-                              TXN-
-                              {transaction.id
-                                .slice(
-                                  0,
-                                  4
-                                )
-                                .toUpperCase()}
-                            </Text>
-
-                            <Text
-                              style={
-                                styles.transactionDate
-                              }
-                              numberOfLines={
-                                1
-                              }
-                            >
-                              {new Date(
-                                transaction.date
-                              ).toLocaleDateString(
-                                "en-US"
-                              )}
-                            </Text>
-                          </View>
+                      <View style={styles.tableTransaction}>
+                        <View style={styles.transactionIcon}>
+                          <MaterialIcons name="receipt" size={17} color={COLORS.onSurfaceVariant} />
                         </View>
 
-                        {/* ITEMS */}
+                        <View style={styles.transactionInfo}>
+                          <Text style={styles.transactionId} numberOfLines={1}>
+                            TXN {formatOrderNumber(transaction.orderNumber)}
+                          </Text>
 
-                        <Text
-                          style={[
-                            styles.tableCell,
-                            styles.itemsColumn,
-                          ]}
-                          numberOfLines={
-                            1
-                          }
-                        >
-                          {itemCount}{" "}
-                          items
-                        </Text>
-
-                        {/* TIME */}
-
-                        <Text
-                          style={[
-                            styles.tableCell,
-                            styles.timeColumn,
-                          ]}
-                          numberOfLines={
-                            1
-                          }
-                        >
-                          {formatTransactionTime(
-                            transaction.date
-                          )}
-                        </Text>
-
-                        {/* PAYMENT */}
-
-                        <View
-                          style={
-                            styles.paymentCell
-                          }
-                        >
-                          <View
-                            style={[
-                              styles.paymentBadge,
-                              transaction.paymentMethod
-                                ? styles.paidBadge
-                                : styles.unpaidBadge,
-                            ]}
-                          >
-                            <Text
-                              style={
-                                transaction.paymentMethod
-                                  ? styles.paidLabel
-                                  : styles.unpaidLabel
-                              }
-                              numberOfLines={
-                                1
-                              }
-                            >
-                              {transaction.paymentMethod
-                                ? "✓ Bayad"
-                                : "Hindi pa bayad"}
-                            </Text>
-                          </View>
+                          <Text style={styles.transactionDate} numberOfLines={1}>
+                            {new Date(transaction.date).toLocaleDateString("en-US")}
+                          </Text>
                         </View>
-
-                        {/* AMOUNT */}
-
-                        <Text
-                          style={[
-                            styles.tableAmount,
-                            styles.amountColumn,
-                          ]}
-                          numberOfLines={
-                            1
-                          }
-                          adjustsFontSizeToFit
-                        >
-                          {formatCurrency(
-                            transactionTotal
-                          )}
-                        </Text>
                       </View>
-                    );
-                  }
-                )}
+
+                      {/* ITEMS */}
+
+                      <Text style={[styles.tableCell, styles.itemsColumn]} numberOfLines={1}>
+                        {itemCount} items
+                      </Text>
+
+                      {/* TIME */}
+
+                      <Text style={[styles.tableCell, styles.timeColumn]} numberOfLines={1}>
+                        {formatTransactionTime(transaction.date)}
+                      </Text>
+
+                      {/* PAYMENT */}
+
+                      <View style={styles.paymentCell}>
+                        <View
+                          style={[
+                            styles.paymentBadge,
+                            transaction.paymentMethod ? styles.paidBadge : styles.unpaidBadge,
+                          ]}
+                        >
+                          <Text
+                            style={transaction.paymentMethod ? styles.paidLabel : styles.unpaidLabel}
+                            numberOfLines={1}
+                          >
+                            {transaction.paymentMethod ? "✓ Paid" : "Not yet paid"}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* AMOUNT */}
+
+                      <Text
+                        style={[styles.tableAmount, styles.amountColumn]}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                      >
+                        {formatCurrency(transactionTotal)}
+                      </Text>
+                    </View>
+                  );
+                })}
               </View>
             )}
           </View>

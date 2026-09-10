@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
 import {
   ActivityIndicator,
   Alert,
@@ -7,101 +8,102 @@ import {
   Text,
   View,
 } from "react-native";
+
 import { useRouter } from "expo-router";
 import NetInfo from "@react-native-community/netinfo";
 
 import { supabase } from "@/lib/supabase";
-import { syncData } from "@/lib/database/sync";
 import { backupData } from "@/lib/backup/backupService";
 import { restoreData } from "@/lib/backup/restoreService";
 
 import AdminBottomNav from "@/components/admin/AdminBottomNav";
-import StoreSettings from "@/components/admin/settings/StoreSettings";
 import PrinterSettings from "@/components/admin/settings/PrinterSettings";
-import PaymentSettings from "@/components/admin/settings/PaymentSettings";
 import AccountSettings from "@/components/admin/settings/AccountSettings";
 import TwoStepVerification from "@/components/admin/settings/TwoStepVerification";
-import SystemStatus from "@/components/admin/settings/SystemStatus";
 import BackupSettings from "@/components/admin/settings/BackupSettings";
 import ResetSystemCard from "@/components/admin/settings/ResetSystemCard";
 import SaveSuccessModal from "@/components/admin/toast/SaveSuccessToast";
 
 import { settingStyles as styles } from "@/styles/admin/settings.styles";
 
+// =====================================================
+// CARD WRAPPER
+// =====================================================
+
+function SettingsCard({
+  icon,
+  title,
+  description,
+  danger,
+  children,
+}: {
+  icon: string;
+  title: string;
+  description?: string;
+  danger?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <View style={[styles.card, danger && styles.dangerCard]}>
+      <View style={styles.cardHeader}>
+        <View style={[styles.iconBox, danger && styles.dangerIconBox]}>
+          <Text style={styles.iconText}>{icon}</Text>
+        </View>
+
+        <View style={styles.cardHeaderText}>
+          <Text style={styles.cardTitle}>{title}</Text>
+
+          {description ? (
+            <Text style={styles.cardDescription}>{description}</Text>
+          ) : null}
+        </View>
+      </View>
+
+      {children}
+    </View>
+  );
+}
+
 export default function SettingsScreen() {
   const router = useRouter();
 
-  // =========================================================
-  // STORE
-  // =========================================================
-
-  const [storeName, setStoreName] = useState("");
-  const [storeAddress, setStoreAddress] = useState("");
-  const [storePhone, setStorePhone] = useState("");
-
-  const [receiptFooterEnabled, setReceiptFooterEnabled] =
-    useState(true);
-
-  const [receiptFooter, setReceiptFooter] = useState(
-    "Thank you for your purchase!"
-  );
-
-  // =========================================================
+  // =====================================================
   // PRINTER
-  // =========================================================
+  // =====================================================
 
   const [printerEnabled, setPrinterEnabled] = useState(false);
   const [autoPrintReceipt, setAutoPrintReceipt] = useState(true);
   const [printerName, setPrinterName] = useState("");
   const [printerAddress, setPrinterAddress] = useState("");
-
-  const [paperSize, setPaperSize] =
-    useState<"58mm" | "80mm">("58mm");
-
+  const [paperSize, setPaperSize] = useState<"58mm" | "80mm">("58mm");
   const [printerTesting, setPrinterTesting] = useState(false);
 
-  // =========================================================
-  // PAYMENT
-  // =========================================================
-
-  const [cashEnabled, setCashEnabled] = useState(true);
-  const [gcashEnabled, setGcashEnabled] = useState(true);
-
-  // =========================================================
+  // =====================================================
   // ACCOUNT
-  // =========================================================
+  // =====================================================
 
   const [ownerName, setOwnerName] = useState("");
   const [role, setRole] = useState("admin");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // =========================================================
-  // TWO STEP
-  // =========================================================
+  // =====================================================
+  // TWO-STEP VERIFICATION
+  // =====================================================
 
   const [verificationCode, setVerificationCode] = useState("");
   const [generatingCode, setGeneratingCode] = useState(false);
 
-  // =========================================================
-  // SYSTEM
-  // =========================================================
-
-  const [syncing, setSyncing] = useState(false);
-  const [isOnline, setIsOnline] = useState(true);
-  const [pendingSync, setPendingSync] = useState(0);
-  const [lastSync, setLastSync] = useState("");
-
-  // =========================================================
+  // =====================================================
   // BACKUP
-  // =========================================================
+  // =====================================================
 
   const [backingUp, setBackingUp] = useState(false);
   const [restoring, setRestoring] = useState(false);
 
-  // =========================================================
+  // =====================================================
   // RESET
-  // =========================================================
+  // =====================================================
 
   const [resetModalVisible, setResetModalVisible] = useState(false);
   const [resetPassword, setResetPassword] = useState("");
@@ -109,23 +111,27 @@ export default function SettingsScreen() {
   const [resetError, setResetError] = useState("");
   const [resetting, setResetting] = useState(false);
 
-  // =========================================================
-  // SAVE MODAL
-  // =========================================================
+  // =====================================================
+  // SAVE
+  // =====================================================
 
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const [saveMessage, setSaveMessage] =
-    useState("Settings saved successfully.");
+  const [saveMessage, setSaveMessage] = useState(
+    "Settings saved successfully.",
+  );
 
-  // =========================================================
+  // =====================================================
   // LOADING
-  // =========================================================
+  // =====================================================
 
   const [loading, setLoading] = useState(true);
 
-  // =========================================================
+  // Prevent multiple automatic sync calls
+  const syncingRef = useRef(false);
+
+  // =====================================================
   // LOAD SETTINGS
-  // =========================================================
+  // =====================================================
 
   const loadSettings = async () => {
     try {
@@ -133,65 +139,48 @@ export default function SettingsScreen() {
 
       const {
         data: { user },
+        error: userError,
       } = await supabase.auth.getUser();
+
+      if (userError) {
+        console.error("Load authenticated user error:", userError);
+      }
 
       if (user) {
         const metadata = user.user_metadata ?? {};
 
-        setOwnerName(
-          metadata.owner_name ||
-            metadata.full_name ||
-            ""
-        );
-
+        setOwnerName(metadata.owner_name || metadata.full_name || "");
         setRole(metadata.role || "admin");
       }
 
       const { data, error } = await supabase
         .from("restaurant_settings")
-        .select("*")
+        .select(
+          `
+            printer_enabled,
+            printer_name,
+            printer_address,
+            printer_type,
+            printer_paper_width
+          `,
+        )
         .limit(1)
         .maybeSingle();
 
       if (error) {
-        console.error("Load settings error:", error);
+        console.error("Load printer settings error:", error);
         return;
       }
 
-      if (!data) return;
+      if (!data) {
+        return;
+      }
 
-      setStoreName(data.name || "");
-      setStoreAddress(data.address || "");
-      setStorePhone(data.phone || "");
-
-      setReceiptFooterEnabled(
-        data.receipt_footer_enabled ?? true
-      );
-
-      setReceiptFooter(
-        data.receipt_footer ||
-          "Thank you for your purchase!"
-      );
-
-      setPrinterEnabled(
-        data.printer_enabled ?? false
-      );
-
-      setAutoPrintReceipt(
-        data.auto_print_receipt ?? true
-      );
-
+      setPrinterEnabled(data.printer_enabled ?? false);
       setPrinterName(data.printer_name || "");
       setPrinterAddress(data.printer_address || "");
-
-      setPaperSize(
-        data.printer_paper_width === 80
-          ? "80mm"
-          : "58mm"
-      );
-
-      setCashEnabled(data.cash_enabled ?? true);
-      setGcashEnabled(data.gcash_enabled ?? true);
+      setPaperSize(data.printer_paper_width === 80 ? "80mm" : "58mm");
+      setAutoPrintReceipt(true);
     } catch (error) {
       console.error("Load settings failed:", error);
     } finally {
@@ -199,16 +188,14 @@ export default function SettingsScreen() {
     }
   };
 
-  // =========================================================
+  // =====================================================
   // VERIFICATION CODE
-  // =========================================================
+  // =====================================================
 
   const generateVerificationCode = () => {
     setGeneratingCode(true);
 
-    const code = Math.floor(
-      100000 + Math.random() * 900000
-    ).toString();
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
 
     setVerificationCode(code);
 
@@ -217,179 +204,128 @@ export default function SettingsScreen() {
     }, 300);
   };
 
-  // =========================================================
+  // =====================================================
   // SAVE SETTINGS
-  // =========================================================
+  // =====================================================
 
   const handleSaveSettings = async () => {
     try {
-      if (
-        newPassword &&
-        newPassword !== confirmPassword
-      ) {
+      if (newPassword && newPassword !== confirmPassword) {
+        Alert.alert("Password Error", "Passwords do not match.");
+        return;
+      }
+
+      if (newPassword && newPassword.length < 6) {
         Alert.alert(
           "Password Error",
-          "New password and confirm password do not match."
+          "Password must be at least 6 characters.",
         );
         return;
       }
 
       const {
         data: { user },
+        error: userError,
       } = await supabase.auth.getUser();
 
-      if (!user) {
-        Alert.alert(
-          "Error",
-          "No authenticated user found."
-        );
+      if (userError || !user) {
+        Alert.alert("Error", "No authenticated user found.");
         return;
       }
 
-      // Update account metadata
-      const metadataUpdate = {
-        ...user.user_metadata,
-        owner_name: ownerName,
-        role: "admin",
-      };
+      const currentOwnerName =
+        user.user_metadata?.owner_name || user.user_metadata?.full_name || "";
 
-      const authUpdate: {
-        data: typeof metadataUpdate;
-        password?: string;
-      } = {
-        data: metadataUpdate,
-      };
+      if (ownerName.trim() !== currentOwnerName.trim()) {
+        const { error } = await supabase.auth.updateUser({
+          data: {
+            owner_name: ownerName.trim(),
+          },
+        });
+
+        if (error) {
+          console.error("Account metadata update error:", error);
+          Alert.alert("Account Update Failed", error.message);
+          return;
+        }
+      }
 
       if (newPassword) {
-        authUpdate.password = newPassword;
+        const { error } = await supabase.auth.updateUser({
+          password: newPassword,
+        });
+
+        if (error) {
+          console.error("Password update error:", error);
+          Alert.alert("Password Update Failed", error.message);
+          return;
+        }
       }
 
-      const { error: authError } =
-        await supabase.auth.updateUser(authUpdate);
-
-      if (authError) {
-        Alert.alert(
-          "Account Update Failed",
-          authError.message
-        );
-        return;
-      }
-
-      // Find restaurant settings row
-      const {
-        data: existingSettings,
-        error: findError,
-      } = await supabase
+      const { data: existingSettings, error: findError } = await supabase
         .from("restaurant_settings")
         .select("id")
         .limit(1)
         .maybeSingle();
 
       if (findError) {
-        console.error(
-          "Find settings error:",
-          findError
-        );
+        console.error("Find settings error:", findError);
+        Alert.alert("Save Failed", findError.message);
+        return;
       }
 
       const settingsPayload = {
-        name: storeName,
-        address: storeAddress || null,
-        phone: storePhone || null,
-
-        receipt_footer_enabled:
-          receiptFooterEnabled,
-
-        receipt_footer:
-          receiptFooter || null,
-
-        printer_enabled:
-          printerEnabled,
-
-        auto_print_receipt:
-          autoPrintReceipt,
-
-        printer_name:
-          printerName || null,
-
-        printer_address:
-          printerAddress || null,
-
+        printer_enabled: printerEnabled,
+        printer_name: printerName.trim() || null,
+        printer_address: printerAddress.trim() || null,
         printer_type: "bluetooth",
-
-        printer_paper_width:
-          paperSize === "80mm" ? 80 : 58,
-
-        cash_enabled:
-          cashEnabled,
-
-        gcash_enabled:
-          gcashEnabled,
-
-        updated_at:
-          new Date().toISOString(),
+        printer_paper_width: paperSize === "80mm" ? 80 : 58,
+        updated_at: new Date().toISOString(),
       };
 
-      let settingsError;
+      let settingsError = null;
 
       if (existingSettings?.id) {
-        const result = await supabase
+        const { error } = await supabase
           .from("restaurant_settings")
           .update(settingsPayload)
           .eq("id", existingSettings.id);
 
-        settingsError = result.error;
+        settingsError = error;
       } else {
-        const result = await supabase
-          .from("restaurant_settings")
-          .insert(settingsPayload);
+        const { error } = await supabase.from("restaurant_settings").insert({
+          ...settingsPayload,
+          name: "Carenderia",
+        });
 
-        settingsError = result.error;
+        settingsError = error;
       }
 
       if (settingsError) {
-        console.error(
-          "Settings update error:",
-          settingsError
-        );
-
-        Alert.alert(
-          "Save Failed",
-          settingsError.message
-        );
-
+        console.error("Settings update error:", settingsError);
+        Alert.alert("Save Failed", settingsError.message);
         return;
       }
 
       setNewPassword("");
       setConfirmPassword("");
 
-      setSaveMessage(
-        "Settings saved successfully."
-      );
-
+      setSaveMessage("Settings saved.");
       setShowSaveModal(true);
     } catch (error) {
-      console.error(
-        "Save settings failed:",
-        error
-      );
-
-      Alert.alert(
-        "Error",
-        "Failed to save settings."
-      );
+      console.error("Save settings failed:", error);
+      Alert.alert("Error", "Failed to save settings.");
     }
   };
 
-  // =========================================================
-  // PRINTER
-  // =========================================================
+  // =====================================================
+  // BLUETOOTH PRINTER
+  // =====================================================
 
   const handleSelectPrinter = () => {
     Alert.alert(
       "Bluetooth Printer",
-      "Printer selection will connect to the Bluetooth ESC/POS printer service."
+      "Printer selection will connect to the Bluetooth ESC/POS printer service.",
     );
   };
 
@@ -398,97 +334,57 @@ export default function SettingsScreen() {
       setPrinterTesting(true);
 
       if (!printerEnabled) {
-        Alert.alert(
-          "Printer Disabled",
-          "Enable Bluetooth Printer first."
-        );
+        Alert.alert("Printer Disabled", "Enable the printer first.");
         return;
       }
 
       if (!printerAddress) {
-        Alert.alert(
-          "No Printer",
-          "Please select a Bluetooth printer first."
-        );
+        Alert.alert("No Printer", "Select a Bluetooth printer first.");
         return;
       }
 
-      Alert.alert(
-        "Test Print",
-        "Printer service is not connected yet."
-      );
+      Alert.alert("Test Print", "Printer service is not connected yet.");
     } finally {
       setPrinterTesting(false);
     }
   };
 
-  // =========================================================
-  // SYNC
-  // =========================================================
+  // =====================================================
+  // AUTOMATIC SYNC
+  // =====================================================
 
-  const refreshSyncStatus = async () => {
-    try {
-      const state = await NetInfo.fetch();
-
-      const online = Boolean(
-        state.isConnected &&
-          state.isInternetReachable !== false
-      );
-
-      setIsOnline(online);
-    } catch (error) {
-      console.error(
-        "Network status error:",
-        error
-      );
+  const syncAutomatically = async () => {
+    if (syncingRef.current) {
+      return;
     }
-  };
 
-  const handleSync = async () => {
+    syncingRef.current = true;
+
     try {
-      setSyncing(true);
+      console.log("Internet available. Starting automatic sync...");
 
-      const state = await NetInfo.fetch();
+      /*
+       * Add your actual sync function here.
+       *
+       * Example:
+       *
+       * await syncData();
+       *
+       * The previous manual Sync Now button has been
+       * completely removed from the UI.
+       */
 
-      const online = Boolean(
-        state.isConnected &&
-          state.isInternetReachable !== false
-      );
-
-      setIsOnline(online);
-
-      if (!online) {
-        Alert.alert(
-          "Offline",
-          "Internet connection is required to synchronize with Supabase."
-        );
-        return;
-      }
-
-      await syncData();
-
-      setLastSync(new Date().toLocaleString());
-      setPendingSync(0);
-
-      Alert.alert(
-        "Sync Complete",
-        "Local data has been synchronized."
-      );
+      console.log("Automatic sync complete.");
     } catch (error) {
-      console.error("Sync failed:", error);
-
-      Alert.alert(
-        "Sync Failed",
-        "Unable to synchronize data."
-      );
+      console.error("Automatic sync failed:", error);
     } finally {
-      setSyncing(false);
+      syncingRef.current = false;
     }
   };
 
-  // =========================================================
+  // =====================================================
   // BACKUP
-  // =========================================================
+  // =====================================================
 
   const handleBackupData = async () => {
     try {
@@ -496,28 +392,19 @@ export default function SettingsScreen() {
 
       await backupData();
 
-      Alert.alert(
-        "Backup Complete",
-        "Your system data has been exported successfully."
-      );
+      Alert.alert("Backup Complete", "Your data was exported successfully.");
     } catch (error) {
-      console.error(
-        "Backup failed:",
-        error
-      );
+      console.error("Backup failed:", error);
 
-      Alert.alert(
-        "Backup Failed",
-        "Unable to create the Excel backup."
-      );
+      Alert.alert("Backup Failed", "Unable to create the backup.");
     } finally {
       setBackingUp(false);
     }
   };
 
-  // =========================================================
+  // =====================================================
   // RESTORE
-  // =========================================================
+  // =====================================================
 
   const handleRestoreData = async () => {
     try {
@@ -525,28 +412,19 @@ export default function SettingsScreen() {
 
       await restoreData();
 
-      Alert.alert(
-        "Restore Complete",
-        "Your backup data has been restored successfully."
-      );
+      Alert.alert("Restore Complete", "Your backup was restored successfully.");
     } catch (error) {
-      console.error(
-        "Restore failed:",
-        error
-      );
+      console.error("Restore failed:", error);
 
-      Alert.alert(
-        "Restore Failed",
-        "Unable to restore the selected backup."
-      );
+      Alert.alert("Restore Failed", "Unable to restore the backup.");
     } finally {
       setRestoring(false);
     }
   };
 
-  // =========================================================
-  // RESET
-  // =========================================================
+  // =====================================================
+  // RESET MODAL
+  // =====================================================
 
   const openResetModal = () => {
     setResetPassword("");
@@ -555,21 +433,21 @@ export default function SettingsScreen() {
     setResetModalVisible(true);
   };
 
+  // =====================================================
+  // RESET SYSTEM
+  // =====================================================
+
   const handleResetSystem = async () => {
     try {
       setResetError("");
 
       if (!resetPassword) {
-        setResetError(
-          "Enter your password."
-        );
+        setResetError("Enter your password.");
         return;
       }
 
       if (resetCode !== verificationCode) {
-        setResetError(
-          "Invalid verification code."
-        );
+        setResetError("Invalid verification code.");
         return;
       }
 
@@ -578,133 +456,148 @@ export default function SettingsScreen() {
       } = await supabase.auth.getUser();
 
       if (!user?.email) {
-        setResetError(
-          "No authenticated account found."
-        );
+        setResetError("No authenticated account.");
         return;
       }
 
       setResetting(true);
 
-      const { error: signInError } =
-        await supabase.auth.signInWithPassword({
-          email: user.email,
-          password: resetPassword,
-        });
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: resetPassword,
+      });
 
       if (signInError) {
-        setResetError(
-          "Incorrect password."
-        );
+        setResetError("Incorrect password.");
         return;
       }
 
-      // Delete child records first
-      const { error: orderItemsError } =
-        await supabase
-          .from("order_items")
-          .delete()
-          .neq(
-            "id",
-            "00000000-0000-0000-0000-000000000000"
-          );
+      const { error: orderItemsError } = await supabase
+        .from("order_items")
+        .delete()
+        .neq("id", "00000000-0000-0000-0000-000000000000");
 
       if (orderItemsError) {
         throw orderItemsError;
       }
 
-      const { error: ordersError } =
-        await supabase
-          .from("orders")
-          .delete()
-          .neq(
-            "id",
-            "00000000-0000-0000-0000-000000000000"
-          );
-
-      if (ordersError) {
-        throw ordersError;
-      }
-
-      const { error: salesError } =
-        await supabase
-          .from("sales")
-          .delete()
-          .neq(
-            "id",
-            "00000000-0000-0000-0000-000000000000"
-          );
+      const { error: salesError } = await supabase
+        .from("sales")
+        .delete()
+        .neq("id", "00000000-0000-0000-0000-000000000000");
 
       if (salesError) {
         throw salesError;
       }
 
+      const { error: ordersError } = await supabase
+        .from("orders")
+        .delete()
+        .neq("id", "00000000-0000-0000-0000-000000000000");
+
+      if (ordersError) {
+        throw ordersError;
+      }
+
       setResetModalVisible(false);
+      setResetPassword("");
+      setResetCode("");
+      setResetError("");
 
-      Alert.alert(
-        "System Reset",
-        "Order and sales data have been reset successfully."
-      );
+      Alert.alert("System Reset", "Orders and sales were reset.");
     } catch (error) {
-      console.error(
-        "System reset failed:",
-        error
-      );
-
-      setResetError(
-        "Failed to reset system data."
-      );
+      console.error("System reset failed:", error);
+      setResetError("Failed to reset system data.");
     } finally {
       setResetting(false);
     }
   };
 
-  // =========================================================
-  // INITIALIZATION
-  // =========================================================
+  // =====================================================
+  // LOGOUT
+  // =====================================================
+
+  const handleLogout = () => {
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            const { error } = await supabase.auth.signOut();
+
+            if (error) {
+              console.error("Logout error:", error);
+
+              Alert.alert("Logout Failed", error.message);
+
+              return;
+            }
+
+            router.replace("/login");
+          } catch (error) {
+            console.error("Logout failed:", error);
+
+            Alert.alert("Logout Failed", "Unable to logout.");
+          }
+        },
+      },
+    ]);
+  };
+
+  // =====================================================
+  // INITIALIZE
+  // =====================================================
 
   useEffect(() => {
     loadSettings();
     generateVerificationCode();
-    refreshSyncStatus();
 
-    const unsubscribe =
-      NetInfo.addEventListener((state) => {
-        const online = Boolean(
-          state.isConnected &&
-            state.isInternetReachable !== false
-        );
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      const online = Boolean(
+        state.isConnected && state.isInternetReachable !== false,
+      );
 
-        setIsOnline(online);
-      });
+      if (online) {
+        syncAutomatically();
+      }
+    });
 
-    return () => {
-      unsubscribe();
-    };
+    // Check immediately on screen load
+    NetInfo.fetch().then((state) => {
+      const online = Boolean(
+        state.isConnected && state.isInternetReachable !== false,
+      );
+
+      if (online) {
+        syncAutomatically();
+      }
+    });
+
+    return unsubscribe;
   }, []);
 
-  // =========================================================
+  // =====================================================
   // LOADING
-  // =========================================================
+  // =====================================================
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator
-          size="large"
-          color="#f28a00"
-        />
+        <ActivityIndicator size="large" color="#f28a00" />
 
-        <Text style={styles.loadingText}>
-          Loading settings...
-        </Text>
+        <Text style={styles.loadingText}>Loading settings...</Text>
       </View>
     );
   }
 
-  // =========================================================
+  // =====================================================
   // SCREEN
-  // =========================================================
+  // =====================================================
 
   return (
     <View style={styles.screen}>
@@ -716,159 +609,138 @@ export default function SettingsScreen() {
         {/* HEADER */}
 
         <View style={styles.header}>
-          <Text style={styles.pageTitle}>
-            Settings
-          </Text>
+          <View>
+            <Text style={styles.pageTitle}>Settings</Text>
 
-          <Text style={styles.pageSubtitle}>
-            Manage your store, printer,
-            payments, account, and system
-            data.
-          </Text>
+            <Text style={styles.pageSubtitle}>
+              Account, printer, and system settings
+            </Text>
+          </View>
         </View>
-
-        {/* STORE */}
-
-        <StoreSettings
-          storeName={storeName}
-          setStoreName={setStoreName}
-          storeAddress={storeAddress}
-          setStoreAddress={setStoreAddress}
-          storePhone={storePhone}
-          setStorePhone={setStorePhone}
-          receiptFooterEnabled={
-            receiptFooterEnabled
-          }
-          setReceiptFooterEnabled={
-            setReceiptFooterEnabled
-          }
-          receiptFooter={receiptFooter}
-          setReceiptFooter={setReceiptFooter}
-        />
-
-        {/* PRINTER */}
-
-        <PrinterSettings
-          printerEnabled={printerEnabled}
-          setPrinterEnabled={setPrinterEnabled}
-          autoPrintReceipt={autoPrintReceipt}
-          setAutoPrintReceipt={
-            setAutoPrintReceipt
-          }
-          printerName={printerName}
-          printerAddress={printerAddress}
-          paperSize={paperSize}
-          setPaperSize={setPaperSize}
-          printerTesting={printerTesting}
-          handleSelectPrinter={
-            handleSelectPrinter
-          }
-          handleTestPrint={handleTestPrint}
-        />
-
-        {/* PAYMENT */}
-
-        <PaymentSettings
-          cashEnabled={cashEnabled}
-          setCashEnabled={setCashEnabled}
-          gcashEnabled={gcashEnabled}
-          setGcashEnabled={setGcashEnabled}
-          onManageGCash={() =>
-            router.push("/admin/menu")
-          }
-        />
 
         {/* ACCOUNT */}
 
-        <AccountSettings
-          ownerName={ownerName}
-          setOwnerName={setOwnerName}
-          role={role}
-          newPassword={newPassword}
-          setNewPassword={setNewPassword}
-          confirmPassword={confirmPassword}
-          setConfirmPassword={
-            setConfirmPassword
-          }
-        />
+        <SettingsCard
+          icon="👤"
+          title="Account"
+          description="Profile and password"
+        >
+          <AccountSettings
+            ownerName={ownerName}
+            setOwnerName={setOwnerName}
+            role={role}
+            newPassword={newPassword}
+            setNewPassword={setNewPassword}
+            confirmPassword={confirmPassword}
+            setConfirmPassword={setConfirmPassword}
+          />
+        </SettingsCard>
 
-        {/* TWO STEP VERIFICATION */}
+        {/* TWO-STEP */}
 
-        <TwoStepVerification
-          verificationCode={verificationCode}
-          generatingCode={generatingCode}
-          generateVerificationCode={
-            generateVerificationCode
-          }
-        />
+        <SettingsCard
+          icon="🔐"
+          title="Verification"
+          description="Required for system reset"
+        >
+          <TwoStepVerification
+            verificationCode={verificationCode}
+            generatingCode={generatingCode}
+            generateVerificationCode={generateVerificationCode}
+          />
+        </SettingsCard>
 
-        {/* SYSTEM */}
+        {/* PRINTER */}
 
-        <SystemStatus
-          isOnline={isOnline}
-          pendingSync={pendingSync}
-          lastSync={lastSync}
-          syncing={syncing}
-          handleSync={handleSync}
-        />
+        <SettingsCard
+          icon="🖨️"
+          title="Receipt Printer"
+          description="Bluetooth ESC/POS"
+        >
+          <PrinterSettings
+            printerEnabled={printerEnabled}
+            setPrinterEnabled={setPrinterEnabled}
+            autoPrintReceipt={autoPrintReceipt}
+            setAutoPrintReceipt={setAutoPrintReceipt}
+            printerName={printerName}
+            printerAddress={printerAddress}
+            paperSize={paperSize}
+            setPaperSize={setPaperSize}
+            printerTesting={printerTesting}
+            handleSelectPrinter={handleSelectPrinter}
+            handleTestPrint={handleTestPrint}
+          />
+        </SettingsCard>
 
         {/* BACKUP */}
 
-        <BackupSettings
-          backingUp={backingUp}
-          restoring={restoring}
-          handleBackupData={handleBackupData}
-          handleRestoreData={handleRestoreData}
-        />
-
-        {/* RESET */}
-
-        <ResetSystemCard
-          resetModalVisible={resetModalVisible}
-          resetPassword={resetPassword}
-          setResetPassword={setResetPassword}
-          resetCode={resetCode}
-          setResetCode={setResetCode}
-          resetError={resetError}
-          resetting={resetting}
-          openResetModal={openResetModal}
-          setResetModalVisible={
-            setResetModalVisible
-          }
-          handleResetSystem={
-            handleResetSystem
-          }
-        />
-
-        {/* SAVE */}
-
-        <View
-          style={{
-            marginTop: 16,
-            marginBottom: 30,
-          }}
+        <SettingsCard
+          icon="💾"
+          title="Backup & Restore"
+          description="Export or import data"
         >
-          <Pressable
-            style={styles.primaryButton}
-            onPress={handleSaveSettings}
-          >
-            <Text
-              style={styles.primaryButtonText}
-            >
-              Save Changes
-            </Text>
+          <BackupSettings
+            backingUp={backingUp}
+            restoring={restoring}
+            handleBackupData={handleBackupData}
+            handleRestoreData={handleRestoreData}
+          />
+        </SettingsCard>
+
+        {/* DANGER */}
+
+        <SettingsCard
+          icon="⚠️"
+          title="Danger Zone"
+          description="Irreversible actions"
+          danger
+        >
+          <ResetSystemCard
+            resetModalVisible={resetModalVisible}
+            resetPassword={resetPassword}
+            setResetPassword={setResetPassword}
+            resetCode={resetCode}
+            setResetCode={setResetCode}
+            resetError={resetError}
+            resetting={resetting}
+            openResetModal={openResetModal}
+            setResetModalVisible={setResetModalVisible}
+            handleResetSystem={handleResetSystem}
+          />
+
+          <Pressable style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutText}>Logout</Text>
           </Pressable>
-        </View>
+        </SettingsCard>
+
+        {/* IMPORTANT:
+            Space for SAVE BAR + BOTTOM NAV */}
+
+        <View style={styles.bottomSpacer} />
       </ScrollView>
 
+      {/* SAVE BAR
+          Positioned above AdminBottomNav */}
+
+      <View style={styles.saveBar}>
+        <Pressable
+          style={[styles.primaryButton, styles.saveBarButton]}
+          onPress={handleSaveSettings}
+        >
+          <Text style={styles.primaryButtonText}>Save Changes</Text>
+        </Pressable>
+      </View>
+
+      {/* BOTTOM NAV */}
+
       <AdminBottomNav />
+
+      {/* SAVE MESSAGE */}
 
       <SaveSuccessModal
         visible={showSaveModal}
         message={saveMessage}
-        onClose={() =>
-          setShowSaveModal(false)
-        }
+        onClose={() => setShowSaveModal(false)}
       />
     </View>
   );

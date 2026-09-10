@@ -1,5 +1,6 @@
 import React, {
   useMemo,
+  useState,
 } from "react";
 
 import {
@@ -17,17 +18,15 @@ import {
   createMobileOrderModalStyles,
 } from "@/styles/admin/modals/mobile/mobile-order-modal.styles";
 
+import ErrorToast from "../../toast/ErrorToast";
 // =====================================================
 // TYPES
 // =====================================================
 
 export type MobileOrderItem = {
   id: string;
-
   name: string;
-
   price: number;
-
   quantity: number;
 };
 
@@ -81,39 +80,25 @@ type MobileOrderModalProps = {
 
 export default function MobileOrderModal({
   visible,
-
   customerName,
-
   orderType,
-
   orderItems,
-
   orderTotal,
-
   isCreatingOrder,
-
   isEditMode,
-
   onClose,
-
   onCustomerNameChange,
-
   onSelectOrderType,
-
   onIncreaseQuantity,
-
   onDecreaseQuantity,
-
   onClearOrder,
-
   onCheckout,
 }: MobileOrderModalProps) {
   // ===================================================
   // RESPONSIVE WIDTH
   // ===================================================
 
-  const { width } =
-    useWindowDimensions();
+  const { width } = useWindowDimensions();
 
   // ===================================================
   // RESPONSIVE STYLES
@@ -121,61 +106,94 @@ export default function MobileOrderModal({
 
   const styles = useMemo(
     () =>
-      createMobileOrderModalStyles(
-        width
-      ),
+      createMobileOrderModalStyles(width),
     [width]
   );
+
+  // ===================================================
+  // ERROR TOAST
+  // ===================================================
+
+  const [showErrorToast, setShowErrorToast] =
+    useState(false);
+
+  const [errorToastMessage, setErrorToastMessage] =
+    useState("");
+
+  const showError = (message: string) => {
+    setErrorToastMessage(message);
+    setShowErrorToast(true);
+
+    setTimeout(() => {
+      setShowErrorToast(false);
+    }, 3000);
+  };
+
+  // ===================================================
+  // CHECKOUT
+  // ===================================================
+
+  const handleCheckout = async () => {
+    if (isCreatingOrder) {
+      return;
+    }
+
+    // CUSTOMER NAME REQUIRED
+    if (!customerName.trim()) {
+      showError(
+        "Please enter the customer's name before saving the order."
+      );
+
+      return;
+    }
+
+    // ORDER ITEMS REQUIRED
+    if (orderItems.length === 0) {
+      showError(
+        "Please add at least one item to the order."
+      );
+
+      return;
+    }
+
+    // CONTINUE TO PARENT
+    await onCheckout();
+  };
+
+  // ===================================================
+  // RENDER
+  // ===================================================
 
   return (
     <Modal
       visible={visible}
       transparent={false}
       animationType="slide"
-      onRequestClose={
-        onClose
-      }
+      onRequestClose={onClose}
       statusBarTranslucent={false}
     >
-      <View
-        style={
-          styles.screen
-        }
-      >
+      <View style={styles.screen}>
         {/* =================================================
             HEADER
         ================================================= */}
 
-        <View
-          style={
-            styles.header
-          }
-        >
+        <View style={styles.header}>
           <View
             style={
               styles.headerTextContainer
             }
           >
-            <Text
-              style={
-                styles.title
-              }
-            >
+            <Text style={styles.title}>
               Current Order
             </Text>
           </View>
 
           {/* CLOSE */}
+
           <Pressable
-            onPress={
-              onClose
-            }
-            disabled={
-              isCreatingOrder
-            }
-            style={
-              styles.closeButton
-            }
+            onPress={onClose}
+            disabled={isCreatingOrder}
+            style={styles.closeButton}
             hitSlop={8}
           >
             <Text
@@ -193,49 +211,31 @@ export default function MobileOrderModal({
         ================================================= */}
 
         <ScrollView
-          style={
-            styles.contentScroll
-          }
+          style={styles.contentScroll}
           contentContainerStyle={
             styles.content
           }
           keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={
-            false
-        }
+          showsVerticalScrollIndicator={false}
         >
           {/* ===============================================
               CUSTOMER NAME
           =============================================== */}
 
-          <View
-            style={
-              styles.section
-            }
-          >
-            <Text
-              style={
-                styles.label
-              }
-            >
+          <View style={styles.section}>
+            <Text style={styles.label}>
               Customer Name
             </Text>
 
             <TextInput
-              value={
-                customerName
-              }
+              value={customerName}
               onChangeText={
                 onCustomerNameChange
               }
               placeholder="e.g. Juan Dela Cruz"
               placeholderTextColor="#B5ADA3"
-              style={
-                styles.input
-              }
-              editable={
-                !isCreatingOrder
-              }
+              style={styles.input}
+              editable={!isCreatingOrder}
               autoCapitalize="words"
               returnKeyType="done"
             />
@@ -245,16 +245,8 @@ export default function MobileOrderModal({
               ORDER TYPE
           =============================================== */}
 
-          <View
-            style={
-              styles.section
-            }
-          >
-            <Text
-              style={
-                styles.label
-              }
-            >
+          <View style={styles.section}>
+            <Text style={styles.label}>
               Order Type
             </Text>
 
@@ -264,29 +256,24 @@ export default function MobileOrderModal({
               }
             >
               {/* DINE IN */}
+
               <Pressable
                 onPress={() =>
                   onSelectOrderType(
                     "Dine In"
                   )
                 }
-                disabled={
-                  isCreatingOrder
-                }
+                disabled={isCreatingOrder}
                 style={[
                   styles.orderTypeButton,
-
-                  orderType ===
-                    "Dine In" &&
+                  orderType === "Dine In" &&
                     styles.orderTypeButtonActive,
                 ]}
               >
                 <Text
                   style={[
                     styles.orderTypeButtonText,
-
-                    orderType ===
-                      "Dine In" &&
+                    orderType === "Dine In" &&
                       styles.orderTypeButtonTextActive,
                   ]}
                 >
@@ -295,29 +282,24 @@ export default function MobileOrderModal({
               </Pressable>
 
               {/* TAKE OUT */}
+
               <Pressable
                 onPress={() =>
                   onSelectOrderType(
                     "Take Out"
                   )
                 }
-                disabled={
-                  isCreatingOrder
-                }
+                disabled={isCreatingOrder}
                 style={[
                   styles.orderTypeButton,
-
-                  orderType ===
-                    "Take Out" &&
+                  orderType === "Take Out" &&
                     styles.orderTypeButtonActive,
                 ]}
               >
                 <Text
                   style={[
                     styles.orderTypeButtonText,
-
-                    orderType ===
-                      "Take Out" &&
+                    orderType === "Take Out" &&
                       styles.orderTypeButtonTextActive,
                   ]}
                 >
@@ -331,28 +313,20 @@ export default function MobileOrderModal({
               ORDER ITEMS
           =============================================== */}
 
-          {orderItems.length ===
-          0 ? (
+          {orderItems.length === 0 ? (
             <View
-              style={
-                styles.emptyOrder
-              }
+              style={styles.emptyOrder}
             >
-              {/* CART ICON */}
               <Text
-                style={
-                  styles.emptyIcon
-                }
+                style={styles.emptyIcon}
               >
                 🛒
               </Text>
 
               <Text
-                style={
-                  styles.emptyTitle
-                }
+                style={styles.emptyTitle}
               >
-                Walang laman ang order
+                No item
               </Text>
 
               <Text
@@ -360,147 +334,120 @@ export default function MobileOrderModal({
                   styles.emptySubtitle
                 }
               >
-                Pumili ng pagkain mula sa menu
+                Choose an item from the menu
               </Text>
             </View>
           ) : (
             <View
-              style={
-                styles.itemsSection
-              }
+              style={styles.itemsSection}
             >
               <Text
-                style={
-                  styles.itemsTitle
-                }
+                style={styles.itemsTitle}
               >
                 Order Items
               </Text>
 
-              {orderItems.map(
-                (item) => (
+              {orderItems.map((item) => (
+                <View
+                  key={item.id}
+                  style={styles.orderItem}
+                >
+                  {/* ITEM INFO */}
+
                   <View
-                    key={
-                      item.id
-                    }
-                    style={
-                      styles.orderItem
-                    }
+                    style={styles.itemInfo}
                   >
-                    {/* ITEM INFO */}
-                    <View
-                      style={
-                        styles.itemInfo
-                      }
-                    >
-                      <Text
-                        style={
-                          styles.itemName
-                        }
-                        numberOfLines={
-                          2
-                        }
-                      >
-                        {
-                          item.name
-                        }
-                      </Text>
-
-                      <Text
-                        style={
-                          styles.itemPrice
-                        }
-                      >
-                        ₱
-                        {item.price.toFixed(
-                          2
-                        )}{" "}
-                        each
-                      </Text>
-                    </View>
-
-                    {/* QUANTITY */}
-                    <View
-                      style={
-                        styles.itemControls
-                      }
-                    >
-                      <Pressable
-                        onPress={() =>
-                          onDecreaseQuantity(
-                            item.id
-                          )
-                        }
-                        disabled={
-                          isCreatingOrder
-                        }
-                        style={
-                          styles.stepperButton
-                        }
-                      >
-                        <Text
-                          style={
-                            styles.stepperText
-                          }
-                        >
-                          −
-                        </Text>
-                      </Pressable>
-
-                      <Text
-                        style={
-                          styles.quantity
-                        }
-                      >
-                        {
-                          item.quantity
-                        }
-                      </Text>
-
-                      <Pressable
-                        onPress={() =>
-                          onIncreaseQuantity(
-                            item.id
-                          )
-                        }
-                        disabled={
-                          isCreatingOrder
-                        }
-                        style={[
-                          styles.stepperButton,
-
-                          styles.plusButton,
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.stepperText,
-
-                            styles.plusText,
-                          ]}
-                        >
-                          +
-                        </Text>
-                      </Pressable>
-                    </View>
-
-                    {/* TOTAL */}
                     <Text
-                      style={
-                        styles.itemTotal
-                      }
+                      style={styles.itemName}
+                      numberOfLines={2}
+                    >
+                      {item.name}
+                    </Text>
+
+                    <Text
+                      style={styles.itemPrice}
                     >
                       ₱
-                      {(
-                        item.price *
-                        item.quantity
-                      ).toFixed(
+                      {item.price.toFixed(
                         2
-                      )}
+                      )}{" "}
+                      each
                     </Text>
                   </View>
-                )
-              )}
+
+                  {/* QUANTITY */}
+
+                  <View
+                    style={
+                      styles.itemControls
+                    }
+                  >
+                    <Pressable
+                      onPress={() =>
+                        onDecreaseQuantity(
+                          item.id
+                        )
+                      }
+                      disabled={
+                        isCreatingOrder
+                      }
+                      style={
+                        styles.stepperButton
+                      }
+                    >
+                      <Text
+                        style={
+                          styles.stepperText
+                        }
+                      >
+                        −
+                      </Text>
+                    </Pressable>
+
+                    <Text
+                      style={styles.quantity}
+                    >
+                      {item.quantity}
+                    </Text>
+
+                    <Pressable
+                      onPress={() =>
+                        onIncreaseQuantity(
+                          item.id
+                        )
+                      }
+                      disabled={
+                        isCreatingOrder
+                      }
+                      style={[
+                        styles.stepperButton,
+                        styles.plusButton,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.stepperText,
+                          styles.plusText,
+                        ]}
+                      >
+                        +
+                      </Text>
+                    </Pressable>
+                  </View>
+
+                  {/* TOTAL */}
+
+                  <Text
+                    style={styles.itemTotal}
+                  >
+                    ₱
+                    {(
+                      item.price *
+                      item.quantity
+                    ).toFixed(2)}
+                  </Text>
+                </View>
+              ))}
             </View>
           )}
         </ScrollView>
@@ -509,16 +456,11 @@ export default function MobileOrderModal({
             FOOTER
         ================================================= */}
 
-        <View
-          style={
-            styles.footer
-          }
-        >
+        <View style={styles.footer}>
           {/* SUBTOTAL */}
+
           <View
-            style={
-              styles.subtotalRow
-            }
+            style={styles.subtotalRow}
           >
             <Text
               style={
@@ -534,61 +476,44 @@ export default function MobileOrderModal({
               }
             >
               ₱
-              {orderTotal.toFixed(
-                2
-              )}
+              {orderTotal.toFixed(2)}
             </Text>
           </View>
 
           {/* TOTAL */}
-          <View
-            style={
-              styles.totalRow
-            }
-          >
+
+          <View style={styles.totalRow}>
             <Text
-              style={
-                styles.totalLabel
-              }
+              style={styles.totalLabel}
             >
               Total
             </Text>
 
             <Text
-              style={
-                styles.totalValue
-              }
+              style={styles.totalValue}
             >
               ₱
-              {orderTotal.toFixed(
-                2
-              )}
+              {orderTotal.toFixed(2)}
             </Text>
           </View>
 
           {/* SAVE ORDER */}
+
           <Pressable
-            onPress={
-              onCheckout
-            }
+            onPress={handleCheckout}
             disabled={
-              orderItems.length ===
-                0 ||
+              orderItems.length === 0 ||
               isCreatingOrder
             }
             style={[
               styles.saveButton,
-
-              (orderItems.length ===
-                0 ||
+              (orderItems.length === 0 ||
                 isCreatingOrder) &&
                 styles.saveButtonDisabled,
             ]}
           >
             <Text
-              style={
-                styles.saveButtonText
-              }
+              style={styles.saveButtonText}
             >
               {isCreatingOrder
                 ? "SAVING..."
@@ -597,26 +522,22 @@ export default function MobileOrderModal({
           </Pressable>
 
           {/* BOTTOM */}
+
           <View
-            style={
-              styles.footerBottom
-            }
+            style={styles.footerBottom}
           >
             {/* CLEAR */}
+
             <Pressable
-              onPress={
-                onClearOrder
-              }
+              onPress={onClearOrder}
               disabled={
-                orderItems.length ===
-                  0 ||
+                orderItems.length === 0 ||
                 isCreatingOrder
               }
             >
               <Text
                 style={[
                   styles.clearText,
-
                   (orderItems.length ===
                     0 ||
                     isCreatingOrder) &&
@@ -628,10 +549,9 @@ export default function MobileOrderModal({
             </Pressable>
 
             {/* HELP */}
+
             <Pressable
-              style={
-                styles.helpButton
-              }
+              style={styles.helpButton}
               onPress={() =>
                 Alert.alert(
                   "Order Help",
@@ -649,6 +569,16 @@ export default function MobileOrderModal({
             </Pressable>
           </View>
         </View>
+
+        {/* =================================================
+            ERROR TOAST
+        ================================================= */}
+
+        <ErrorToast
+          visible={showErrorToast}
+          title="Incomplete Order"
+          message={errorToastMessage}
+        />
       </View>
     </Modal>
   );

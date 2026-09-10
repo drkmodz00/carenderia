@@ -20,7 +20,9 @@ export type ReceiptItem = {
 export type ReceiptData = {
   orderId: string;
 
-  // Support multiple items
+  // Can come from Supabase as either number or string
+  orderNumber?: number | string | null;
+
   items?: ReceiptItem[];
 
   // Compatibility with checkout receipt
@@ -30,13 +32,10 @@ export type ReceiptData = {
 
   total: number;
 
-  // Payment information
   cashReceived?: number | null;
   change?: number | null;
   paymentMethod?: string | null;
 
-  // IMPORTANT:
-  // Historical receipt uses this instead of new Date()
   soldAt?: string;
 
   storeName?: string;
@@ -49,8 +48,6 @@ type ReceiptModalProps = {
   data: ReceiptData;
   onClose: () => void;
   onNewOrder?: () => void;
-
-  // true when opened from Sales History
   isHistory?: boolean;
 };
 
@@ -61,9 +58,35 @@ export default function ReceiptModal({
   onNewOrder,
   isHistory = false,
 }: ReceiptModalProps) {
-  const txnNumber = data.orderId
-    ? `TXN-${data.orderId.slice(0, 8).toUpperCase()}`
-    : "TXN-0000";
+
+  // =====================================================
+  // TRANSACTION NUMBER
+  // =====================================================
+
+  const rawOrderNumber = data.orderNumber;
+
+  let txnNumber = "N/A";
+
+  if (
+    rawOrderNumber !== null &&
+    rawOrderNumber !== undefined &&
+    String(rawOrderNumber).trim() !== ""
+  ) {
+    const orderNumberString = String(rawOrderNumber).trim();
+
+    // If numeric, format as 0001, 0002, etc.
+    if (/^\d+$/.test(orderNumberString)) {
+      txnNumber = `#${orderNumberString.padStart(4, "0")}`;
+    } else {
+      // If Supabase returns something like ORD-1024,
+      // keep it exactly as it is.
+      txnNumber = `#${orderNumberString}`;
+    }
+  } else if (data.orderId) {
+    // Never show #0000.
+    // Use the order UUID as a fallback.
+    txnNumber = `#${data.orderId.slice(0, 8).toUpperCase()}`;
+  }
 
   // =====================================================
   // RECEIPT DATE
@@ -106,7 +129,9 @@ export default function ReceiptModal({
   );
 
   const subtotal =
-    calculatedSubtotal > 0 ? calculatedSubtotal : data.total;
+    calculatedSubtotal > 0
+      ? calculatedSubtotal
+      : data.total;
 
   const storeName =
     data.storeName?.trim() || "Carenderia POS";
@@ -122,8 +147,13 @@ export default function ReceiptModal({
     data.cashReceived !== null &&
     data.cashReceived !== undefined;
 
-  const cashReceived = Number(data.cashReceived ?? 0);
-  const change = Number(data.change ?? 0);
+  const cashReceived = Number(
+    data.cashReceived ?? 0
+  );
+
+  const change = Number(
+    data.change ?? 0
+  );
 
   // =====================================================
   // RENDER
@@ -140,25 +170,33 @@ export default function ReceiptModal({
         <View style={styles.receiptContainer}>
           <ScrollView
             style={styles.receiptScroll}
-            contentContainerStyle={styles.receiptScrollContent}
+            contentContainerStyle={
+              styles.receiptScrollContent
+            }
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.receipt}>
 
               {/* TOP TORN EDGE */}
+
               <View style={styles.zigzagRow}>
-                {Array.from({ length: 20 }).map((_, index) => (
-                  <View
-                    key={index}
-                    style={styles.zigzagTriangle}
-                  />
-                ))}
+                {Array.from({ length: 20 }).map(
+                  (_, index) => (
+                    <View
+                      key={index}
+                      style={styles.zigzagTriangle}
+                    />
+                  )
+                )}
               </View>
 
               <View style={styles.receiptInner}>
 
                 {/* STORE */}
-                <Text style={styles.logo}>🧺</Text>
+
+                <Text style={styles.logo}>
+                  🧺
+                </Text>
 
                 <Text style={styles.storeName}>
                   {storeName}
@@ -179,6 +217,7 @@ export default function ReceiptModal({
                 <View style={styles.dashedDivider} />
 
                 {/* RECEIPT TYPE */}
+
                 <Text
                   style={{
                     textAlign: "center",
@@ -278,8 +317,6 @@ export default function ReceiptModal({
                       key={`${item.name}-${index}`}
                       style={styles.itemRow}
                     >
-                      {/* ITEM */}
-
                       <View style={styles.itemColumn}>
                         <Text
                           style={styles.itemName}
@@ -288,8 +325,6 @@ export default function ReceiptModal({
                           {item.name}
                         </Text>
                       </View>
-
-                      {/* QTY */}
 
                       <Text
                         style={[
@@ -300,8 +335,6 @@ export default function ReceiptModal({
                         {item.quantity}
                       </Text>
 
-                      {/* PRICE */}
-
                       <Text
                         style={[
                           styles.itemPrice,
@@ -310,8 +343,6 @@ export default function ReceiptModal({
                       >
                         ₱{item.price.toFixed(2)}
                       </Text>
-
-                      {/* AMOUNT */}
 
                       <Text
                         style={[
@@ -365,9 +396,7 @@ export default function ReceiptModal({
                   </Text>
                 </View>
 
-                {/* CASH + CHANGE
-                    Only show if actual data exists.
-                */}
+                {/* CASH + CHANGE */}
 
                 {hasCashInfo && (
                   <>
@@ -406,7 +435,8 @@ export default function ReceiptModal({
                       opacity: 0.65,
                     }}
                   >
-                    This is a historical transaction record.
+                    This is a historical transaction
+                    record.
                   </Text>
                 )}
 
@@ -428,18 +458,21 @@ export default function ReceiptModal({
               {/* BOTTOM TORN EDGE */}
 
               <View style={styles.zigzagRowBottom}>
-                {Array.from({ length: 20 }).map((_, index) => (
-                  <View
-                    key={index}
-                    style={styles.zigzagTriangleBottom}
-                  />
-                ))}
+                {Array.from({ length: 20 }).map(
+                  (_, index) => (
+                    <View
+                      key={index}
+                      style={
+                        styles.zigzagTriangleBottom
+                      }
+                    />
+                  )
+                )}
               </View>
 
               {/* BUTTONS */}
 
               <View style={styles.actionFooter}>
-
                 <Pressable
                   style={styles.printButton}
                   onPress={() => {
@@ -456,7 +489,9 @@ export default function ReceiptModal({
                     style={styles.newOrderButton}
                     onPress={onClose}
                   >
-                    <Text style={styles.newOrderButtonText}>
+                    <Text
+                      style={styles.newOrderButtonText}
+                    >
                       ✕ Close
                     </Text>
                   </Pressable>
@@ -465,12 +500,13 @@ export default function ReceiptModal({
                     style={styles.newOrderButton}
                     onPress={onNewOrder}
                   >
-                    <Text style={styles.newOrderButtonText}>
+                    <Text
+                      style={styles.newOrderButtonText}
+                    >
                       ✚ Bagong Order
                     </Text>
                   </Pressable>
                 )}
-
               </View>
             </View>
           </ScrollView>

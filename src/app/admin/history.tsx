@@ -16,6 +16,7 @@ type Sale = {
   id: string;
   customerName: string;
   orderId: string;
+  orderNumber: number | null;
   date: string;
   items: SaleItem[];
   total: number;
@@ -86,6 +87,7 @@ export default function History() {
           sold_at,
           orders (
             id,
+            order_number,
             customer_name,
             status,
             order_type,
@@ -133,6 +135,7 @@ export default function History() {
         return {
           id: sale.id,
           orderId: sale.order_id ?? order?.id ?? "",
+          orderNumber: order?.order_number ?? null,
           customerName: order?.customer_name ?? "",
           date: sale.sold_at ?? order?.created_at ?? new Date().toISOString(),
           items,
@@ -160,6 +163,10 @@ export default function History() {
 
   // FORMATTERS
   const formatCurrency = (amount: number) => `₱${Number(amount).toFixed(2)}`;
+  const formatOrderNumber = (orderNumber: number | null | undefined) =>
+    orderNumber !== null && orderNumber !== undefined
+      ? `#${String(orderNumber).padStart(4, "0")}`
+      : "#0000";
 
   const formatDate = (date: string) =>
     new Date(date).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
@@ -225,8 +232,7 @@ export default function History() {
 
   // VIEW ORDER
   const handleViewOrder = (sale: Sale) => {
-    const orderNumber = `Order #${sale.orderId.slice(0, 8)}`;
-
+    const orderNumber = `Order ${formatOrderNumber(sale.orderNumber)}`;
     const orderDetails: OrderDetailsData = {
       id: sale.orderId,
       customerName: sale.customerName,
@@ -326,6 +332,7 @@ export default function History() {
 
     const receipt: ReceiptData = {
       orderId: selectedOrder.id,
+      orderNumber: sale?.orderNumber ?? null,
       items: selectedOrder.items.map((item) => ({ name: item.name, quantity: item.quantity, price: item.price })),
       total: selectedOrder.total,
       paymentMethod: sale?.paymentMethod ?? null,
@@ -603,7 +610,7 @@ export default function History() {
                 >
                   {/* ORDER */}
                   <View style={[styles.cell, styles.colOrder]}>
-                    <Text style={styles.orderIdText} numberOfLines={1}>#{sale.orderId.slice(0, 8)}</Text>
+                    <Text style={styles.orderIdText} numberOfLines={1}>#{formatOrderNumber(sale.orderNumber)}</Text>
                     <Text style={styles.customerText} numberOfLines={1}>
                       {sale.customerName || "Walk-in Customer"}
                     </Text>

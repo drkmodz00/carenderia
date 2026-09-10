@@ -1,7 +1,10 @@
 import React from "react";
 import { Text, View } from "react-native";
 
-import { errorToastStyles as styles} from "@/styles/admin/modals/toast/errorToast";
+import {
+  errorToastStyles as styles,
+} from "@/styles/admin/modals/toast/errorToast";
+
 type ErrorToastProps = {
   title?: string;
   message: string;
