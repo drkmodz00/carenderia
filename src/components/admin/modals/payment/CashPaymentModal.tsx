@@ -1,7 +1,20 @@
 import React, { useMemo, useState } from "react";
-import {  Alert, Modal, Pressable, Text, useWindowDimensions, View, } from "react-native";
-import { cashPaymentModalStyles as styles } from "@/styles/admin/modals/payment/cashPaymentModal.styles";
+import {
+  Alert,
+  Keyboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { Banknote } from "lucide-react-native";
+
+import {
+  cashPaymentModalStyles as styles,
+} from "@/styles/admin/modals/payment/cashPaymentModal.styles";
 
 type CashPaymentModalProps = {
   visible: boolean;
@@ -21,9 +34,13 @@ export default function CashPaymentModal({
   onClose,
   onConfirm,
 }: CashPaymentModalProps) {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
 
   const isTablet = width >= 768;
+
+  // Smaller modal spacing for short screens / keyboard
+  const isShortScreen = height < 700;
+  const isVeryShortScreen = height < 600;
 
   const [cashReceived, setCashReceived] = useState("");
 
@@ -80,12 +97,12 @@ export default function CashPaymentModal({
   const handleQuickAmount = (amount: number) => {
     if (isProcessing) return;
 
-    setCashReceived(
-      String(amount)
-    );
+    setCashReceived(String(amount));
   };
 
   const handleConfirm = () => {
+    Keyboard.dismiss();
+
     if (!cashReceived.trim()) {
       Alert.alert(
         "Cash Required",
@@ -119,6 +136,7 @@ export default function CashPaymentModal({
   const handleClose = () => {
     if (isProcessing) return;
 
+    Keyboard.dismiss();
     setCashReceived("");
     onClose();
   };
@@ -129,197 +147,320 @@ export default function CashPaymentModal({
       transparent
       animationType="fade"
       onRequestClose={handleClose}
+      statusBarTranslucent
     >
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView
+        style={styles.keyboardContainer}
+        behavior={
+          Platform.OS === "ios"
+            ? "padding"
+            : undefined
+        }
+      >
         <View
           style={[
-            styles.modal,
-            isTablet && styles.modalTablet,
+            styles.overlay,
+            isShortScreen &&
+              styles.overlayShort,
           ]}
         >
-          <View style={styles.header}>
-            <View style={styles.headerTextWrap}>
-              <View style={styles.titleRow}>
-                <Banknote
-                  size={22}
-                  color="#F59E0B"
-                  strokeWidth={2.5}
-                />
-                <Text style={styles.title}>
-                  Cash Payment
+          <View
+            style={[
+              styles.modal,
+              isTablet && styles.modalTablet,
+              isShortScreen &&
+                styles.modalShort,
+              isVeryShortScreen &&
+                styles.modalVeryShort,
+            ]}
+          >
+            {/* HEADER */}
+            <View
+              style={[
+                styles.header,
+                isShortScreen &&
+                  styles.headerShort,
+              ]}
+            >
+              <View style={styles.headerTextWrap}>
+                <View style={styles.titleRow}>
+                  <Banknote
+                    size={isShortScreen ? 20 : 22}
+                    color="#F59E0B"
+                    strokeWidth={2.5}
+                  />
+
+                  <Text
+                    style={[
+                      styles.title,
+                      isShortScreen &&
+                        styles.titleShort,
+                    ]}
+                  >
+                    Cash Payment
+                  </Text>
+                </View>
+
+                <Text
+                  style={[
+                    styles.subtitle,
+                    isShortScreen &&
+                      styles.subtitleShort,
+                  ]}
+                >
+                  Enter the cash received
                 </Text>
               </View>
 
-              <Text style={styles.subtitle}>
-                Enter the cash received
-              </Text>
+              <Pressable
+                style={[
+                  styles.closeButton,
+                  isShortScreen &&
+                    styles.closeButtonShort,
+                ]}
+                onPress={handleClose}
+                disabled={isProcessing}
+              >
+                <Text style={styles.closeText}>
+                  ×
+                </Text>
+              </Pressable>
             </View>
 
-            <Pressable
-              style={styles.closeButton}
-              onPress={handleClose}
-              disabled={isProcessing}
-            >
-              <Text style={styles.closeText}>
-                ×
-              </Text>
-            </Pressable>
-          </View>
-
-          <View
-            style={[
-              styles.amountGrid,
-              isTablet && styles.amountGridTablet,
-            ]}
-          >
-            <View style={styles.totalBox}>
-              <Text style={styles.totalLabel}>
-                Total Amount
-              </Text>
-
-              <Text style={styles.totalValue}>
-                ₱{total.toFixed(2)}
-              </Text>
-            </View>
-
+            {/* AMOUNT CARDS */}
             <View
               style={[
-                styles.cashBox,
-                sufficientCash &&
-                  styles.cashBoxValid,
+                styles.amountGrid,
+                isTablet &&
+                  styles.amountGridTablet,
+                isShortScreen &&
+                  styles.amountGridShort,
               ]}
             >
-              <Text style={styles.cashLabel}>
-                Cash Received
-              </Text>
-
-              <Text
-                style={styles.cashValue}
-                numberOfLines={1}
-                adjustsFontSizeToFit
+              <View
+                style={[
+                  styles.totalBox,
+                  isShortScreen &&
+                    styles.amountBoxShort,
+                ]}
               >
-                ₱{cashReceived || "0"}
-              </Text>
-            </View>
-
-            <View style={styles.changeBox}>
-              <View style={styles.changeRow}>
-                <Text style={styles.changeLabel}>
-                  Change
+                <Text style={styles.totalLabel}>
+                  Total Amount
                 </Text>
 
                 <Text
                   style={[
-                    styles.changeValue,
-                    !sufficientCash &&
-                      styles.changeValueEmpty,
+                    styles.totalValue,
+                    isShortScreen &&
+                      styles.amountValueShort,
                   ]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
                 >
-                  {sufficientCash
-                    ? `₱${change.toFixed(2)}`
-                    : "—"}
+                  ₱{total.toFixed(2)}
                 </Text>
               </View>
-            </View>
-          </View>
 
-          <Text style={styles.quickLabel}>
-            Quick Value
-          </Text>
-
-          <View style={styles.quickRow}>
-            {[total, 50, 100, 500]
-              .filter(
-                (amount, index, array) =>
-                  array.indexOf(amount) === index
-              )
-              .map((amount) => (
-                <Pressable
-                  key={amount}
-                  style={styles.quickButton}
-                  onPress={() =>
-                    handleQuickAmount(amount)
-                  }
-                  disabled={isProcessing}
-                >
-                  <Text
-                    style={
-                      styles.quickButtonText
-                    }
-                  >
-                    ₱{amount.toFixed(0)}
-                  </Text>
-                </Pressable>
-              ))}
-          </View>
-
-          <View style={styles.keypad}>
-            {[
-              ["7", "8", "9"],
-              ["4", "5", "6"],
-              ["1", "2", "3"],
-              ["00", "0", "backspace"],
-            ].map((row, rowIndex) => (
               <View
-                key={rowIndex}
-                style={styles.keypadRow}
+                style={[
+                  styles.cashBox,
+                  sufficientCash &&
+                    styles.cashBoxValid,
+                  isShortScreen &&
+                    styles.amountBoxShort,
+                ]}
               >
-                {row.map((key) => (
-                  <Pressable
-                    key={key}
+                <Text style={styles.cashLabel}>
+                  Cash Received
+                </Text>
+
+                <Text
+                  style={[
+                    styles.cashValue,
+                    isShortScreen &&
+                      styles.amountValueShort,
+                  ]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
+                  ₱{cashReceived || "0"}
+                </Text>
+              </View>
+
+              <View
+                style={[
+                  styles.changeBox,
+                  isShortScreen &&
+                    styles.amountBoxShort,
+                ]}
+              >
+                <View style={styles.changeRow}>
+                  <Text style={styles.changeLabel}>
+                    Change
+                  </Text>
+
+                  <Text
                     style={[
-                      styles.keypadButton,
-                      key === "backspace" &&
-                        styles.keypadBackspace,
+                      styles.changeValue,
+                      !sufficientCash &&
+                        styles.changeValueEmpty,
+                      isShortScreen &&
+                        styles.changeValueShort,
+                    ]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                  >
+                    {sufficientCash
+                      ? `₱${change.toFixed(2)}`
+                      : "—"}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* QUICK VALUE */}
+            <Text
+              style={[
+                styles.quickLabel,
+                isShortScreen &&
+                  styles.quickLabelShort,
+              ]}
+            >
+              Quick Value
+            </Text>
+
+            <View
+              style={[
+                styles.quickRow,
+                isShortScreen &&
+                  styles.quickRowShort,
+              ]}
+            >
+              {[total, 50, 100, 500]
+                .filter(
+                  (amount, index, array) =>
+                    array.indexOf(amount) ===
+                    index
+                )
+                .map((amount) => (
+                  <Pressable
+                    key={amount}
+                    style={[
+                      styles.quickButton,
+                      isShortScreen &&
+                        styles.quickButtonShort,
                     ]}
                     onPress={() =>
-                      handleKeypadPress(key)
+                      handleQuickAmount(
+                        amount
+                      )
                     }
                     disabled={isProcessing}
                   >
                     <Text
                       style={[
-                        styles.keypadText,
-                        key === "backspace" &&
-                          styles.backspaceText,
+                        styles.quickButtonText,
+                        isShortScreen &&
+                          styles.quickButtonTextShort,
                       ]}
                     >
-                      {key === "backspace"
-                        ? "⌫"
-                        : key}
+                      ₱{amount.toFixed(0)}
                     </Text>
                   </Pressable>
                 ))}
-              </View>
-            ))}
-          </View>
+            </View>
 
-          <Pressable
-            style={[
-              styles.confirmButton,
-              !sufficientCash &&
-                styles.confirmButtonDisabled,
-            ]}
-            disabled={
-              !sufficientCash ||
-              isProcessing
-            }
-            onPress={handleConfirm}
-          >
-            <Text
+            {/* KEYPAD */}
+            <View
               style={[
-                styles.confirmText,
-                !sufficientCash &&
-                  styles.confirmTextDisabled,
+                styles.keypad,
+                isShortScreen &&
+                  styles.keypadShort,
               ]}
             >
-              {isProcessing
-                ? "Processing..."
-                : "✓ Confirm Cash Payment"}
-            </Text>
-          </Pressable>
+              {[
+                ["7", "8", "9"],
+                ["4", "5", "6"],
+                ["1", "2", "3"],
+                ["00", "0", "backspace"],
+              ].map((row, rowIndex) => (
+                <View
+                  key={rowIndex}
+                  style={[
+                    styles.keypadRow,
+                    isShortScreen &&
+                      styles.keypadRowShort,
+                  ]}
+                >
+                  {row.map((key) => (
+                    <Pressable
+                      key={key}
+                      style={[
+                        styles.keypadButton,
+                        isShortScreen &&
+                          styles.keypadButtonShort,
+                        key === "backspace" &&
+                          styles.keypadBackspace,
+                      ]}
+                      onPress={() =>
+                        handleKeypadPress(
+                          key
+                        )
+                      }
+                      disabled={isProcessing}
+                    >
+                      <Text
+                        style={[
+                          styles.keypadText,
+                          isShortScreen &&
+                            styles.keypadTextShort,
+                          key ===
+                            "backspace" &&
+                            styles.backspaceText,
+                        ]}
+                      >
+                        {key === "backspace"
+                          ? "⌫"
+                          : key}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              ))}
+            </View>
+
+            {/* CONFIRM */}
+            <Pressable
+              style={[
+                styles.confirmButton,
+                isShortScreen &&
+                  styles.confirmButtonShort,
+                !sufficientCash &&
+                  styles.confirmButtonDisabled,
+              ]}
+              disabled={
+                !sufficientCash ||
+                isProcessing
+              }
+              onPress={handleConfirm}
+            >
+              <Text
+                style={[
+                  styles.confirmText,
+                  isShortScreen &&
+                    styles.confirmTextShort,
+                  !sufficientCash &&
+                    styles.confirmTextDisabled,
+                ]}
+              >
+                {isProcessing
+                  ? "Processing..."
+                  : "✓ Confirm Cash Payment"}
+              </Text>
+            </Pressable>
+          </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

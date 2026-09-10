@@ -1,5 +1,13 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import MobileOrderModal from "@/components/admin/modals/mobile/MobileOrderModal";
+import { useRouter } from "expo-router";
+
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
 import {
   ActivityIndicator,
   Alert,
@@ -11,17 +19,25 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import AdminBottomNav from "@/components/admin/AdminBottomNav";
-import ErrorToast from "@/components/admin/toast/ErrorToast";
+
 import { createOrder } from "@/lib/order";
+
 import { supabase } from "@/lib/supabase";
+
 import {
   getCurrentProfile,
   getRestaurantSettings,
 } from "@/lib/setting";
-import { createOrderStyles } from "@/styles/admin/order.styles";
+
+import {
+  createOrderStyles,
+} from "@/styles/admin/order.styles";
+
+import {
+  createMobileOrderModalStyles,
+} from "@/styles/admin/modals/mobile/mobile-order-modal.styles";
 
 // =====================================================
 // TYPES
@@ -51,120 +67,188 @@ type HeaderData = {
   cashierName: string;
 };
 
-type OrderType = "Dine In" | "Take Out";
+type OrderType =
+  | "Dine In"
+  | "Take Out";
 
 // =====================================================
-// COMPONENT
+// SCREEN
 // =====================================================
 
 export default function OrderScreen() {
   const router = useRouter();
-  const { width } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
 
-  // ---------------------------------------------------
-  // RESPONSIVE
-  // ---------------------------------------------------
+  // ===================================================
+  // SCREEN DIMENSIONS
+  // ===================================================
 
-  const isTablet = width >= 768;
+  const {
+    width,
+    height,
+  } = useWindowDimensions();
 
-  const numColumns = isTablet
-    ? width >= 1024
-      ? 4
-      : 3
-    : 2;
+  // ===================================================
+  // RESPONSIVE DEVICE
+  // ===================================================
 
-  const styles = useMemo(
-    () => createOrderStyles(isTablet, numColumns),
-    [isTablet, numColumns]
+  const responsive = useMemo(
+    () => ({
+      width,
+      height,
+
+      isSmallPhone:
+        width < 360,
+
+      isPhone:
+        width < 768,
+
+      isTablet:
+        width >= 768 &&
+        width < 1024,
+
+      isLargeTablet:
+        width >= 1024 &&
+        width < 1200,
+
+      isDesktop:
+        width >= 1200,
+
+      isLargeDesktop:
+        width >= 1440,
+    }),
+    [width, height]
   );
 
-  // ---------------------------------------------------
-  // ROUTE PARAMS
-  // ---------------------------------------------------
+  // ===================================================
+  // TABLET / DESKTOP
+  // ===================================================
 
-  const params = useLocalSearchParams<{
-    mode?: string;
-    orderId?: string;
-    customerName?: string;
-    orderType?: string;
-  }>();
+  const isTablet =
+    responsive.isTablet ||
+    responsive.isLargeTablet ||
+    responsive.isDesktop;
 
-  const isEditMode = params.mode === "edit";
+  // ===================================================
+  // MENU COLUMNS
+  // ===================================================
 
-  // ---------------------------------------------------
+  const numColumns =
+    responsive.isPhone
+      ? 2
+      : responsive.isTablet
+        ? 3
+        : 4;
+
+  // ===================================================
+  // DESKTOP ORDER STYLES
+  // ===================================================
+
+  const styles = useMemo(
+    () =>
+      createOrderStyles(
+        isTablet,
+        numColumns
+      ),
+    [
+      isTablet,
+      numColumns,
+    ]
+  );
+
+  // ===================================================
+  // MOBILE MODAL STYLES
+  // ===================================================
+
+  const mobileStyles = useMemo(
+    () =>
+      createMobileOrderModalStyles(
+        responsive.width
+      ),
+    [responsive.width]
+  );
+
+  // ===================================================
   // STATE
-  // ---------------------------------------------------
+  // ===================================================
 
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [
+    categories,
+    setCategories,
+  ] = useState<Category[]>([]);
 
-  const [isLoadingMenu, setIsLoadingMenu] = useState(true);
-  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
-  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [
+    menuItems,
+    setMenuItems,
+  ] = useState<MenuItem[]>([]);
 
-  const [customerName, setCustomerName] = useState("");
+  const [
+    selectedCategory,
+    setSelectedCategory,
+  ] = useState("All");
 
-  const [orderType, setOrderType] =
-    useState<OrderType>("Dine In");
+  const [
+    isLoadingMenu,
+    setIsLoadingMenu,
+  ] = useState(true);
 
-  const [headerData, setHeaderData] =
-    useState<HeaderData>({
-      storeName: "Restaurant",
-      cashierName: "Cashier",
-    });
+  const [
+    orderItems,
+    setOrderItems,
+  ] = useState<OrderItem[]>([]);
 
-  // ---------------------------------------------------
-  // ERROR TOAST
-  // ---------------------------------------------------
+  const [
+    isCreatingOrder,
+    setIsCreatingOrder,
+  ] = useState(false);
 
-  const [showErrorToast, setShowErrorToast] =
-    useState(false);
+  const [
+    customerName,
+    setCustomerName,
+  ] = useState("");
 
-  const [errorToastTitle, setErrorToastTitle] =
-    useState("Incomplete Order");
+  const [
+    orderType,
+    setOrderType,
+  ] = useState<OrderType>(
+    "Dine In"
+  );
 
-  const [errorToastMessage, setErrorToastMessage] =
-    useState("");
+  const [
+    showMobileOrder,
+    setShowMobileOrder,
+  ] = useState(false);
 
-  const showError = (
-    title: string,
-    message: string
-  ) => {
-    setErrorToastTitle(title);
-    setErrorToastMessage(message);
-    setShowErrorToast(true);
-  };
+  const [
+    headerData,
+    setHeaderData,
+  ] = useState<HeaderData>({
+    storeName: "Restaurant",
+    cashierName: "Cashier",
+  });
 
-  useEffect(() => {
-    if (!showErrorToast) {
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setShowErrorToast(false);
-    }, 4000);
-
-    return () => clearTimeout(timer);
-  }, [showErrorToast]);
-
-  // =====================================================
+  // ===================================================
   // LOAD HEADER
-  // =====================================================
+  // ===================================================
 
   const loadHeader = async () => {
     try {
+      // ---------------------------------------------
+      // RESTAURANT SETTINGS
+      // ---------------------------------------------
+
       try {
         const settings =
           await getRestaurantSettings();
 
-        setHeaderData((current) => ({
-          ...current,
-          storeName:
-            settings.name?.trim() ||
-            "Restaurant",
-        }));
+        setHeaderData(
+          (current) => ({
+            ...current,
+
+            storeName:
+              settings.name?.trim() ||
+              "Restaurant",
+          })
+        );
       } catch (error) {
         console.warn(
           "Unable to load restaurant settings:",
@@ -172,25 +256,34 @@ export default function OrderScreen() {
         );
       }
 
+      // ---------------------------------------------
+      // PROFILE
+      // ---------------------------------------------
+
       try {
         const profile =
           await getCurrentProfile();
 
         if (profile) {
-          const data = profile as {
-            name?: string | null;
-            username?: string | null;
-          };
+          const data =
+            profile as {
+              name?: string | null;
+              username?: string | null;
+            };
 
           const displayName =
             data.name?.trim() ||
             data.username?.trim();
 
           if (displayName) {
-            setHeaderData((current) => ({
-              ...current,
-              cashierName: displayName,
-            }));
+            setHeaderData(
+              (current) => ({
+                ...current,
+
+                cashierName:
+                  displayName,
+              })
+            );
 
             return;
           }
@@ -202,25 +295,37 @@ export default function OrderScreen() {
         );
       }
 
+      // ---------------------------------------------
+      // AUTH FALLBACK
+      // ---------------------------------------------
+
       const {
-        data: { session },
+        data: {
+          session,
+        },
         error,
-      } = await supabase.auth.getSession();
+      } =
+        await supabase.auth.getSession();
 
       if (error) {
         console.warn(
           "Session error:",
           error
         );
+
         return;
       }
 
       if (session?.user) {
-        setHeaderData((current) => ({
-          ...current,
-          cashierName:
-            session.user.email ?? "Cashier",
-        }));
+        setHeaderData(
+          (current) => ({
+            ...current,
+
+            cashierName:
+              session.user.email ??
+              "Cashier",
+          })
+        );
       }
     } catch (error) {
       console.error(
@@ -230,9 +335,9 @@ export default function OrderScreen() {
     }
   };
 
-  // =====================================================
+  // ===================================================
   // LOAD MENU
-  // =====================================================
+  // ===================================================
 
   const loadMenu = async () => {
     try {
@@ -251,18 +356,20 @@ export default function OrderScreen() {
 
         supabase
           .from("menu_items")
-          .select(`
-            id,
-            category_id,
-            name,
-            price,
-            image_url,
-            available,
-            categories (
+          .select(
+            `
               id,
-              name
-            )
-          `)
+              category_id,
+              name,
+              price,
+              image_url,
+              available,
+              categories (
+                id,
+                name
+              )
+            `
+          )
           .order("name", {
             ascending: true,
           }),
@@ -276,32 +383,66 @@ export default function OrderScreen() {
         throw menuResult.error;
       }
 
+      // ---------------------------------------------
+      // CATEGORIES
+      // ---------------------------------------------
+
       setCategories(
-        (categoriesResult.data ?? []).map(
+        (
+          categoriesResult.data ??
+          []
+        ).map(
           (category) => ({
-            id: String(category.id),
-            name: category.name,
+            id: String(
+              category.id
+            ),
+
+            name:
+              category.name,
           })
         )
       );
 
+      // ---------------------------------------------
+      // MENU
+      // ---------------------------------------------
+
       setMenuItems(
-        (menuResult.data ?? []).map(
+        (
+          menuResult.data ??
+          []
+        ).map(
           (item: any) => ({
-            id: String(item.id),
-            name: item.name,
-            category_id: String(
-              item.category_id
+            id: String(
+              item.id
             ),
+
+            name:
+              item.name,
+
+            category_id:
+              String(
+                item.category_id
+              ),
+
             category_name:
-              item.categories?.name ??
+              item.categories
+                ?.name ??
               "Uncategorized",
-            price: Number(item.price),
-            available: Boolean(
-              item.available
-            ),
+
+            price:
+              Number(
+                item.price
+              ),
+
+            available:
+              Boolean(
+                item.available
+              ),
+
             image:
-              item.image_url ?? null,
+              item.image_url ??
+              null,
           })
         )
       );
@@ -313,6 +454,7 @@ export default function OrderScreen() {
 
       Alert.alert(
         "Menu Error",
+
         error instanceof Error
           ? error.message
           : "Unable to load menu."
@@ -322,233 +464,51 @@ export default function OrderScreen() {
     }
   };
 
-  // =====================================================
-  // LOAD EXISTING ORDER
-  // =====================================================
-
-  const loadExistingOrder = async () => {
-    if (
-      !isEditMode ||
-      !params.orderId
-    ) {
-      return;
-    }
-
-    try {
-      const { data, error } =
-        await supabase
-          .from("orders")
-          .select(`
-            id,
-            customer_name,
-            order_type,
-            status,
-            total,
-            order_items (
-              id,
-              menu_item_id,
-              quantity,
-              unit_price,
-              subtotal,
-              image
-            )
-          `)
-          .eq("id", params.orderId)
-          .single();
-
-      if (error) {
-        throw error;
-      }
-
-      if (!data) {
-        throw new Error(
-          "Order not found."
-        );
-      }
-
-      setCustomerName(
-        data.customer_name ?? ""
-      );
-
-      if (
-        data.order_type === "dine_in"
-      ) {
-        setOrderType("Dine In");
-      } else if (
-        data.order_type === "take_out"
-      ) {
-        setOrderType("Take Out");
-      }
-
-      const loadedItems: OrderItem[] =
-        (data.order_items ?? []).map(
-          (item: any) => {
-            const menuItem =
-              menuItems.find(
-                (menu) =>
-                  menu.id ===
-                  String(
-                    item.menu_item_id
-                  )
-              );
-
-            return {
-              id: String(
-                item.menu_item_id
-              ),
-
-              name:
-                menuItem?.name ??
-                "Unknown Item",
-
-              category_id:
-                menuItem?.category_id ??
-                "",
-
-              category_name:
-                menuItem?.category_name ??
-                "Uncategorized",
-
-              price: Number(
-                item.unit_price
-              ),
-
-              available:
-                menuItem?.available ??
-                true,
-
-              image:
-                menuItem?.image ??
-                item.image ??
-                null,
-
-              quantity: Number(
-                item.quantity
-              ),
-            };
-          }
-        );
-
-      setOrderItems(loadedItems);
-    } catch (error) {
-      console.error(
-        "Failed to load existing order:",
-        error
-      );
-
-      showError(
-        "Unable to Load Order",
-        error instanceof Error
-          ? error.message
-          : "Unable to load the existing order."
-      );
-    }
-  };
-
-  // =====================================================
+  // ===================================================
   // INITIAL LOAD
-  // =====================================================
+  // ===================================================
 
   useEffect(() => {
     loadHeader();
     loadMenu();
   }, []);
 
-  // =====================================================
-  // LOAD EXISTING ORDER AFTER MENU
-  // =====================================================
-
-  useEffect(() => {
-    if (
-      !isEditMode ||
-      !params.orderId ||
-      !menuItems.length
-    ) {
-      return;
-    }
-
-    loadExistingOrder();
-  }, [
-    isEditMode,
-    params.orderId,
-    menuItems.length,
-  ]);
-
-  // =====================================================
-  // FALLBACK CUSTOMER NAME
-  // =====================================================
-
-  useEffect(() => {
-    if (!isEditMode) {
-      return;
-    }
-
-    if (
-      typeof params.customerName ===
-        "string" &&
-      params.customerName.trim()
-    ) {
-      setCustomerName(
-        params.customerName
-      );
-    }
-  }, [
-    isEditMode,
-    params.customerName,
-  ]);
-
-  // =====================================================
-  // FALLBACK ORDER TYPE
-  // =====================================================
-
-  useEffect(() => {
-    if (!isEditMode) {
-      return;
-    }
-
-    if (
-      params.orderType === "Dine In"
-    ) {
-      setOrderType("Dine In");
-    }
-
-    if (
-      params.orderType === "Take Out"
-    ) {
-      setOrderType("Take Out");
-    }
-  }, [
-    isEditMode,
-    params.orderType,
-  ]);
-
-  // =====================================================
-  // FILTER MENU
-  // =====================================================
+  // ===================================================
+  // FILTERED MENU
+  // ===================================================
 
   const filteredItems = useMemo(
-    () =>
-      selectedCategory === "All"
-        ? menuItems
-        : menuItems.filter(
-            (item) =>
-              item.category_id ===
-              selectedCategory
-          ),
+    () => {
+      if (
+        selectedCategory ===
+        "All"
+      ) {
+        return menuItems;
+      }
+
+      return menuItems.filter(
+        (item) =>
+          item.category_id ===
+          selectedCategory
+      );
+    },
     [
       menuItems,
       selectedCategory,
     ]
   );
 
-  // =====================================================
+  // ===================================================
   // TOTAL
-  // =====================================================
+  // ===================================================
 
   const orderTotal = useMemo(
     () =>
       orderItems.reduce(
-        (total, item) =>
+        (
+          total,
+          item
+        ) =>
           total +
           item.price *
             item.quantity,
@@ -557,9 +517,27 @@ export default function OrderScreen() {
     [orderItems]
   );
 
-  // =====================================================
-  // ADD ITEM
-  // =====================================================
+  // ===================================================
+  // ORDER COUNT
+  // ===================================================
+
+  const orderCount = useMemo(
+    () =>
+      orderItems.reduce(
+        (
+          total,
+          item
+        ) =>
+          total +
+          item.quantity,
+        0
+      ),
+    [orderItems]
+  );
+
+  // ===================================================
+  // ADD TO ORDER
+  // ===================================================
 
   const handleAddToOrder = (
     item: MenuItem
@@ -571,281 +549,234 @@ export default function OrderScreen() {
       return;
     }
 
-    setShowErrorToast(false);
+    setOrderItems(
+      (current) => {
+        const existing =
+          current.find(
+            (orderItem) =>
+              orderItem.id ===
+              item.id
+          );
 
-    setOrderItems((current) => {
-      const existing =
-        current.find(
-          (orderItem) =>
-            orderItem.id === item.id
-        );
+        if (existing) {
+          return current.map(
+            (orderItem) =>
+              orderItem.id ===
+              item.id
+                ? {
+                    ...orderItem,
 
-      if (existing) {
-        return current.map(
-          (orderItem) =>
-            orderItem.id ===
-            item.id
-              ? {
-                  ...orderItem,
-                  quantity:
-                    orderItem.quantity +
-                    1,
-                }
-              : orderItem
-        );
+                    quantity:
+                      orderItem.quantity +
+                      1,
+                  }
+                : orderItem
+          );
+        }
+
+        return [
+          ...current,
+
+          {
+            ...item,
+
+            quantity: 1,
+          },
+        ];
       }
-
-      return [
-        ...current,
-        {
-          ...item,
-          quantity: 1,
-        },
-      ];
-    });
+    );
   };
 
-  // =====================================================
-  // QUANTITY
-  // =====================================================
+  // ===================================================
+  // INCREASE
+  // ===================================================
 
   const increaseQuantity = (
     id: string
   ) => {
-    if (isCreatingOrder) {
+    if (
+      isCreatingOrder
+    ) {
       return;
     }
 
-    setOrderItems((current) =>
-      current.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              quantity:
-                item.quantity + 1,
-            }
-          : item
-      )
+    setOrderItems(
+      (current) =>
+        current.map(
+          (item) =>
+            item.id === id
+              ? {
+                  ...item,
+
+                  quantity:
+                    item.quantity +
+                    1,
+                }
+              : item
+        )
     );
   };
+
+  // ===================================================
+  // DECREASE
+  // ===================================================
 
   const decreaseQuantity = (
     id: string
   ) => {
-    if (isCreatingOrder) {
+    if (
+      isCreatingOrder
+    ) {
       return;
     }
 
-    setOrderItems((current) =>
-      current
-        .map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                quantity:
-                  item.quantity - 1,
-              }
-            : item
-        )
-        .filter(
-          (item) =>
-            item.quantity > 0
-        )
+    setOrderItems(
+      (current) =>
+        current
+          .map(
+            (item) =>
+              item.id === id
+                ? {
+                    ...item,
+
+                    quantity:
+                      item.quantity -
+                      1,
+                  }
+                : item
+          )
+          .filter(
+            (item) =>
+              item.quantity >
+              0
+          )
     );
   };
 
-  // =====================================================
+  // ===================================================
   // ORDER TYPE
-  // =====================================================
+  // ===================================================
 
   const handleSelectOrderType = (
     type: OrderType
   ) => {
-    if (isCreatingOrder) {
+    if (
+      isCreatingOrder
+    ) {
       return;
     }
 
     setOrderType(type);
   };
 
-  // =====================================================
-  // CLEAR ORDER
-  // =====================================================
+  // ===================================================
+  // CLEAR
+  // ===================================================
 
   const clearOrder = () => {
-    if (isCreatingOrder) {
+    if (
+      isCreatingOrder
+    ) {
       return;
     }
 
     setOrderItems([]);
+
     setCustomerName("");
-    setOrderType("Dine In");
-    setShowErrorToast(false);
+
+    setOrderType(
+      "Dine In"
+    );
   };
 
-  // =====================================================
-  // UPDATE EXISTING ORDER
-  // =====================================================
-
-  const updateExistingOrder = async (
-    orderId: string,
-    cleanCustomerName: string
-  ) => {
-    const {
-      error: orderError,
-    } = await supabase
-      .from("orders")
-      .update({
-        customer_name:
-          cleanCustomerName,
-
-        order_type:
-          orderType === "Dine In"
-            ? "dine_in"
-            : "take_out",
-
-        total: Number(
-          orderTotal.toFixed(2)
-        ),
-
-        status: "ongoing",
-      })
-      .eq("id", orderId);
-
-    if (orderError) {
-      throw orderError;
-    }
-
-    const {
-      error: deleteItemsError,
-    } = await supabase
-      .from("order_items")
-      .delete()
-      .eq("order_id", orderId);
-
-    if (deleteItemsError) {
-      throw deleteItemsError;
-    }
-
-    const updatedOrderItems =
-      orderItems.map((item) => ({
-        order_id: orderId,
-        menu_item_id: item.id,
-        quantity: item.quantity,
-        unit_price: Number(
-          item.price.toFixed(2)
-        ),
-        subtotal: Number(
-          (
-            item.price *
-            item.quantity
-          ).toFixed(2)
-        ),
-        image: item.image,
-      }));
-
-    const {
-      error: insertItemsError,
-    } = await supabase
-      .from("order_items")
-      .insert(
-        updatedOrderItems
-      );
-
-    if (insertItemsError) {
-      throw insertItemsError;
-    }
-  };
-
-  // =====================================================
+  // ===================================================
   // CHECKOUT
-  // =====================================================
+  // ===================================================
 
   const handleCheckout =
     async () => {
-      if (isCreatingOrder) {
+      if (
+        isCreatingOrder
+      ) {
         return;
       }
 
       const cleanCustomerName =
         customerName.trim();
 
-      if (!cleanCustomerName) {
-        showError(
+      if (
+        !cleanCustomerName
+      ) {
+        Alert.alert(
           "Customer Name Required",
+
           "Please enter the customer's name before saving the order."
         );
+
         return;
       }
 
-      if (!orderItems.length) {
-        showError(
-          "Order is Empty",
-          "Please add at least one menu item before saving."
+      if (
+        !orderItems.length
+      ) {
+        Alert.alert(
+          "Empty Order",
+
+          "Please add at least one menu item."
         );
+
         return;
       }
 
       try {
-        setShowErrorToast(false);
-        setIsCreatingOrder(true);
+        setIsCreatingOrder(
+          true
+        );
 
-        let orderId: string;
+        const createdOrder =
+          await createOrder(
+            cleanCustomerName,
 
-        if (
-          isEditMode &&
-          params.orderId
-        ) {
-          await updateExistingOrder(
-            params.orderId,
-            cleanCustomerName
-          );
+            orderItems.map(
+              (item) => ({
+                menu_item_id:
+                  item.id,
 
-          orderId =
-            params.orderId;
-        } else {
-          const createdOrder =
-            await createOrder(
-              cleanCustomerName,
+                name:
+                  item.name,
 
-              orderItems.map(
-                (item) => ({
-                  menu_item_id:
-                    item.id,
+                quantity:
+                  item.quantity,
 
-                  name: item.name,
+                unit_price:
+                  item.price,
 
-                  quantity:
-                    item.quantity,
+                image:
+                  item.image,
+              })
+            ),
 
-                  unit_price:
-                    item.price,
+            orderType,
 
-                  image:
-                    item.image,
-                })
-              ),
-
-              orderType,
-
-              Number(
-                orderTotal.toFixed(2)
+            Number(
+              orderTotal.toFixed(
+                2
               )
-            );
-
-          orderId =
-            createdOrder.id;
-        }
+            )
+          );
 
         router.push({
           pathname:
             "/admin/payment",
 
           params: {
-            orderId,
+            orderId:
+              createdOrder.id,
 
             total:
-              orderTotal.toFixed(2),
+              orderTotal.toFixed(
+                2
+              ),
 
             customerName:
               cleanCustomerName,
@@ -856,12 +787,18 @@ export default function OrderScreen() {
               JSON.stringify(
                 orderItems.map(
                   (item) => ({
-                    id: item.id,
-                    name: item.name,
+                    id:
+                      item.id,
+
+                    name:
+                      item.name,
+
                     quantity:
                       item.quantity,
+
                     price:
                       item.price,
+
                     image:
                       item.image,
                   })
@@ -869,44 +806,42 @@ export default function OrderScreen() {
               ),
           },
         });
+
+        setShowMobileOrder(
+          false
+        );
       } catch (error) {
         console.error(
-          isEditMode
-            ? "Update order error:"
-            : "Create order error:",
+          "Create order error:",
           error
         );
 
-        showError(
-          isEditMode
-            ? "Unable to Update Order"
-            : "Unable to Save Order",
+        Alert.alert(
+          "Order Error",
 
           error instanceof Error
             ? error.message
-            : "Something went wrong while saving the order."
+            : "Something went wrong while creating the order."
         );
       } finally {
-        setIsCreatingOrder(false);
+        setIsCreatingOrder(
+          false
+        );
       }
     };
 
-  // =====================================================
+  // ===================================================
   // LOADING
-  // =====================================================
+  // ===================================================
 
-  if (isLoadingMenu) {
+  if (
+    isLoadingMenu
+  ) {
     return (
       <View
         style={[
           styles.container,
           styles.centered,
-          {
-            paddingTop:
-              insets.top,
-            paddingBottom:
-              insets.bottom,
-          },
         ]}
       >
         <ActivityIndicator
@@ -915,7 +850,9 @@ export default function OrderScreen() {
         />
 
         <Text
-          style={styles.loadingText}
+          style={
+            styles.loadingText
+          }
         >
           Loading menu...
         </Text>
@@ -925,49 +862,62 @@ export default function OrderScreen() {
     );
   }
 
-  // =====================================================
-  // MAIN UI
-  // =====================================================
+  // ===================================================
+  // SCREEN
+  // ===================================================
 
   return (
     <View
-      style={[
-        styles.container,
-        {
-          paddingTop:
-            insets.top,
-
-          paddingBottom:
-            insets.bottom,
-
-          paddingLeft:
-            insets.left,
-
-          paddingRight:
-            insets.right,
-        },
-      ]}
+      style={
+        styles.container
+      }
     >
-      {/* PAGE HEADER */}
+      {/* =================================================
+          HEADER
+      ================================================= */}
 
-      <View style={styles.pageHeader}>
-        <Text style={styles.pageTitle}>
-          {isEditMode
-            ? "Edit Order"
-            : "New Order"}
+      <View
+        style={
+          styles.pageHeader
+        }
+      >
+        <Text
+          style={
+            styles.pageTitle
+          }
+        >
+          New Order
         </Text>
 
-        <Text style={styles.pageHint}>
-          {isEditMode
-            ? "Update the existing order"
-            : "Click items to add to order"}
+        <Text
+          style={
+            styles.pageHint
+          }
+        >
+          Click items to add to order
         </Text>
       </View>
 
-      <View style={styles.mainRow}>
-        {/* MENU */}
+      {/* =================================================
+          MAIN CONTENT
+      ================================================= */}
 
-        <View style={styles.leftPane}>
+      <View
+        style={
+          styles.mainRow
+        }
+      >
+        {/* ===============================================
+            MENU
+        =============================================== */}
+
+        <View
+          style={
+            styles.leftPane
+          }
+        >
+          {/* CATEGORY */}
+
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={
@@ -985,42 +935,57 @@ export default function OrderScreen() {
                 id: "All",
                 name: "All",
               },
-              ...categories,
-            ].map((category) => {
-              const active =
-                selectedCategory ===
-                category.id;
 
-              return (
-                <Pressable
-                  key={category.id}
-                  onPress={() =>
-                    setSelectedCategory(
+              ...categories,
+            ].map(
+              (
+                category
+              ) => {
+                const active =
+                  selectedCategory ===
+                  category.id;
+
+                return (
+                  <Pressable
+                    key={
                       category.id
-                    )
-                  }
-                  style={[
-                    styles.categoryTab,
-                    active &&
-                      styles.activeCategoryTab,
-                  ]}
-                >
-                  <Text
+                    }
+                    onPress={() =>
+                      setSelectedCategory(
+                        category.id
+                      )
+                    }
                     style={[
-                      styles.categoryTabText,
+                      styles.categoryTab,
+
                       active &&
-                        styles.activeCategoryTabText,
+                        styles.activeCategoryTab,
                     ]}
                   >
-                    {category.name}
-                  </Text>
-                </Pressable>
-              );
-            })}
+                    <Text
+                      style={[
+                        styles.categoryTabText,
+
+                        active &&
+                          styles.activeCategoryTabText,
+                      ]}
+                    >
+                      {
+                        category.name
+                      }
+                    </Text>
+                  </Pressable>
+                );
+              }
+            )}
           </ScrollView>
 
+          {/* MENU GRID */}
+
           <ScrollView
-            style={styles.menuScroll}
+            style={
+              styles.menuScroll
+            }
             contentContainerStyle={
               styles.menuGrid
             }
@@ -1030,7 +995,9 @@ export default function OrderScreen() {
           >
             {!filteredItems.length ? (
               <View
-                style={styles.emptyMenu}
+                style={
+                  styles.emptyMenu
+                }
               >
                 <Text
                   style={
@@ -1042,17 +1009,24 @@ export default function OrderScreen() {
               </View>
             ) : (
               filteredItems.map(
-                (item) => {
+                (
+                  item
+                ) => {
                   const quantityInCart =
                     orderItems.find(
-                      (orderItem) =>
+                      (
+                        orderItem
+                      ) =>
                         orderItem.id ===
                         item.id
-                    )?.quantity ?? 0;
+                    )?.quantity ??
+                    0;
 
                   return (
                     <Pressable
-                      key={item.id}
+                      key={
+                        item.id
+                      }
                       disabled={
                         !item.available ||
                         isCreatingOrder
@@ -1073,6 +1047,8 @@ export default function OrderScreen() {
                           styles.foodCardSelected,
                       ]}
                     >
+                      {/* IMAGE */}
+
                       <View
                         style={
                           styles.foodImageWrap
@@ -1104,6 +1080,8 @@ export default function OrderScreen() {
                           </View>
                         )}
 
+                        {/* COUNT */}
+
                         {quantityInCart >
                           0 && (
                           <View
@@ -1124,6 +1102,8 @@ export default function OrderScreen() {
                           </View>
                         )}
 
+                        {/* SOLD OUT */}
+
                         {!item.available && (
                           <View
                             style={
@@ -1141,6 +1121,8 @@ export default function OrderScreen() {
                         )}
                       </View>
 
+                      {/* INFO */}
+
                       <View
                         style={
                           styles.foodCardBody
@@ -1150,9 +1132,13 @@ export default function OrderScreen() {
                           style={
                             styles.foodName
                           }
-                          numberOfLines={1}
+                          numberOfLines={
+                            1
+                          }
                         >
-                          {item.name}
+                          {
+                            item.name
+                          }
                         </Text>
 
                         <Text
@@ -1174,410 +1160,516 @@ export default function OrderScreen() {
           </ScrollView>
         </View>
 
-        {/* CURRENT ORDER */}
+        {/* =================================================
+            TABLET / DESKTOP ORDER PANEL
+        ================================================= */}
 
-        <View
-          style={styles.orderPanel}
-        >
+        {isTablet && (
           <View
             style={
-              styles.orderPanelHeader
+              styles.orderPanel
             }
           >
-            <Text
+            <View
               style={
-                styles.orderPanelTitle
+                styles.orderPanelHeader
               }
             >
-              {isEditMode
-                ? "Editing Order"
-                : "Current Order"}
-            </Text>
-
-            <Text
-              style={
-                styles.tableInputLabel
-              }
-            >
-              Customer Name
-            </Text>
-
-            <TextInput
-              value={customerName}
-              onChangeText={(text) => {
-                setCustomerName(text);
-
-                if (text.trim()) {
-                  setShowErrorToast(
-                    false
-                  );
+              <Text
+                style={
+                  styles.orderPanelTitle
                 }
-              }}
-              placeholder="e.g. Juan Dela Cruz"
-              placeholderTextColor="#B3AB9C"
-              style={styles.tableInput}
-              editable={!isCreatingOrder}
-              autoCapitalize="words"
-            />
-          </View>
+              >
+                Current Order
+              </Text>
 
-          {/* ORDER TYPE */}
+              <Text
+                style={
+                  styles.tableInputLabel
+                }
+              >
+                Customer Name
+              </Text>
 
-          <View
-            style={
-              styles.orderTypeSection
-            }
-          >
-            <Text
-              style={
-                styles.orderTypeLabel
-              }
-            >
-              Order Type
-            </Text>
+              <TextInput
+                value={
+                  customerName
+                }
+                onChangeText={
+                  setCustomerName
+                }
+                placeholder="e.g. Juan Dela Cruz"
+                placeholderTextColor="#B3AB9C"
+                style={
+                  styles.tableInput
+                }
+                editable={
+                  !isCreatingOrder
+                }
+              />
+            </View>
+
+            {/* ORDER TYPE */}
 
             <View
               style={
-                styles.orderTypeButtons
+                styles.orderTypeSection
               }
             >
-              <Pressable
-                style={[
-                  styles.orderTypeButton,
-
-                  orderType ===
-                    "Dine In" &&
-                    styles.orderTypeButtonActive,
-                ]}
-                onPress={() =>
-                  handleSelectOrderType(
-                    "Dine In"
-                  )
-                }
-                disabled={
-                  isCreatingOrder
+              <Text
+                style={
+                  styles.orderTypeLabel
                 }
               >
-                <Text
+                Order Type
+              </Text>
+
+              <View
+                style={
+                  styles.orderTypeButtons
+                }
+              >
+                <Pressable
                   style={[
-                    styles.orderTypeButtonText,
+                    styles.orderTypeButton,
 
                     orderType ===
                       "Dine In" &&
-                      styles.orderTypeButtonTextActive,
+                      styles.orderTypeButtonActive,
                   ]}
+                  onPress={() =>
+                    handleSelectOrderType(
+                      "Dine In"
+                    )
+                  }
                 >
-                  Dine In
-                </Text>
-              </Pressable>
+                  <Text
+                    style={[
+                      styles.orderTypeButtonText,
 
-              <Pressable
-                style={[
-                  styles.orderTypeButton,
+                      orderType ===
+                        "Dine In" &&
+                        styles.orderTypeButtonTextActive,
+                    ]}
+                  >
+                    🍽️ Dine In
+                  </Text>
+                </Pressable>
 
-                  orderType ===
-                    "Take Out" &&
-                    styles.orderTypeButtonActive,
-                ]}
-                onPress={() =>
-                  handleSelectOrderType(
-                    "Take Out"
-                  )
-                }
-                disabled={
-                  isCreatingOrder
-                }
-              >
-                <Text
+                <Pressable
                   style={[
-                    styles.orderTypeButtonText,
+                    styles.orderTypeButton,
 
                     orderType ===
                       "Take Out" &&
-                      styles.orderTypeButtonTextActive,
+                      styles.orderTypeButtonActive,
                   ]}
+                  onPress={() =>
+                    handleSelectOrderType(
+                      "Take Out"
+                    )
+                  }
                 >
-                  Take Out
-                </Text>
-              </Pressable>
-            </View>
-          </View>
+                  <Text
+                    style={[
+                      styles.orderTypeButtonText,
 
-          {/* ORDER ITEMS */}
-
-          {!orderItems.length ? (
-            <View
-              style={
-                styles.emptyOrderContainer
-              }
-            >
-              <Text
-                style={
-                  styles.emptyCartIcon
-                }
-              >
-                🍽️
-              </Text>
-
-              <Text
-                style={
-                  styles.emptyOrderTitle
-                }
-              >
-                No items added yet
-              </Text>
-
-              <Text
-                style={
-                  styles.emptyOrderSubtitle
-                }
-              >
-                Click menu items to add
-              </Text>
-            </View>
-          ) : (
-            <ScrollView
-              style={
-                styles.orderItemsList
-              }
-              showsVerticalScrollIndicator={
-                false
-              }
-            >
-              {orderItems.map(
-                (item) => (
-                  <View
-                    key={item.id}
-                    style={
-                      styles.orderLineItem
-                    }
+                      orderType ===
+                        "Take Out" &&
+                        styles.orderTypeButtonTextActive,
+                    ]}
                   >
+                    🥡 Take Out
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+
+            {/* ORDER ITEMS */}
+
+            {!orderItems.length ? (
+              <View
+                style={
+                  styles.emptyOrderContainer
+                }
+              >
+                <Text
+                  style={
+                    styles.emptyCartIcon
+                  }
+                >
+                  🛒
+                </Text>
+
+                <Text
+                  style={
+                    styles.emptyOrderTitle
+                  }
+                >
+                  Walang laman ang order
+                </Text>
+
+                <Text
+                  style={
+                    styles.emptyOrderSubtitle
+                  }
+                >
+                  Pumili ng pagkain mula sa menu
+                </Text>
+              </View>
+            ) : (
+              <ScrollView
+                style={
+                  styles.orderItemsList
+                }
+                showsVerticalScrollIndicator={
+                  false
+                }
+              >
+                {orderItems.map(
+                  (
+                    item
+                  ) => (
                     <View
+                      key={
+                        item.id
+                      }
                       style={
-                        styles.orderLineInfo
+                        styles.orderLineItem
                       }
                     >
-                      <Text
+                      <View
                         style={
-                          styles.orderLineName
-                        }
-                        numberOfLines={1}
-                      >
-                        {item.name}
-                      </Text>
-
-                      <Text
-                        style={
-                          styles.orderLineSub
-                        }
-                      >
-                        ₱
-                        {item.price.toFixed(
-                          2
-                        )}{" "}
-                        each
-                      </Text>
-                    </View>
-
-                    <View
-                      style={
-                        styles.orderLineControls
-                      }
-                    >
-                      <Pressable
-                        disabled={
-                          isCreatingOrder
-                        }
-                        style={
-                          styles.stepperButton
-                        }
-                        onPress={() =>
-                          decreaseQuantity(
-                            item.id
-                          )
+                          styles.orderLineInfo
                         }
                       >
                         <Text
                           style={
-                            styles.stepperButtonText
+                            styles.orderLineName
                           }
                         >
-                          −
+                          {
+                            item.name
+                          }
                         </Text>
-                      </Pressable>
+
+                        <Text
+                          style={
+                            styles.orderLineSub
+                          }
+                        >
+                          ₱
+                          {item.price.toFixed(
+                            2
+                          )}{" "}
+                          each
+                        </Text>
+                      </View>
+
+                      <View
+                        style={
+                          styles.orderLineControls
+                        }
+                      >
+                        <Pressable
+                          style={
+                            styles.stepperButton
+                          }
+                          onPress={() =>
+                            decreaseQuantity(
+                              item.id
+                            )
+                          }
+                        >
+                          <Text
+                            style={
+                              styles.stepperButtonText
+                            }
+                          >
+                            −
+                          </Text>
+                        </Pressable>
+
+                        <Text
+                          style={
+                            styles.stepperValue
+                          }
+                        >
+                          {
+                            item.quantity
+                          }
+                        </Text>
+
+                        <Pressable
+                          style={[
+                            styles.stepperButton,
+
+                            styles.stepperButtonPlus,
+                          ]}
+                          onPress={() =>
+                            increaseQuantity(
+                              item.id
+                            )
+                          }
+                        >
+                          <Text
+                            style={[
+                              styles.stepperButtonText,
+
+                              styles.stepperButtonTextPlus,
+                            ]}
+                          >
+                            +
+                          </Text>
+                        </Pressable>
+                      </View>
 
                       <Text
                         style={
-                          styles.stepperValue
+                          styles.orderLineTotal
                         }
                       >
-                        {item.quantity}
+                        ₱
+                        {(
+                          item.price *
+                          item.quantity
+                        ).toFixed(
+                          2
+                        )}
                       </Text>
-
-                      <Pressable
-                        disabled={
-                          isCreatingOrder
-                        }
-                        style={[
-                          styles.stepperButton,
-                          styles.stepperButtonPlus,
-                        ]}
-                        onPress={() =>
-                          increaseQuantity(
-                            item.id
-                          )
-                        }
-                      >
-                        <Text
-                          style={[
-                            styles.stepperButtonText,
-                            styles.stepperButtonTextPlus,
-                          ]}
-                        >
-                          +
-                        </Text>
-                      </Pressable>
                     </View>
+                  )
+                )}
+              </ScrollView>
+            )}
 
-                    <Text
-                      style={
-                        styles.orderLineTotal
-                      }
-                    >
-                      ₱
-                      {(
-                        item.price *
-                        item.quantity
-                      ).toFixed(2)}
-                    </Text>
-                  </View>
-                )
-              )}
-            </ScrollView>
-          )}
-
-          {/* ORDER FOOTER */}
-
-          <View
-            style={styles.orderFooter}
-          >
-            <View
-              style={styles.subtotalRow}
-            >
-              <Text
-                style={
-                  styles.subtotalLabel
-                }
-              >
-                Subtotal
-              </Text>
-
-              <Text
-                style={
-                  styles.subtotalValue
-                }
-              >
-                ₱
-                {orderTotal.toFixed(2)}
-              </Text>
-            </View>
-
-            <View
-              style={styles.totalRow}
-            >
-              <Text
-                style={
-                  styles.totalLabelBold
-                }
-              >
-                Total
-              </Text>
-
-              <Text
-                style={
-                  styles.totalValueBold
-                }
-              >
-                ₱
-                {orderTotal.toFixed(2)}
-              </Text>
-            </View>
-
-            <Pressable
-              style={[
-                styles.saveOrderButton,
-
-                (!orderItems.length ||
-                  isCreatingOrder) &&
-                  styles.saveOrderButtonDisabled,
-              ]}
-              disabled={
-                !orderItems.length ||
-                isCreatingOrder
-              }
-              onPress={
-                handleCheckout
-              }
-            >
-              <Text
-                style={
-                  styles.saveOrderButtonText
-                }
-              >
-                {isCreatingOrder
-                  ? "SAVING..."
-                  : isEditMode
-                    ? "UPDATE ORDER"
-                    : "SAVE ORDER"}
-              </Text>
-            </Pressable>
+            {/* FOOTER */}
 
             <View
               style={
-                styles.footerBottomRow
+                styles.orderFooter
               }
             >
+              <View
+                style={
+                  styles.subtotalRow
+                }
+              >
+                <Text
+                  style={
+                    styles.subtotalLabel
+                  }
+                >
+                  Subtotal
+                </Text>
+
+                <Text
+                  style={
+                    styles.subtotalValue
+                  }
+                >
+                  ₱
+                  {orderTotal.toFixed(
+                    2
+                  )}
+                </Text>
+              </View>
+
+              <View
+                style={
+                  styles.totalRow
+                }
+              >
+                <Text
+                  style={
+                    styles.totalLabelBold
+                  }
+                >
+                  Total
+                </Text>
+
+                <Text
+                  style={
+                    styles.totalValueBold
+                  }
+                >
+                  ₱
+                  {orderTotal.toFixed(
+                    2
+                  )}
+                </Text>
+              </View>
+
               <Pressable
+                style={[
+                  styles.saveOrderButton,
+
+                  (!orderItems.length ||
+                    isCreatingOrder) &&
+                    styles.saveOrderButtonDisabled,
+                ]}
                 disabled={
                   !orderItems.length ||
                   isCreatingOrder
                 }
-                onPress={clearOrder}
+                onPress={
+                  handleCheckout
+                }
               >
                 <Text
                   style={
-                    styles.clearOrderLink
+                    styles.saveOrderButtonText
                   }
                 >
-                  Clear Order
+                  {isCreatingOrder
+                    ? "SAVING..."
+                    : "SAVE ORDER"}
                 </Text>
               </Pressable>
 
               <View
                 style={
-                  styles.helpCircle
+                  styles.footerBottomRow
                 }
               >
-                <Text
-                  style={
-                    styles.helpCircleText
+                <Pressable
+                  onPress={
+                    clearOrder
+                  }
+                  disabled={
+                    !orderItems.length ||
+                    isCreatingOrder
                   }
                 >
-                  ?
-                </Text>
+                  <Text
+                    style={
+                      styles.clearOrderLink
+                    }
+                  >
+                    Clear Order
+                  </Text>
+                </Pressable>
+
+                <View
+                  style={
+                    styles.helpCircle
+                  }
+                >
+                  <Text
+                    style={
+                      styles.helpCircleText
+                    }
+                  >
+                    ?
+                  </Text>
+                </View>
               </View>
             </View>
           </View>
-        </View>
+        )}
       </View>
 
-      {/* ERROR TOAST */}
+      {/* =================================================
+          MOBILE CART BUTTON
+      ================================================= */}
 
-      <ErrorToast
-        visible={showErrorToast}
-        title={errorToastTitle}
-        message={errorToastMessage}
+      {responsive.isPhone && (
+        <Pressable
+          onPress={() =>
+            setShowMobileOrder(
+              true
+            )
+          }
+          disabled={
+            isCreatingOrder
+          }
+          style={[
+            mobileStyles.cartButton,
+
+            isCreatingOrder &&
+              mobileStyles.cartButtonDisabled,
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel="Open current order"
+        >
+          <Ionicons
+            name="cart-outline"
+            size={24}
+            color="#FFFFFF"
+          />
+
+          {/* CART QUANTITY */}
+
+          {orderCount > 0 && (
+            <View
+              style={
+                mobileStyles.cartBadge
+              }
+            >
+              <Text
+                style={
+                  mobileStyles.cartBadgeText
+                }
+              >
+                {orderCount}
+              </Text>
+            </View>
+          )}
+        </Pressable>
+      )}
+
+      {/* =================================================
+          MOBILE ORDER MODAL
+      ================================================= */}
+
+      <MobileOrderModal
+        visible={
+          showMobileOrder
+        }
+        customerName={
+          customerName
+        }
+        orderType={
+          orderType
+        }
+        orderItems={
+          orderItems
+        }
+        orderTotal={
+          orderTotal
+        }
+        isCreatingOrder={
+          isCreatingOrder
+        }
+        isEditMode={false}
+        onClose={() =>
+          setShowMobileOrder(
+            false
+          )
+        }
+        onCustomerNameChange={
+          setCustomerName
+        }
+        onSelectOrderType={
+          handleSelectOrderType
+        }
+        onIncreaseQuantity={
+          increaseQuantity
+        }
+        onDecreaseQuantity={
+          decreaseQuantity
+        }
+        onClearOrder={
+          clearOrder
+        }
+        onCheckout={
+          handleCheckout
+        }
       />
+
+      {/* =================================================
+          BOTTOM NAV
+      ================================================= */}
 
       <AdminBottomNav />
     </View>

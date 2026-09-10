@@ -5,9 +5,6 @@ import { COLORS } from "@/styles/admin/theme";
 import {
   FONT_SIZE,
   PAGE_PADDING,
-  responsiveFont,
-  responsiveSpacing,
-  responsiveValue,
 } from "../components/admin/responsive";
 
 // =====================================================
@@ -18,9 +15,23 @@ export const createOrderStyles = (
   isTablet: boolean,
   numColumns: number
 ) => {
-  const horizontalPadding = responsiveValue(12, 18, 24);
-  const menuPadding = responsiveValue(12, 18, 24);
-  const gridGap = responsiveSpacing(10);
+  // ===================================================
+  // COMPACT RESPONSIVE VALUES
+  // ===================================================
+
+  const horizontalPadding = isTablet ? 14 : 12;
+  const menuPadding = isTablet ? 16 : 10;
+  const gridGap = 8;
+
+  const pageTitleSize = isTablet ? 20 : 17;
+  const pageHintSize = isTablet ? 12 : 10;
+
+  const foodNameSize = isTablet ? 14 : 12;
+  const foodPriceSize = isTablet ? 14 : 12;
+
+  // ===================================================
+  // MENU CARD WIDTH
+  // ===================================================
 
   const cardBasis =
     numColumns === 1
@@ -31,12 +42,6 @@ export const createOrderStyles = (
           ? "31.5%"
           : "23.5%";
 
-  const pageTitleSize = responsiveValue(18, 20, 22);
-  const pageHintSize = responsiveValue(11, 12, 13);
-
-  const foodNameSize = responsiveValue(12, 13, 14);
-  const foodPriceSize = responsiveValue(12, 13, 14);
-
   return StyleSheet.create({
     // =================================================
     // SCREEN
@@ -45,6 +50,8 @@ export const createOrderStyles = (
     container: {
       flex: 1,
       backgroundColor: COLORS.bg,
+      minWidth: 0,
+      minHeight: 0,
     },
 
     centered: {
@@ -53,7 +60,7 @@ export const createOrderStyles = (
     },
 
     loadingText: {
-      marginTop: responsiveSpacing(10),
+      marginTop: 8,
       fontSize: FONT_SIZE.md,
       color: COLORS.muted,
     },
@@ -64,25 +71,37 @@ export const createOrderStyles = (
 
     pageHeader: {
       paddingHorizontal: PAGE_PADDING,
-      paddingTop: responsiveSpacing(10),
-      paddingBottom: responsiveSpacing(10),
+      paddingTop: isTablet ? 10 : 8,
+      paddingBottom: isTablet ? 10 : 8,
+
       borderBottomWidth: 1,
       borderBottomColor: COLORS.border,
+
       backgroundColor: COLORS.bg,
+
+      flexShrink: 0,
     },
 
     pageTitle: {
       color: COLORS.text,
+
       fontSize: pageTitleSize,
-      lineHeight: responsiveFont(25),
+      lineHeight: isTablet ? 23 : 20,
+
       fontWeight: "800",
+
+      flexShrink: 0,
     },
 
     pageHint: {
       color: COLORS.muted,
+
       fontSize: pageHintSize,
-      lineHeight: responsiveFont(17),
-      marginTop: responsiveSpacing(1),
+      lineHeight: 15,
+
+      marginTop: 1,
+
+      flexShrink: 0,
     },
 
     // =================================================
@@ -91,49 +110,65 @@ export const createOrderStyles = (
 
     mainRow: {
       flex: 1,
+
       flexDirection: isTablet ? "row" : "column",
+
       minHeight: 0,
+      minWidth: 0,
     },
 
-    leftPane: isTablet
-      ? {
-          flex: 1,
-          minWidth: 0,
-          minHeight: 0,
-          backgroundColor: COLORS.bg,
-        }
-      : {
-          flex: 1,
-          minWidth: 0,
-          minHeight: 0,
-          backgroundColor: COLORS.bg,
-        },
+    // =================================================
+    // LEFT PANE
+    // =================================================
+
+    leftPane: {
+      flex: 1,
+
+      minWidth: 0,
+      minHeight: 0,
+
+      backgroundColor: COLORS.bg,
+    },
 
     // =================================================
     // CATEGORY
     // =================================================
 
     categoryScroll: {
-      maxHeight: responsiveSpacing(56),
+      maxHeight: isTablet ? 54 : 50,
+
       backgroundColor: COLORS.bg,
+
+      flexGrow: 0,
+      flexShrink: 0,
     },
 
     categoryContent: {
       paddingHorizontal: PAGE_PADDING,
-      paddingVertical: responsiveSpacing(9),
-      gap: responsiveSpacing(8),
+
+      paddingVertical: 7,
+
+      gap: 7,
+
       alignItems: "center",
     },
 
     categoryTab: {
-      minHeight: responsiveSpacing(34),
-      paddingHorizontal: responsiveSpacing(14),
-      borderRadius: responsiveSpacing(18),
+      minHeight: 32,
+
+      paddingHorizontal: isTablet ? 14 : 12,
+
+      borderRadius: 16,
+
       justifyContent: "center",
       alignItems: "center",
+
       backgroundColor: COLORS.card,
+
       borderWidth: 1,
       borderColor: COLORS.border,
+
+      flexShrink: 0,
     },
 
     activeCategoryTab: {
@@ -143,8 +178,12 @@ export const createOrderStyles = (
 
     categoryTabText: {
       color: COLORS.muted,
-      fontSize: FONT_SIZE.sm,
+
+      fontSize: 11,
+
       fontWeight: "600",
+
+      flexShrink: 0,
     },
 
     activeCategoryTabText: {
@@ -157,34 +196,44 @@ export const createOrderStyles = (
 
     menuScroll: {
       flex: 1,
+
       minWidth: 0,
       minHeight: 0,
     },
 
     menuGrid: {
       paddingHorizontal: menuPadding,
-      paddingTop: responsiveSpacing(8),
-      paddingBottom: responsiveSpacing(90),
+
+      paddingTop: 8,
+
+      paddingBottom: isTablet ? 80 : 90,
 
       flexDirection: "row",
+
       flexWrap: "wrap",
 
-      justifyContent: "space-between",
+      justifyContent:
+        numColumns === 1 ? "flex-start" : "space-between",
 
-      // Helps prevent cards from getting squeezed
       columnGap: gridGap,
+
+      rowGap: 0,
     },
 
     emptyMenu: {
       width: "100%",
+
       alignItems: "center",
       justifyContent: "center",
-      paddingVertical: responsiveSpacing(40),
+
+      paddingVertical: 35,
     },
 
     emptyMenuText: {
       fontSize: FONT_SIZE.md,
+
       color: COLORS.muted,
+
       textAlign: "center",
     },
 
@@ -200,9 +249,9 @@ export const createOrderStyles = (
 
       backgroundColor: COLORS.card,
 
-      borderRadius: responsiveSpacing(12),
+      borderRadius: 10,
 
-      marginBottom: responsiveSpacing(12),
+      marginBottom: 10,
 
       overflow: "hidden",
 
@@ -212,6 +261,7 @@ export const createOrderStyles = (
 
     foodCardSelected: {
       borderColor: COLORS.primary,
+
       borderWidth: 2,
     },
 
@@ -226,11 +276,13 @@ export const createOrderStyles = (
     foodImageWrap: {
       width: "100%",
 
-      aspectRatio: isTablet ? 1.25 : 1.15,
+      aspectRatio: isTablet ? 1.25 : 1.1,
 
       backgroundColor: COLORS.panel,
 
       position: "relative",
+
+      flexShrink: 0,
     },
 
     foodImage: {
@@ -247,7 +299,7 @@ export const createOrderStyles = (
     },
 
     foodIcon: {
-      fontSize: responsiveValue(24, 28, 32),
+      fontSize: isTablet ? 28 : 24,
     },
 
     // =================================================
@@ -257,21 +309,23 @@ export const createOrderStyles = (
     quantityBadge: {
       position: "absolute",
 
-      top: responsiveSpacing(7),
-      right: responsiveSpacing(7),
+      top: 6,
+      right: 6,
 
       backgroundColor: COLORS.primaryDisabled,
 
-      borderRadius: responsiveSpacing(8),
+      borderRadius: 7,
 
-      paddingHorizontal: responsiveSpacing(7),
-      paddingVertical: responsiveSpacing(3),
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+
+      flexShrink: 0,
     },
 
     quantityBadgeText: {
       color: COLORS.primary,
 
-      fontSize: responsiveFont(10),
+      fontSize: 9,
 
       fontWeight: "800",
     },
@@ -279,21 +333,23 @@ export const createOrderStyles = (
     soldOutBadge: {
       position: "absolute",
 
-      top: responsiveSpacing(7),
-      left: responsiveSpacing(7),
+      top: 6,
+      left: 6,
 
       backgroundColor: COLORS.dangerBg,
 
-      borderRadius: responsiveSpacing(6),
+      borderRadius: 5,
 
-      paddingHorizontal: responsiveSpacing(6),
-      paddingVertical: responsiveSpacing(3),
+      paddingHorizontal: 5,
+      paddingVertical: 2,
+
+      flexShrink: 0,
     },
 
     soldOutBadgeText: {
       color: COLORS.danger,
 
-      fontSize: responsiveFont(9),
+      fontSize: 8,
 
       fontWeight: "700",
     },
@@ -303,10 +359,13 @@ export const createOrderStyles = (
     // =================================================
 
     foodCardBody: {
-      paddingHorizontal: responsiveSpacing(10),
-      paddingVertical: responsiveSpacing(9),
+      paddingHorizontal: 8,
+
+      paddingVertical: 7,
 
       minWidth: 0,
+
+      flexShrink: 0,
     },
 
     foodName: {
@@ -314,11 +373,11 @@ export const createOrderStyles = (
 
       fontSize: foodNameSize,
 
-      lineHeight: responsiveFont(18),
+      lineHeight: 16,
 
       fontWeight: "700",
 
-      marginBottom: responsiveSpacing(3),
+      marginBottom: 2,
 
       flexShrink: 1,
     },
@@ -329,7 +388,13 @@ export const createOrderStyles = (
       fontSize: foodPriceSize,
 
       fontWeight: "800",
+
+      flexShrink: 0,
     },
+
+    // =================================================
+    // ORDER PANEL
+    // =================================================
 
     // =================================================
     // ORDER PANEL
@@ -337,32 +402,24 @@ export const createOrderStyles = (
 
     orderPanel: isTablet
       ? {
-          width: 360,
-          maxWidth: "42%",
+          width: 340,
 
-          minWidth: 300,
+          maxWidth: "40%",
+
+          minWidth: 290,
+
           minHeight: 0,
 
           backgroundColor: COLORS.card,
 
           borderLeftWidth: 1,
           borderLeftColor: COLORS.border,
+
+          flexShrink: 0,
         }
       : {
-          width: "100%",
-
-          // IMPORTANT:
-          // Mobile gets a fixed minimum area for the order.
-          // This prevents the menu from consuming the whole screen.
-          height: 370,
-          minHeight: 350,
-
-          backgroundColor: COLORS.card,
-
-          borderTopWidth: 1,
-          borderTopColor: COLORS.border,
+          display: "none",
         },
-
     // =================================================
     // ORDER HEADER
     // =================================================
@@ -370,52 +427,60 @@ export const createOrderStyles = (
     orderPanelHeader: {
       paddingHorizontal: horizontalPadding,
 
-      paddingTop: responsiveSpacing(14),
-      paddingBottom: responsiveSpacing(14),
+      paddingTop: 9,
+      paddingBottom: 9,
 
       borderBottomWidth: 1,
       borderBottomColor: COLORS.borderLight,
+
+      flexShrink: 0,
     },
 
     orderPanelTitle: {
       color: COLORS.text,
 
-      fontSize: responsiveValue(16, 17, 18),
+      fontSize: isTablet ? 17 : 16,
 
-      lineHeight: responsiveFont(23),
+      lineHeight: 20,
 
       fontWeight: "800",
 
-      marginBottom: responsiveSpacing(10),
+      marginBottom: 7,
+
+      flexShrink: 0,
     },
 
     tableInputLabel: {
       color: COLORS.muted,
 
-      fontSize: FONT_SIZE.sm,
+      fontSize: 10,
 
       fontWeight: "600",
 
-      marginBottom: responsiveSpacing(6),
+      marginBottom: 4,
+
+      flexShrink: 0,
     },
 
     tableInput: {
       width: "100%",
 
-      height: responsiveSpacing(42),
+      height: 40,
 
-      borderRadius: responsiveSpacing(9),
+      borderRadius: 8,
 
       borderWidth: 1,
       borderColor: COLORS.borderLight,
 
       backgroundColor: COLORS.bg,
 
-      paddingHorizontal: responsiveSpacing(12),
+      paddingHorizontal: 10,
 
-      fontSize: FONT_SIZE.md,
+      fontSize: 12,
 
       color: COLORS.text,
+
+      flexShrink: 0,
     },
 
     // =================================================
@@ -425,34 +490,42 @@ export const createOrderStyles = (
     orderTypeSection: {
       paddingHorizontal: horizontalPadding,
 
-      paddingVertical: responsiveSpacing(12),
+      paddingVertical: 7,
 
       borderBottomWidth: 1,
       borderBottomColor: COLORS.borderLight,
+
+      flexShrink: 0,
     },
 
     orderTypeLabel: {
       color: COLORS.muted,
 
-      fontSize: FONT_SIZE.sm,
+      fontSize: 10,
 
       fontWeight: "600",
 
-      marginBottom: responsiveSpacing(8),
+      marginBottom: 5,
+
+      flexShrink: 0,
     },
 
     orderTypeButtons: {
       flexDirection: "row",
 
-      gap: responsiveSpacing(8),
+      gap: 7,
+
+      minWidth: 0,
     },
 
     orderTypeButton: {
       flex: 1,
 
-      minHeight: responsiveSpacing(40),
+      minWidth: 0,
 
-      borderRadius: responsiveSpacing(9),
+      minHeight: 38,
+
+      borderRadius: 8,
 
       borderWidth: 1,
       borderColor: COLORS.borderLight,
@@ -461,6 +534,8 @@ export const createOrderStyles = (
 
       alignItems: "center",
       justifyContent: "center",
+
+      flexShrink: 0,
     },
 
     orderTypeButtonActive: {
@@ -472,9 +547,11 @@ export const createOrderStyles = (
     orderTypeButtonText: {
       color: COLORS.muted,
 
-      fontSize: FONT_SIZE.sm,
+      fontSize: 11,
 
       fontWeight: "700",
+
+      flexShrink: 0,
     },
 
     orderTypeButtonTextActive: {
@@ -488,29 +565,31 @@ export const createOrderStyles = (
     emptyOrderContainer: {
       flex: 1,
 
+      minHeight: 100,
+
       alignItems: "center",
       justifyContent: "center",
 
-      paddingHorizontal: responsiveSpacing(20),
-      paddingVertical: responsiveSpacing(18),
+      paddingHorizontal: 16,
+      paddingVertical: 12,
     },
 
     emptyCartIcon: {
-      fontSize: responsiveValue(34, 38, 42),
+      fontSize: isTablet ? 36 : 32,
 
       opacity: 0.35,
 
-      marginBottom: responsiveSpacing(8),
+      marginBottom: 6,
     },
 
     emptyOrderTitle: {
       color: COLORS.text,
 
-      fontSize: FONT_SIZE.md,
+      fontSize: 12,
 
       fontWeight: "700",
 
-      marginBottom: responsiveSpacing(3),
+      marginBottom: 2,
 
       textAlign: "center",
     },
@@ -518,7 +597,7 @@ export const createOrderStyles = (
     emptyOrderSubtitle: {
       color: COLORS.mutedLight,
 
-      fontSize: FONT_SIZE.sm,
+      fontSize: 10,
 
       textAlign: "center",
     },
@@ -531,6 +610,8 @@ export const createOrderStyles = (
       flex: 1,
 
       minHeight: 0,
+
+      minWidth: 0,
     },
 
     orderLineItem: {
@@ -540,12 +621,14 @@ export const createOrderStyles = (
 
       paddingHorizontal: horizontalPadding,
 
-      paddingVertical: responsiveSpacing(9),
+      paddingVertical: 5,
 
       borderBottomWidth: 1,
       borderBottomColor: COLORS.border,
 
       minWidth: 0,
+
+      flexShrink: 0,
     },
 
     orderLineInfo: {
@@ -553,15 +636,17 @@ export const createOrderStyles = (
 
       minWidth: 0,
 
-      paddingRight: responsiveSpacing(5),
+      paddingRight: 3,
+
+      flexShrink: 1,
     },
 
     orderLineName: {
       color: COLORS.text,
 
-      fontSize: FONT_SIZE.sm,
+      fontSize: 11,
 
-      lineHeight: responsiveFont(17),
+      lineHeight: 14,
 
       fontWeight: "700",
 
@@ -571,11 +656,13 @@ export const createOrderStyles = (
     orderLineSub: {
       color: COLORS.muted,
 
-      fontSize: FONT_SIZE.xs,
+      fontSize: 9,
 
-      lineHeight: responsiveFont(15),
+      lineHeight: 11,
 
-      marginTop: responsiveSpacing(1),
+      marginTop: 0,
+
+      flexShrink: 0,
     },
 
     // =================================================
@@ -587,16 +674,17 @@ export const createOrderStyles = (
 
       alignItems: "center",
 
-      marginHorizontal: responsiveSpacing(6),
+      marginHorizontal: 3,
 
       flexShrink: 0,
     },
 
     stepperButton: {
-      width: responsiveSpacing(27),
-      height: responsiveSpacing(27),
+      width: 26,
 
-      borderRadius: responsiveSpacing(7),
+      height: 26,
+
+      borderRadius: 6,
 
       borderWidth: 1,
       borderColor: COLORS.borderLight,
@@ -605,6 +693,8 @@ export const createOrderStyles = (
 
       alignItems: "center",
       justifyContent: "center",
+
+      flexShrink: 0,
     },
 
     stepperButtonPlus: {
@@ -616,9 +706,9 @@ export const createOrderStyles = (
     stepperButtonText: {
       color: COLORS.muted,
 
-      fontSize: responsiveFont(16),
+      fontSize: 14,
 
-      lineHeight: responsiveFont(18),
+      lineHeight: 15,
 
       fontWeight: "600",
     },
@@ -628,25 +718,31 @@ export const createOrderStyles = (
     },
 
     stepperValue: {
-      width: responsiveSpacing(25),
+      width: 22,
 
       textAlign: "center",
 
       color: COLORS.text,
 
-      fontSize: FONT_SIZE.sm,
+      fontSize: 11,
 
       fontWeight: "700",
+
+      flexShrink: 0,
     },
 
+    // =================================================
+    // ORDER TOTAL
+    // =================================================
+
     orderLineTotal: {
-      width: responsiveSpacing(64),
+      width: 54,
 
       textAlign: "right",
 
       color: COLORS.text,
 
-      fontSize: FONT_SIZE.sm,
+      fontSize: 11,
 
       fontWeight: "800",
 
@@ -660,14 +756,16 @@ export const createOrderStyles = (
     orderFooter: {
       paddingHorizontal: horizontalPadding,
 
-      paddingTop: responsiveSpacing(10),
+      paddingTop: 6,
 
-      paddingBottom: responsiveSpacing(10),
+      paddingBottom: 6,
 
       borderTopWidth: 1,
       borderTopColor: COLORS.border,
 
       backgroundColor: COLORS.card,
+
+      flexShrink: 0,
     },
 
     subtotalRow: {
@@ -675,22 +773,36 @@ export const createOrderStyles = (
 
       justifyContent: "space-between",
 
-      marginBottom: responsiveSpacing(5),
+      alignItems: "center",
+
+      marginBottom: 1,
+
+      minHeight: 16,
+
+      flexShrink: 0,
     },
 
     subtotalLabel: {
       color: COLORS.muted,
 
-      fontSize: FONT_SIZE.sm,
+      fontSize: 10,
+
+      flexShrink: 0,
     },
 
     subtotalValue: {
       color: COLORS.text,
 
-      fontSize: FONT_SIZE.sm,
+      fontSize: 10,
 
       fontWeight: "600",
+
+      flexShrink: 0,
     },
+
+    // =================================================
+    // TOTAL
+    // =================================================
 
     totalRow: {
       flexDirection: "row",
@@ -699,23 +811,31 @@ export const createOrderStyles = (
 
       alignItems: "center",
 
-      marginBottom: responsiveSpacing(10),
+      marginBottom: 6,
+
+      minHeight: 21,
+
+      flexShrink: 0,
     },
 
     totalLabelBold: {
       color: COLORS.text,
 
-      fontSize: responsiveValue(14, 15, 16),
+      fontSize: 14,
 
       fontWeight: "800",
+
+      flexShrink: 0,
     },
 
     totalValueBold: {
       color: COLORS.primary,
 
-      fontSize: responsiveValue(18, 20, 21),
+      fontSize: 19,
 
       fontWeight: "800",
+
+      flexShrink: 0,
     },
 
     // =================================================
@@ -725,14 +845,16 @@ export const createOrderStyles = (
     saveOrderButton: {
       width: "100%",
 
-      minHeight: responsiveSpacing(44),
+      minHeight: 42,
 
-      borderRadius: responsiveSpacing(10),
+      borderRadius: 9,
 
       backgroundColor: COLORS.primary,
 
       alignItems: "center",
       justifyContent: "center",
+
+      flexShrink: 0,
     },
 
     saveOrderButtonDisabled: {
@@ -742,11 +864,13 @@ export const createOrderStyles = (
     saveOrderButtonText: {
       color: COLORS.text,
 
-      fontSize: FONT_SIZE.sm,
+      fontSize: 11,
 
       fontWeight: "800",
 
-      letterSpacing: responsiveValue(0.5, 0.7, 0.8),
+      letterSpacing: 0.5,
+
+      flexShrink: 0,
     },
 
     // =================================================
@@ -760,36 +884,43 @@ export const createOrderStyles = (
 
       justifyContent: "space-between",
 
-      marginTop: responsiveSpacing(8),
+      marginTop: 5,
 
-      minHeight: responsiveSpacing(24),
+      minHeight: 20,
+
+      flexShrink: 0,
     },
 
     clearOrderLink: {
       color: COLORS.muted,
 
-      fontSize: FONT_SIZE.xs,
+      fontSize: 9,
 
       fontWeight: "600",
+
+      flexShrink: 0,
     },
 
     helpCircle: {
-      width: responsiveSpacing(22),
-      height: responsiveSpacing(22),
+      width: 21,
 
-      borderRadius: responsiveSpacing(11),
+      height: 21,
+
+      borderRadius: 11,
 
       borderWidth: 1,
       borderColor: COLORS.borderLight,
 
       alignItems: "center",
       justifyContent: "center",
+
+      flexShrink: 0,
     },
 
     helpCircleText: {
       color: COLORS.muted,
 
-      fontSize: FONT_SIZE.xs,
+      fontSize: 9,
 
       fontWeight: "700",
     },
