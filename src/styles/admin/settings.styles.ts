@@ -798,26 +798,20 @@ export const settingStyles = StyleSheet.create({
   // =====================================================
   // BUTTONS
   // =====================================================
-  saveBar: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
+saveBar: {
+  width: "100%",
+  paddingHorizontal: PAGE_PADDING,
+  paddingTop: responsiveSpacing(12),
+  paddingBottom: responsiveSpacing(12),
+  backgroundColor: COLORS.panel,
+  borderTopWidth: 1,
+  borderTopColor: COLORS.border,
+},
 
-    paddingHorizontal: PAGE_PADDING,
-    paddingTop: responsiveSpacing(12),
-    paddingBottom: responsiveSpacing(16),
-
-    backgroundColor: COLORS.panel,
-
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-
-  saveBarButton: {
-    width: "100%",
-    alignSelf: "stretch",
-  },
+saveBarButton: {
+  width: "100%",
+  alignSelf: "stretch",
+},
   primaryButton: {
     minHeight: BUTTON.minHeight,
 

@@ -1,5 +1,7 @@
 import { StyleSheet } from "react-native";
 
+import { COLORS } from "@/styles/admin/theme";
+
 import {
   BREAKPOINTS,
   responsiveFont,
@@ -8,116 +10,48 @@ import {
 } from "@/styles/components/admin/responsive";
 
 // =====================================================
-// COLORS
-// =====================================================
-
-const COLORS = {
-  green: "#319A6B",
-
-  greenDark: "#287D58",
-
-  greenLight: "#A8CEBA",
-
-  white: "#FFFFFF",
-
-  background: "#FAFAF8",
-
-  text: "#363636",
-
-  muted: "#777777",
-
-  mutedLight: "#A09A92",
-
-  border: "#D8D8D4",
-
-  inputBorder: "#D8D8D4",
-
-  orange: "#F45B00",
-
-  disabled: "#A9CCB9",
-};
-
-// =====================================================
 // MOBILE ORDER MODAL STYLES
 // =====================================================
 
 export const createMobileOrderModalStyles = (
   screenWidth: number
 ) => {
-  // ===================================================
-  // DEVICE
-  // ===================================================
-
-  const isSmallPhone =
+  const smallPhone =
     screenWidth < BREAKPOINTS.smallPhone;
 
-  // ===================================================
-  // RESPONSIVE VALUES
-  // ===================================================
+  const phone =
+    screenWidth < BREAKPOINTS.tablet;
 
-  const horizontalPadding =
-    responsiveSpacing(
-      16,
-      screenWidth
-    );
+  const horizontalPadding = smallPhone
+    ? 12
+    : phone
+      ? 16
+      : 20;
 
-  const titleSize =
-    responsiveFont(
-      17,
-      screenWidth
-    );
+  const headerPadding = smallPhone
+    ? 12
+    : phone
+      ? 16
+      : 20;
 
-  const labelSize =
-    responsiveFont(
-      10,
-      screenWidth
-    );
-
-  const bodySize =
-    responsiveFont(
-      12,
-      screenWidth
-    );
-
-  const totalSize =
-    responsiveFont(
-      17,
-      screenWidth
-    );
-
-  const inputHeight =
-    responsiveNumber(
-      40,
-      44,
-      46
-    );
-
-  const typeButtonHeight =
-    responsiveNumber(
-      38,
-      42,
-      44
-    );
-
-  const saveButtonHeight =
-    responsiveNumber(
-      40,
-      44,
-      46
-    );
+  const cardRadius = smallPhone
+    ? 10
+    : phone
+      ? 12
+      : 14;
 
   return StyleSheet.create({
     // =================================================
-    // SCREEN
+    // MODAL SCREEN
     // =================================================
 
     screen: {
       flex: 1,
 
-      width: "100%",
+      backgroundColor: COLORS.bg,
 
-      backgroundColor:
-        COLORS.background,
+      minWidth: 0,
+      minHeight: 0,
     },
 
     // =================================================
@@ -127,79 +61,80 @@ export const createMobileOrderModalStyles = (
     header: {
       width: "100%",
 
-      minHeight:
-        responsiveNumber(
-          46,
-          50,
-          54
-        ),
+      minHeight: smallPhone ? 58 : 66,
+
+      paddingHorizontal: headerPadding,
+
+      paddingVertical: smallPhone ? 9 : 12,
 
       flexDirection: "row",
 
       alignItems: "center",
 
-      justifyContent:
-        "space-between",
+      justifyContent: "space-between",
 
-      paddingHorizontal:
-        horizontalPadding,
-
-      backgroundColor:
-        COLORS.background,
+      backgroundColor: COLORS.bg,
 
       borderBottomWidth: 1,
+      borderBottomColor: COLORS.border,
 
-      borderBottomColor:
-        COLORS.border,
+      flexShrink: 0,
     },
 
     headerTextContainer: {
       flex: 1,
 
       minWidth: 0,
+
+      paddingRight: 10,
     },
 
     title: {
-      color:
-        COLORS.text,
+      color: COLORS.text,
 
-      fontSize:
-        titleSize,
+      fontSize: smallPhone
+        ? 22
+        : phone
+          ? 24
+          : 26,
 
-      lineHeight:
-        titleSize + 4,
+      lineHeight: smallPhone
+        ? 27
+        : phone
+          ? 29
+          : 32,
 
-      fontWeight:
-        "800",
+      fontWeight: "800",
 
-      letterSpacing:
-        -0.2,
+      flexShrink: 1,
     },
 
     closeButton: {
-      width: 30,
+      width: smallPhone ? 38 : 42,
 
-      height: 30,
+      height: smallPhone ? 38 : 42,
 
-      alignItems:
-        "center",
+      borderRadius: smallPhone ? 19 : 21,
 
-      justifyContent:
-        "center",
+      alignItems: "center",
+      justifyContent: "center",
 
-      marginLeft: 8,
+      backgroundColor: COLORS.card,
+
+      borderWidth: 1,
+      borderColor: COLORS.border,
+
+      flexShrink: 0,
     },
 
     closeButtonText: {
-      color:
-        COLORS.muted,
+      color: COLORS.text,
 
-      fontSize: 25,
+      fontSize: smallPhone ? 24 : 26,
 
-      lineHeight: 28,
+      fontWeight: "300",
 
-      fontWeight:
-        "300",
+      lineHeight: smallPhone ? 26 : 28,
     },
 
     // =================================================
@@ -209,12 +144,18 @@ export const createMobileOrderModalStyles = (
     contentScroll: {
       flex: 1,
 
-      backgroundColor:
-        COLORS.background,
+      backgroundColor: COLORS.bg,
+
+      minHeight: 0,
     },
 
     content: {
-      paddingBottom: 4,
+      paddingBottom: responsiveSpacing(
+        smallPhone ? 20 : 28,
+        screenWidth
+      ),
+
+      minWidth: 0,
     },
 
     // =================================================
@@ -224,39 +165,29 @@ export const createMobileOrderModalStyles = (
     section: {
       width: "100%",
 
-      paddingHorizontal:
-        horizontalPadding,
+      paddingHorizontal: horizontalPadding,
 
-      paddingTop: 7,
+      paddingTop: smallPhone ? 13 : 16,
 
-      paddingBottom: 8,
+      paddingBottom: smallPhone ? 13 : 16,
 
       borderBottomWidth: 1,
+      borderBottomColor: COLORS.border,
 
-      borderBottomColor:
-        COLORS.border,
-
-      backgroundColor:
-        COLORS.background,
+      backgroundColor: COLORS.bg,
     },
 
-    // =================================================
-    // LABEL
-    // =================================================
-
     label: {
-      color:
-        COLORS.muted,
+      color: COLORS.muted,
 
-      fontSize:
-        labelSize,
+      fontSize: responsiveFont(
+        smallPhone ? 11 : 12,
+        screenWidth
+      ),
 
-      lineHeight: 13,
+      fontWeight: "600",
 
-      marginBottom: 4,
-
-      fontWeight:
-        "400",
+      marginBottom: smallPhone ? 6 : 8,
     },
 
     // =================================================
@@ -266,28 +197,27 @@ export const createMobileOrderModalStyles = (
     input: {
       width: "100%",
 
-      height:
-        inputHeight,
+      height: smallPhone ? 44 : 48,
+
+      borderRadius: cardRadius,
 
       borderWidth: 1,
+      borderColor: COLORS.border,
 
-      borderColor:
-        COLORS.inputBorder,
+      backgroundColor: COLORS.card,
 
-      borderRadius: 8,
+      paddingHorizontal: smallPhone
+        ? 12
+        : 14,
 
-      backgroundColor:
-        COLORS.white,
+      color: COLORS.text,
 
-      paddingHorizontal: 11,
+      fontSize: responsiveFont(
+        smallPhone ? 12 : 13,
+        screenWidth
+      ),
 
-      paddingVertical: 0,
-
-      color:
-        COLORS.text,
-
-      fontSize:
-        bodySize,
+      flexShrink: 0,
     },
 
     // =================================================
@@ -297,88 +227,79 @@ export const createMobileOrderModalStyles = (
     orderTypeButtons: {
       width: "100%",
 
-      flexDirection:
-        "row",
+      flexDirection: "row",
 
-      gap: 7,
+      gap: smallPhone ? 8 : 10,
+
+      minWidth: 0,
     },
 
     orderTypeButton: {
       flex: 1,
 
-      height:
-        typeButtonHeight,
+      minHeight: smallPhone ? 46 : 50,
+
+      borderRadius: cardRadius,
 
       borderWidth: 1,
+      borderColor: COLORS.border,
 
-      borderColor:
-        COLORS.inputBorder,
+      backgroundColor: COLORS.card,
 
-      borderRadius: 8,
+      alignItems: "center",
+      justifyContent: "center",
 
-      backgroundColor:
-        COLORS.white,
-
-      alignItems:
-        "center",
-
-      justifyContent:
-        "center",
+      minWidth: 0,
     },
 
     orderTypeButtonActive: {
-      backgroundColor:
-        COLORS.green,
+      backgroundColor: COLORS.primary,
 
-      borderColor:
-        COLORS.green,
+      borderColor: COLORS.primary,
     },
 
     orderTypeButtonText: {
-      color:
-        "#666666",
+      color: COLORS.muted,
 
-      fontSize:
-        bodySize,
+      fontSize: responsiveFont(
+        smallPhone ? 12 : 13,
+        screenWidth
+      ),
 
-      fontWeight:
-        "700",
+      fontWeight: "700",
+
+      flexShrink: 1,
     },
 
     orderTypeButtonTextActive: {
-      color:
-        COLORS.white,
+      color: COLORS.text,
     },
 
     // =================================================
-    // ITEMS SECTION
+    // ITEMS
     // =================================================
 
     itemsSection: {
       width: "100%",
 
-      paddingTop: 7,
+      paddingHorizontal: horizontalPadding,
 
-      paddingBottom: 0,
+      paddingTop: smallPhone ? 14 : 18,
 
-      backgroundColor:
-        COLORS.background,
+      backgroundColor: COLORS.bg,
     },
 
     itemsTitle: {
-      color:
-        COLORS.text,
+      color: COLORS.text,
 
-      fontSize:
-        bodySize,
+      fontSize: responsiveFont(
+        smallPhone ? 15 : 17,
+        screenWidth
+      ),
 
-      fontWeight:
-        "800",
+      fontWeight: "800",
 
-      paddingHorizontal:
-        horizontalPadding,
-
-      marginBottom: 4,
+      marginBottom: smallPhone ? 9 : 12,
     },
 
     // =================================================
@@ -386,118 +307,90 @@ export const createMobileOrderModalStyles = (
     // =================================================
 
     emptyOrder: {
-      width: "100%",
+      minHeight: smallPhone ? 190 : 220,
 
-      minHeight:
-        responsiveNumber(
-          112,
-          130,
-          145
-        ),
-
-      alignItems:
-        "center",
-
-      justifyContent:
-        "center",
+      alignItems: "center",
+      justifyContent: "center",
 
       paddingHorizontal: 20,
 
-      paddingVertical: 15,
+      paddingVertical: 30,
 
-      backgroundColor:
-        COLORS.background,
+      borderRadius: cardRadius,
 
-      borderBottomWidth: 1,
+      backgroundColor: COLORS.card,
 
-      borderBottomColor:
-        COLORS.border,
+      borderWidth: 1,
+      borderColor: COLORS.border,
     },
 
-    // =================================================
-    // EMPTY CART ICON
-    // =================================================
-
     emptyIcon: {
-      fontSize:
-        isSmallPhone
-          ? 30
-          : 34,
-
-      lineHeight:
-        isSmallPhone
-          ? 34
-          : 38,
+      fontSize: smallPhone ? 42 : 48,
 
       opacity: 0.35,
 
-      marginBottom: 2,
+      marginBottom: 10,
     },
-
-    // =================================================
-    // EMPTY TITLE
-    // =================================================
 
     emptyTitle: {
-      color:
-        COLORS.text,
+      color: COLORS.text,
 
-      fontSize:
-        bodySize,
+      fontSize: responsiveFont(
+        smallPhone ? 16 : 18,
+        screenWidth
+      ),
 
-      fontWeight:
-        "800",
+      fontWeight: "700",
 
-      textAlign:
-        "center",
+      textAlign: "center",
 
-      marginTop: 0,
+      marginBottom: 5,
     },
-
-    // =================================================
-    // EMPTY SUBTITLE
-    // =================================================
 
     emptySubtitle: {
-      color:
-        COLORS.mutedLight,
+      color: COLORS.muted,
 
-      fontSize:
-        labelSize,
+      fontSize: responsiveFont(
+        smallPhone ? 11 : 12,
+        screenWidth
+      ),
 
-      textAlign:
-        "center",
+      textAlign: "center",
 
-      marginTop: 2,
+      lineHeight: 18,
     },
 
     // =================================================
-    // ORDER ITEMS
+    // ORDER ITEM
     // =================================================
 
     orderItem: {
       width: "100%",
 
-      minHeight: 52,
+      flexDirection: "row",
 
-      flexDirection:
-        "row",
+      alignItems: "center",
 
-      alignItems:
-        "center",
+      paddingHorizontal: smallPhone
+        ? 10
+        : 12,
 
-      paddingHorizontal:
-        horizontalPadding,
+      paddingVertical: smallPhone
+        ? 10
+        : 12,
 
-      paddingVertical: 7,
+      marginBottom: smallPhone
+        ? 8
+        : 10,
 
-      backgroundColor:
-        COLORS.background,
+      borderRadius: cardRadius,
 
-      borderTopWidth: 1,
+      backgroundColor: COLORS.card,
 
-      borderTopColor:
-        "#E5E5E1",
+      borderWidth: 1,
+      borderColor: COLORS.border,
+
+      minWidth: 0,
     },
 
     itemInfo: {
@@ -505,124 +398,115 @@ export const createMobileOrderModalStyles = (
 
       minWidth: 0,
 
-      paddingRight: 5,
+      paddingRight: 8,
     },
 
     itemName: {
-      color:
-        COLORS.text,
+      color: COLORS.text,
 
-      fontSize:
-        bodySize,
+      fontSize: responsiveFont(
+        smallPhone ? 12 : 13,
+        screenWidth
+      ),
 
-      lineHeight:
-        bodySize + 4,
+      fontWeight: "700",
 
-      fontWeight:
-        "700",
+      lineHeight: 17,
+
+      flexShrink: 1,
     },
 
     itemPrice: {
-      color:
-        COLORS.muted,
+      color: COLORS.muted,
 
-      fontSize:
-        labelSize,
+      fontSize: responsiveFont(
+        smallPhone ? 10 : 11,
+        screenWidth
+      ),
 
-      marginTop: 1,
+      marginTop: 3,
+
+      flexShrink: 0,
     },
 
     // =================================================
-    // QUANTITY CONTROLS
+    // ITEM CONTROLS
     // =================================================
 
     itemControls: {
-      flexDirection:
-        "row",
+      flexDirection: "row",
 
-      alignItems:
-        "center",
+      alignItems: "center",
 
-      marginHorizontal: 4,
+      flexShrink: 0,
+
+      gap: 5,
     },
 
     stepperButton: {
-      width: 28,
+      width: smallPhone ? 30 : 34,
 
-      height: 28,
+      height: smallPhone ? 30 : 34,
 
-      borderRadius: 6,
+      borderRadius: smallPhone ? 8 : 9,
 
       borderWidth: 1,
+      borderColor: COLORS.border,
 
-      borderColor:
-        COLORS.inputBorder,
+      backgroundColor: COLORS.bg,
 
-      backgroundColor:
-        COLORS.white,
-
-      alignItems:
-        "center",
-
-      justifyContent:
-        "center",
+      alignItems: "center",
+      justifyContent: "center",
     },
 
     plusButton: {
-      backgroundColor:
-        COLORS.green,
+      backgroundColor: COLORS.primary,
 
-      borderColor:
-        COLORS.green,
+      borderColor: COLORS.primary,
     },
 
     stepperText: {
-      color:
-        COLORS.muted,
+      color: COLORS.muted,
 
-      fontSize: 17,
+      fontSize: smallPhone ? 16 : 18,
 
-      lineHeight: 19,
-
-      fontWeight:
-        "600",
+      fontWeight: "600",
     },
 
     plusText: {
-      color:
-        COLORS.white,
+      color: COLORS.text,
     },
 
     quantity: {
-      width: 25,
+      width: smallPhone ? 24 : 28,
 
-      textAlign:
-        "center",
+      textAlign: "center",
 
-      color:
-        COLORS.text,
+      color: COLORS.text,
 
-      fontSize:
-        bodySize,
+      fontSize: responsiveFont(
+        smallPhone ? 12 : 13,
+        screenWidth
+      ),
 
-      fontWeight:
-        "800",
+      fontWeight: "700",
     },
 
     itemTotal: {
-      width: 62,
+      width: smallPhone ? 58 : 68,
 
-      textAlign:
-        "right",
+      textAlign: "right",
 
-      color:
-        COLORS.text,
+      color: COLORS.text,
 
-      fontSize:
-        bodySize,
+      fontSize: responsiveFont(
+        smallPhone ? 11 : 12,
+        screenWidth
+      ),
 
-      fontWeight:
-        "800",
+      fontWeight: "800",
+
+      flexShrink: 0,
     },
 
     // =================================================
@@ -632,23 +516,18 @@ export const createMobileOrderModalStyles = (
     footer: {
       width: "100%",
 
-      backgroundColor:
-        COLORS.background,
+      paddingHorizontal: horizontalPadding,
+
+      paddingTop: smallPhone ? 12 : 14,
+
+      paddingBottom: smallPhone ? 8 : 10,
+
+      backgroundColor: COLORS.card,
 
       borderTopWidth: 1,
+      borderTopColor: COLORS.border,
 
-      borderTopColor:
-        COLORS.border,
-
-      paddingHorizontal:
-        horizontalPadding,
-
-      paddingTop: 7,
-
-      paddingBottom:
-        isSmallPhone
-          ? 6
-          : 8,
+      flexShrink: 0,
     },
 
     // =================================================
@@ -656,37 +535,35 @@ export const createMobileOrderModalStyles = (
     // =================================================
 
     subtotalRow: {
-      width: "100%",
+      flexDirection: "row",
 
-      minHeight: 17,
+      alignItems: "center",
 
-      flexDirection:
-        "row",
+      justifyContent: "space-between",
 
-      alignItems:
-        "center",
+      marginBottom: 4,
 
-      justifyContent:
-        "space-between",
+      minHeight: 20,
     },
 
     subtotalLabel: {
-      color:
-        COLORS.muted,
+      color: COLORS.muted,
 
-      fontSize:
-        labelSize,
+      fontSize: responsiveFont(
+        smallPhone ? 11 : 12,
+        screenWidth
+      ),
     },
 
     subtotalValue: {
-      color:
-        COLORS.text,
+      color: COLORS.text,
 
-      fontSize:
-        labelSize,
+      fontSize: responsiveFont(
+        smallPhone ? 11 : 12,
+        screenWidth
+      ),
 
-      fontWeight:
-        "600",
+      fontWeight: "600",
     },
 
     // =================================================
@@ -694,86 +571,71 @@ export const createMobileOrderModalStyles = (
     // =================================================
 
     totalRow: {
-      width: "100%",
+      flexDirection: "row",
 
-      minHeight: 24,
+      alignItems: "center",
 
-      flexDirection:
-        "row",
+      justifyContent: "space-between",
 
-      alignItems:
-        "center",
+      marginBottom: smallPhone ? 9 : 11,
 
-      justifyContent:
-        "space-between",
-
-      marginBottom: 5,
+      minHeight: 28,
     },
 
     totalLabel: {
-      color:
-        COLORS.text,
+      color: COLORS.text,
 
-      fontSize:
-        responsiveFont(
-          14,
-          screenWidth
-        ),
+      fontSize: responsiveFont(
+        smallPhone ? 17 : 19,
+        screenWidth
+      ),
 
-      fontWeight:
-        "800",
+      fontWeight: "800",
     },
 
     totalValue: {
-      color:
-        COLORS.green,
+      color: COLORS.primary,
 
-      fontSize:
-        totalSize,
+      fontSize: responsiveFont(
+        smallPhone ? 22 : 25,
+        screenWidth
+      ),
 
-      fontWeight:
-        "900",
+      fontWeight: "800",
     },
 
     // =================================================
-    // SAVE ORDER
+    // SAVE
     // =================================================
 
     saveButton: {
       width: "100%",
 
-      height:
-        saveButtonHeight,
+      minHeight: smallPhone ? 46 : 50,
 
-      borderRadius: 8,
+      borderRadius: cardRadius,
 
-      backgroundColor:
-        COLORS.greenLight,
+      backgroundColor: COLORS.primary,
 
-      alignItems:
-        "center",
-
-      justifyContent:
-        "center",
+      alignItems: "center",
+      justifyContent: "center",
     },
 
     saveButtonDisabled: {
-      backgroundColor:
-        COLORS.disabled,
+      backgroundColor: COLORS.primaryDisabled,
     },
 
     saveButtonText: {
-      color:
-        "#26382F",
+      color: COLORS.text,
 
-      fontSize:
-        labelSize,
+      fontSize: responsiveFont(
+        smallPhone ? 12 : 13,
+        screenWidth
+      ),
 
-      fontWeight:
-        "900",
+      fontWeight: "800",
 
-      letterSpacing:
-        0.2,
+      letterSpacing: 0.5,
     },
 
     // =================================================
@@ -781,199 +643,126 @@ export const createMobileOrderModalStyles = (
     // =================================================
 
     footerBottom: {
-      width: "100%",
+      flexDirection: "row",
 
-      minHeight: 25,
+      alignItems: "center",
 
-      flexDirection:
-        "row",
+      justifyContent: "space-between",
 
-      alignItems:
-        "center",
+      marginTop: smallPhone ? 6 : 8,
 
-      justifyContent:
-        "space-between",
-
-      marginTop: 1,
+      minHeight: 24,
     },
 
     clearText: {
-      color:
-        COLORS.muted,
+      color: COLORS.muted,
 
-      fontSize:
-        labelSize,
+      fontSize: responsiveFont(
+        smallPhone ? 10 : 11,
+        screenWidth
+      ),
 
-      fontWeight:
-        "400",
+      fontWeight: "600",
     },
 
     clearTextDisabled: {
-      opacity: 0.5,
+      color: COLORS.mutedLight,
+
+      opacity: 0.55,
     },
 
-    // =================================================
-    // HELP BUTTON
-    // =================================================
-
     helpButton: {
-      width: 21,
+      width: smallPhone ? 28 : 30,
 
-      height: 21,
+      height: smallPhone ? 28 : 30,
 
-      borderRadius: 10.5,
+      borderRadius: 999,
 
       borderWidth: 1,
+      borderColor: COLORS.border,
 
-      borderColor:
-        COLORS.border,
+      backgroundColor: COLORS.card,
 
-      backgroundColor:
-        COLORS.white,
-
-      alignItems:
-        "center",
-
-      justifyContent:
-        "center",
+      alignItems: "center",
+      justifyContent: "center",
     },
 
     helpButtonText: {
-      color:
-        COLORS.muted,
+      color: COLORS.muted,
 
-      fontSize: 11,
+      fontSize: smallPhone ? 13 : 14,
 
-      lineHeight: 13,
-
-      fontWeight:
-        "600",
+      fontWeight: "700",
     },
 
     // =================================================
     // FLOATING CART BUTTON
-    //
-    // This is for orders.tsx.
     // =================================================
 
     cartButton: {
-      position:
-        "absolute",
+      position: "absolute",
 
-      right:
-        responsiveSpacing(
-          12,
-          screenWidth
-        ),
+      right: smallPhone ? 14 : 18,
 
-      bottom:
-        responsiveNumber(
-          72,
-          80,
-          88
-        ),
+      bottom: smallPhone ? 82 : 92,
 
-      width:
-        responsiveNumber(
-          52,
-          58,
-          62
-        ),
+      width: smallPhone ? 58 : 62,
 
-      height:
-        responsiveNumber(
-          52,
-          58,
-          62
-        ),
+      height: smallPhone ? 58 : 62,
 
-      borderRadius:
-        responsiveNumber(
-          26,
-          29,
-          31
-        ),
+      borderRadius: 999,
 
-      backgroundColor:
-        COLORS.green,
+      backgroundColor: COLORS.primary,
 
-      alignItems:
-        "center",
+      alignItems: "center",
+      justifyContent: "center",
 
-      justifyContent:
-        "center",
-
-      zIndex: 999,
-
-      elevation: 10,
+      elevation: 7,
 
       shadowOffset: {
         width: 0,
-
         height: 4,
       },
 
-      shadowOpacity: 0.25,
+      shadowOpacity: 0.18,
 
-      shadowRadius: 7,
+      shadowRadius: 8,
+
+      zIndex: 50,
     },
 
-    // =================================================
-    // CART BADGE
-    // =================================================
-
     cartBadge: {
-      position:
-        "absolute",
+      position: "absolute",
 
-      top: -3,
+      top: -2,
+      right: -2,
 
-      right: -3,
+      minWidth: 22,
+      height: 22,
 
-      minWidth:
-        isSmallPhone
-          ? 18
-          : 21,
+      paddingHorizontal: 5,
 
-      height:
-        isSmallPhone
-          ? 18
-          : 21,
+      borderRadius: 11,
 
-      paddingHorizontal: 4,
+      backgroundColor: COLORS.danger,
 
-      borderRadius: 20,
-
-      backgroundColor:
-        COLORS.orange,
+      alignItems: "center",
+      justifyContent: "center",
 
       borderWidth: 2,
-
-      borderColor:
-        COLORS.white,
-
-      alignItems:
-        "center",
-
-      justifyContent:
-        "center",
+      borderColor: COLORS.bg,
     },
 
     cartBadgeText: {
-      color:
-        COLORS.white,
+      color: "#FFFFFF",
 
-      fontSize:
-        isSmallPhone
-          ? 9
-          : 10,
+      fontSize: 9,
 
-      fontWeight:
-        "900",
+      fontWeight: "800",
     },
 
     cartButtonDisabled: {
-      opacity: 0.55,
+      opacity: 0.5,
     },
   });
 };

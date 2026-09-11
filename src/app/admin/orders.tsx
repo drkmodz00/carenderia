@@ -1,8 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import MobileOrderModal from "@/components/admin/modals/mobile/MobileOrderModal";
 import ErrorToast from "@/components/admin/toast/ErrorToast";
+import AdminBottomNav from "@/components/admin/AdminBottomNav";
+
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
+
 import {
   ActivityIndicator,
   Alert,
@@ -14,14 +17,27 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import AdminBottomNav from "@/components/admin/AdminBottomNav";
+
+import { SafeAreaView } from "react-native-safe-area-context";
+
 import { createOrder } from "@/lib/order";
 import { supabase } from "@/lib/supabase";
-import { getCurrentProfile, getRestaurantSettings } from "@/lib/setting";
+import {
+  getCurrentProfile,
+  getRestaurantSettings,
+} from "@/lib/setting";
+
 import { createOrderStyles } from "@/styles/admin/order.styles";
 import { createMobileOrderModalStyles } from "@/styles/admin/modals/mobile/mobile-order-modal.styles";
 
-type Category = { id: string; name: string };
+// -----------------------------------------------------------------------------
+// Types
+// -----------------------------------------------------------------------------
+
+type Category = {
+  id: string;
+  name: string;
+};
 
 type MenuItem = {
   id: string;
@@ -33,15 +49,28 @@ type MenuItem = {
   image: string | null;
 };
 
-type OrderItem = MenuItem & { quantity: number };
+type OrderItem = MenuItem & {
+  quantity: number;
+};
 
-type HeaderData = { storeName: string; cashierName: string };
+type HeaderData = {
+  storeName: string;
+  cashierName: string;
+};
 
 type OrderType = "Dine In" | "Take Out";
+
+// -----------------------------------------------------------------------------
+// Component
+// -----------------------------------------------------------------------------
 
 export default function OrderScreen() {
   const router = useRouter();
   const { width, height } = useWindowDimensions();
+
+  // ---------------------------------------------------------------------------
+  // Responsive
+  // ---------------------------------------------------------------------------
 
   const responsive = useMemo(
     () => ({
@@ -62,40 +91,75 @@ export default function OrderScreen() {
     responsive.isLargeTablet ||
     responsive.isDesktop;
 
-  const numColumns = responsive.isPhone
-    ? 2
-    : responsive.isTablet
-      ? 3
-      : 4;
+  // ---------------------------------------------------------------------------
+  // Number of menu columns
+  // ---------------------------------------------------------------------------
+  //
+  // This matches the createOrderStyles(isTablet, numColumns) API.
+  //
+  // Phone:
+  //   small phones -> 2
+  //   normal phones -> 2
+  //
+  // Tablet/Desktop:
+  //   smaller tablet -> 3
+  //   larger screens -> 4
+  //
+  // IMPORTANT:
+  // Do not compare numColumns === 1 when TypeScript has already inferred
+  // numColumns as 2 | 3 | 4.
+  // ---------------------------------------------------------------------------
+
+  const numColumns = useMemo(() => {
+    if (width < 768) {
+      return 2;
+    }
+
+    if (width < 1024) {
+      return 3;
+    }
+
+    return 4;
+  }, [width]);
+
 
   const styles = useMemo(
-    () => createOrderStyles(isTablet, numColumns),
-    [isTablet, numColumns]
+    () => createOrderStyles({width, height}),
+    [width, height]
   );
 
   const mobileStyles = useMemo(
-    () => createMobileOrderModalStyles(responsive.width),
-    [responsive.width]
+    () => createMobileOrderModalStyles(width),
+    [width]
   );
+
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [isLoadingMenu, setIsLoadingMenu] = useState(true);
-  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [customerName, setCustomerName] = useState("");
-  const [orderType, setOrderType] = useState<OrderType>("Dine In");
-  const [showMobileOrder, setShowMobileOrder] = useState(false);
+  const [orderType, setOrderType] =
+    useState<OrderType>("Dine In");
+
+  const [showMobileOrder, setShowMobileOrder] =
+    useState(false);
 
   const [headerData, setHeaderData] = useState<HeaderData>({
     storeName: "Restaurant",
     cashierName: "Cashier",
   });
 
-  // ERROR TOAST
-  const [showErrorToast, setShowErrorToast] = useState(false);
+  const [showErrorToast, setShowErrorToast] =
+    useState(false);
+
   const [errorMessage, setErrorMessage] = useState("");
+
+  // ---------------------------------------------------------------------------
+  // Error handling
+  // ---------------------------------------------------------------------------
 
   const showError = (message: string) => {
     setErrorMessage(message);
@@ -106,14 +170,20 @@ export default function OrderScreen() {
     }, 3000);
   };
 
+  // ---------------------------------------------------------------------------
+  // Load Header
+  // ---------------------------------------------------------------------------
+
   const loadHeader = async () => {
     try {
+      // Load restaurant settings
       try {
         const settings = await getRestaurantSettings();
 
         setHeaderData((current) => ({
           ...current,
-          storeName: settings.name?.trim() || "Restaurant",
+          storeName:
+            settings.name?.trim() || "Restaurant",
         }));
       } catch (error) {
         console.warn(
@@ -122,6 +192,7 @@ export default function OrderScreen() {
         );
       }
 
+      // Load cashier profile
       try {
         const profile = await getCurrentProfile();
 
@@ -151,6 +222,7 @@ export default function OrderScreen() {
         );
       }
 
+      // Fallback to authenticated user's email
       const {
         data: { session },
         error,
@@ -175,6 +247,10 @@ export default function OrderScreen() {
       );
     }
   };
+
+  // ---------------------------------------------------------------------------
+  // Load Menu
+  // ---------------------------------------------------------------------------
 
   const loadMenu = async () => {
     try {
@@ -210,12 +286,15 @@ export default function OrderScreen() {
             }),
         ]);
 
-      if (categoriesResult.error)
+      if (categoriesResult.error) {
         throw categoriesResult.error;
+      }
 
-      if (menuResult.error)
+      if (menuResult.error) {
         throw menuResult.error;
+      }
 
+      // Categories
       setCategories(
         (categoriesResult.data ?? []).map(
           (category) => ({
@@ -225,6 +304,7 @@ export default function OrderScreen() {
         )
       );
 
+      // Menu items
       setMenuItems(
         (menuResult.data ?? []).map(
           (item: any) => ({
@@ -262,19 +342,27 @@ export default function OrderScreen() {
     }
   };
 
+  // ---------------------------------------------------------------------------
+  // Initial Load
+  // ---------------------------------------------------------------------------
+
   useEffect(() => {
     loadHeader();
     loadMenu();
   }, []);
 
+  // ---------------------------------------------------------------------------
+  // Derived Values
+  // ---------------------------------------------------------------------------
+
   const filteredItems = useMemo(() => {
-    if (selectedCategory === "All")
+    if (selectedCategory === "All") {
       return menuItems;
+    }
 
     return menuItems.filter(
       (item) =>
-        item.category_id ===
-        selectedCategory
+        item.category_id === selectedCategory
     );
   }, [
     menuItems,
@@ -286,8 +374,7 @@ export default function OrderScreen() {
       orderItems.reduce(
         (total, item) =>
           total +
-          item.price *
-            item.quantity,
+          item.price * item.quantity,
         0
       ),
     [orderItems]
@@ -303,14 +390,19 @@ export default function OrderScreen() {
     [orderItems]
   );
 
+  // ---------------------------------------------------------------------------
+  // Order Handlers
+  // ---------------------------------------------------------------------------
+
   const handleAddToOrder = (
     item: MenuItem
   ) => {
     if (
       !item.available ||
       isCreatingOrder
-    )
+    ) {
       return;
+    }
 
     setOrderItems((current) => {
       const existing = current.find(
@@ -325,8 +417,7 @@ export default function OrderScreen() {
               ? {
                   ...orderItem,
                   quantity:
-                    orderItem.quantity +
-                    1,
+                    orderItem.quantity + 1,
                 }
               : orderItem
         );
@@ -345,7 +436,9 @@ export default function OrderScreen() {
   const increaseQuantity = (
     id: string
   ) => {
-    if (isCreatingOrder) return;
+    if (isCreatingOrder) {
+      return;
+    }
 
     setOrderItems((current) =>
       current.map((item) =>
@@ -363,7 +456,9 @@ export default function OrderScreen() {
   const decreaseQuantity = (
     id: string
   ) => {
-    if (isCreatingOrder) return;
+    if (isCreatingOrder) {
+      return;
+    }
 
     setOrderItems((current) =>
       current
@@ -377,8 +472,7 @@ export default function OrderScreen() {
             : item
         )
         .filter(
-          (item) =>
-            item.quantity > 0
+          (item) => item.quantity > 0
         )
     );
   };
@@ -386,20 +480,31 @@ export default function OrderScreen() {
   const handleSelectOrderType = (
     type: OrderType
   ) => {
-    if (isCreatingOrder) return;
+    if (isCreatingOrder) {
+      return;
+    }
+
     setOrderType(type);
   };
 
   const clearOrder = () => {
-    if (isCreatingOrder) return;
+    if (isCreatingOrder) {
+      return;
+    }
 
     setOrderItems([]);
     setCustomerName("");
     setOrderType("Dine In");
   };
 
+  // ---------------------------------------------------------------------------
+  // Checkout
+  // ---------------------------------------------------------------------------
+
   const handleCheckout = async () => {
-    if (isCreatingOrder) return;
+    if (isCreatingOrder) {
+      return;
+    }
 
     const cleanCustomerName =
       customerName.trim();
@@ -441,12 +546,10 @@ export default function OrderScreen() {
         );
 
       router.push({
-        pathname:
-          "/admin/payment",
+        pathname: "/admin/payment",
 
         params: {
-          orderId:
-            createdOrder.id,
+          orderId: createdOrder.id,
 
           total:
             orderTotal.toFixed(2),
@@ -489,74 +592,85 @@ export default function OrderScreen() {
     }
   };
 
+  // ---------------------------------------------------------------------------
+  // Loading State
+  // ---------------------------------------------------------------------------
+
   if (isLoadingMenu) {
     return (
-      <View
-        style={[
-          styles.container,
-          styles.centered,
+      <SafeAreaView
+        style={styles.container}
+        edges={[
+          "top",
+          "left",
+          "right",
+          "bottom",
         ]}
       >
-        <ActivityIndicator
-          size="large"
-          color="#F97316"
-        />
+        <View style={styles.centered}>
+          <ActivityIndicator
+            size="large"
+            color="#F97316"
+          />
 
-        <Text
-          style={
-            styles.loadingText
-          }
-        >
-          Loading menu...
-        </Text>
+          <Text
+            style={styles.loadingText}
+          >
+            Loading menu...
+          </Text>
+        </View>
 
         <AdminBottomNav />
-      </View>
+      </SafeAreaView>
     );
   }
 
-  return (
-    <View style={styles.container}>
-      {/* ERROR TOAST */}
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
 
+  return (
+    <SafeAreaView
+      style={styles.container}
+      edges={[
+        "top",
+        "left",
+        "right",
+        "bottom",
+      ]}
+    >
       <ErrorToast
         visible={showErrorToast}
         title="Incomplete Order"
         message={errorMessage}
       />
 
-      <View
-        style={
-          styles.pageHeader
-        }
-      >
-        <Text
-          style={
-            styles.pageTitle
-          }
-        >
+      {/* ------------------------------------------------------------------ */}
+      {/* PAGE HEADER */}
+      {/* ------------------------------------------------------------------ */}
+
+      <View style={styles.pageHeader}>
+        <Text style={styles.pageTitle}>
           New Order
         </Text>
 
-        <Text
-          style={
-            styles.pageHint
-          }
-        >
+        <Text style={styles.pageHint}>
           Click items to add to order
         </Text>
       </View>
 
-      <View
-        style={
-          styles.mainRow
-        }
-      >
-        <View
-          style={
-            styles.leftPane
-          }
-        >
+      {/* ------------------------------------------------------------------ */}
+      {/* MAIN CONTENT */}
+      {/* ------------------------------------------------------------------ */}
+
+      <View style={styles.mainRow}>
+        {/* ---------------------------------------------------------------- */}
+        {/* MENU */}
+        {/* ---------------------------------------------------------------- */}
+
+        <View style={styles.leftPane}>
+          {/* Categories */}
+
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={
@@ -582,9 +696,7 @@ export default function OrderScreen() {
 
               return (
                 <Pressable
-                  key={
-                    category.id
-                  }
+                  key={category.id}
                   onPress={() =>
                     setSelectedCategory(
                       category.id
@@ -603,19 +715,17 @@ export default function OrderScreen() {
                         styles.activeCategoryTabText,
                     ]}
                   >
-                    {
-                      category.name
-                    }
+                    {category.name}
                   </Text>
                 </Pressable>
               );
             })}
           </ScrollView>
 
+          {/* Menu Items */}
+
           <ScrollView
-            style={
-              styles.menuScroll
-            }
+            style={styles.menuScroll}
             contentContainerStyle={
               styles.menuGrid
             }
@@ -625,9 +735,7 @@ export default function OrderScreen() {
           >
             {!filteredItems.length ? (
               <View
-                style={
-                  styles.emptyMenu
-                }
+                style={styles.emptyMenu}
               >
                 <Text
                   style={
@@ -638,147 +746,152 @@ export default function OrderScreen() {
                 </Text>
               </View>
             ) : (
-              filteredItems.map(
-                (item) => {
-                  const quantityInCart =
-                    orderItems.find(
-                      (orderItem) =>
-                        orderItem.id ===
-                        item.id
-                    )?.quantity ?? 0;
+              filteredItems.map((item) => {
+                const quantityInCart =
+                  orderItems.find(
+                    (orderItem) =>
+                      orderItem.id ===
+                      item.id
+                  )?.quantity ?? 0;
 
-                  return (
-                    <Pressable
-                      key={
-                        item.id
+                return (
+                  <Pressable
+                    key={item.id}
+                    disabled={
+                      !item.available ||
+                      isCreatingOrder
+                    }
+                    onPress={() =>
+                      handleAddToOrder(
+                        item
+                      )
+                    }
+                    style={[
+                      styles.foodCard,
+                      !item.available &&
+                        styles.unavailableCard,
+                      quantityInCart > 0 &&
+                        styles.foodCardSelected,
+                    ]}
+                  >
+                    {/* Food Image */}
+
+                    <View
+                      style={
+                        styles.foodImageWrap
                       }
-                      disabled={
-                        !item.available ||
-                        isCreatingOrder
-                      }
-                      onPress={() =>
-                        handleAddToOrder(
-                          item
-                        )
-                      }
-                      style={[
-                        styles.foodCard,
-                        !item.available &&
-                          styles.unavailableCard,
-                        quantityInCart >
-                          0 &&
-                          styles.foodCardSelected,
-                      ]}
                     >
-                      <View
-                        style={
-                          styles.foodImageWrap
-                        }
-                      >
-                        {item.image ? (
-                          <Image
-                            source={{
-                              uri: item.image,
-                            }}
-                            style={
-                              styles.foodImage
-                            }
-                            resizeMode="cover"
-                          />
-                        ) : (
-                          <View
-                            style={
-                              styles.foodImagePlaceholder
-                            }
-                          >
-                            <Text
-                              style={
-                                styles.foodIcon
-                              }
-                            >
-                              🍽️
-                            </Text>
-                          </View>
-                        )}
-
-                        {quantityInCart >
-                          0 && (
-                          <View
-                            style={
-                              styles.quantityBadge
-                            }
-                          >
-                            <Text
-                              style={
-                                styles.quantityBadgeText
-                              }
-                            >
-                              ×
-                              {
-                                quantityInCart
-                              }
-                            </Text>
-                          </View>
-                        )}
-
-                        {!item.available && (
-                          <View
-                            style={
-                              styles.soldOutBadge
-                            }
-                          >
-                            <Text
-                              style={
-                                styles.soldOutBadgeText
-                              }
-                            >
-                              SOLD OUT
-                            </Text>
-                          </View>
-                        )}
-                      </View>
-
-                      <View
-                        style={
-                          styles.foodCardBody
-                        }
-                      >
-                        <Text
+                      {item.image ? (
+                        <Image
+                          source={{
+                            uri: item.image,
+                          }}
                           style={
-                            styles.foodName
+                            styles.foodImage
                           }
-                          numberOfLines={1}
-                        >
-                          {
-                            item.name
-                          }
-                        </Text>
-
-                        <Text
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <View
                           style={
-                            styles.foodPrice
+                            styles.foodImagePlaceholder
                           }
                         >
-                          ₱
-                          {item.price.toFixed(
-                            2
-                          )}
-                        </Text>
-                      </View>
-                    </Pressable>
-                  );
-                }
-              )
+                          <Text
+                            style={
+                              styles.foodIcon
+                            }
+                          >
+                            🍽️
+                          </Text>
+                        </View>
+                      )}
+
+                      {/* Quantity Badge */}
+
+                      {quantityInCart >
+                        0 && (
+                        <View
+                          style={
+                            styles.quantityBadge
+                          }
+                        >
+                          <Text
+                            style={
+                              styles.quantityBadgeText
+                            }
+                          >
+                            ×{" "}
+                            {
+                              quantityInCart
+                            }
+                          </Text>
+                        </View>
+                      )}
+
+                      {/* Sold Out Badge */}
+
+                      {!item.available && (
+                        <View
+                          style={
+                            styles.soldOutBadge
+                          }
+                        >
+                          <Text
+                            style={
+                              styles.soldOutBadgeText
+                            }
+                          >
+                            SOLD OUT
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    {/* Food Details */}
+
+                    <View
+                      style={
+                        styles.foodCardBody
+                      }
+                    >
+                      <Text
+                        style={
+                          styles.foodName
+                        }
+                        numberOfLines={1}
+                      >
+                        {item.name}
+                      </Text>
+
+                      <Text
+                        style={
+                          styles.foodPrice
+                        }
+                      >
+                        ₱{" "}
+                        {item.price.toFixed(
+                          2
+                        )}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              })
             )}
           </ScrollView>
         </View>
 
+        {/* ---------------------------------------------------------------- */}
+        {/* DESKTOP / TABLET ORDER PANEL */}
+        {/* ---------------------------------------------------------------- */}
+
         {isTablet && (
           <View
-            style={
-              styles.orderPanel
-            }
+            style={styles.orderPanel}
           >
+            {/* Order Header */}
+
             <View
               style={
                 styles.orderPanelHeader
@@ -801,9 +914,7 @@ export default function OrderScreen() {
               </Text>
 
               <TextInput
-                value={
-                  customerName
-                }
+                value={customerName}
                 onChangeText={
                   setCustomerName
                 }
@@ -817,6 +928,8 @@ export default function OrderScreen() {
                 }
               />
             </View>
+
+            {/* Order Type */}
 
             <View
               style={
@@ -888,6 +1001,8 @@ export default function OrderScreen() {
               </View>
             </View>
 
+            {/* Empty Order */}
+
             {!orderItems.length ? (
               <View
                 style={
@@ -919,6 +1034,8 @@ export default function OrderScreen() {
                 </Text>
               </View>
             ) : (
+              /* Order Items */
+
               <ScrollView
                 style={
                   styles.orderItemsList
@@ -930,13 +1047,13 @@ export default function OrderScreen() {
                 {orderItems.map(
                   (item) => (
                     <View
-                      key={
-                        item.id
-                      }
+                      key={item.id}
                       style={
                         styles.orderLineItem
                       }
                     >
+                      {/* Item Information */}
+
                       <View
                         style={
                           styles.orderLineInfo
@@ -947,9 +1064,7 @@ export default function OrderScreen() {
                             styles.orderLineName
                           }
                         >
-                          {
-                            item.name
-                          }
+                          {item.name}
                         </Text>
 
                         <Text
@@ -957,13 +1072,15 @@ export default function OrderScreen() {
                             styles.orderLineSub
                           }
                         >
-                          ₱
+                          ₱{" "}
                           {item.price.toFixed(
                             2
                           )}{" "}
                           each
                         </Text>
                       </View>
+
+                      {/* Quantity Controls */}
 
                       <View
                         style={
@@ -994,9 +1111,7 @@ export default function OrderScreen() {
                             styles.stepperValue
                           }
                         >
-                          {
-                            item.quantity
-                          }
+                          {item.quantity}
                         </Text>
 
                         <Pressable
@@ -1021,18 +1136,18 @@ export default function OrderScreen() {
                         </Pressable>
                       </View>
 
+                      {/* Item Total */}
+
                       <Text
                         style={
                           styles.orderLineTotal
                         }
                       >
-                        ₱
+                        ₱{" "}
                         {(
                           item.price *
                           item.quantity
-                        ).toFixed(
-                          2
-                        )}
+                        ).toFixed(2)}
                       </Text>
                     </View>
                   )
@@ -1040,15 +1155,15 @@ export default function OrderScreen() {
               </ScrollView>
             )}
 
+            {/* Order Footer */}
+
             <View
-              style={
-                styles.orderFooter
-              }
+              style={styles.orderFooter}
             >
+              {/* Subtotal */}
+
               <View
-                style={
-                  styles.subtotalRow
-                }
+                style={styles.subtotalRow}
               >
                 <Text
                   style={
@@ -1063,17 +1178,15 @@ export default function OrderScreen() {
                     styles.subtotalValue
                   }
                 >
-                  ₱
-                  {orderTotal.toFixed(
-                    2
-                  )}
+                  ₱{" "}
+                  {orderTotal.toFixed(2)}
                 </Text>
               </View>
 
+              {/* Total */}
+
               <View
-                style={
-                  styles.totalRow
-                }
+                style={styles.totalRow}
               >
                 <Text
                   style={
@@ -1088,12 +1201,12 @@ export default function OrderScreen() {
                     styles.totalValueBold
                   }
                 >
-                  ₱
-                  {orderTotal.toFixed(
-                    2
-                  )}
+                  ₱{" "}
+                  {orderTotal.toFixed(2)}
                 </Text>
               </View>
+
+              {/* Save Order */}
 
               <Pressable
                 style={[
@@ -1120,6 +1233,8 @@ export default function OrderScreen() {
                     : "SAVE ORDER"}
                 </Text>
               </Pressable>
+
+              {/* Footer Actions */}
 
               <View
                 style={
@@ -1163,12 +1278,14 @@ export default function OrderScreen() {
         )}
       </View>
 
+      {/* ------------------------------------------------------------------ */}
+      {/* MOBILE CART BUTTON */}
+      {/* ------------------------------------------------------------------ */}
+
       {responsive.isPhone && (
         <Pressable
           onPress={() =>
-            setShowMobileOrder(
-              true
-            )
+            setShowMobileOrder(true)
           }
           disabled={
             isCreatingOrder
@@ -1205,30 +1322,28 @@ export default function OrderScreen() {
         </Pressable>
       )}
 
+      {/* ------------------------------------------------------------------ */}
+      {/* MOBILE CURRENT ORDER MODAL */}
+      {/* ------------------------------------------------------------------ */}
+
       <MobileOrderModal
-        visible={
-          showMobileOrder
-        }
-        customerName={
-          customerName
-        }
-        orderType={
-          orderType
-        }
-        orderItems={
-          orderItems
-        }
-        orderTotal={
-          orderTotal
-        }
+        visible={showMobileOrder}
+        customerName={customerName}
+        orderType={orderType}
+        orderItems={orderItems}
+        orderTotal={orderTotal}
         isCreatingOrder={
           isCreatingOrder
         }
+
+        /*
+         * MobileOrderModalProps requires this property.
+         * This screen is creating a new order, so edit mode is false.
+         */
         isEditMode={false}
+
         onClose={() =>
-          setShowMobileOrder(
-            false
-          )
+          setShowMobileOrder(false)
         }
         onCustomerNameChange={
           setCustomerName
@@ -1242,15 +1357,17 @@ export default function OrderScreen() {
         onDecreaseQuantity={
           decreaseQuantity
         }
-        onClearOrder={
-          clearOrder
-        }
+        onClearOrder={clearOrder}
         onCheckout={
           handleCheckout
         }
       />
 
+      {/* ------------------------------------------------------------------ */}
+      {/* BOTTOM NAVIGATION */}
+      {/* ------------------------------------------------------------------ */}
+
       <AdminBottomNav />
-    </View>
+    </SafeAreaView>
   );
 }

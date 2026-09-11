@@ -95,12 +95,6 @@ export default function ResetSystemCard({
           onPress={openResetModal}
           disabled={resetting}
         >
-          <MaterialIcons
-            name="delete-forever"
-            size={20}
-            color="#fff"
-          />
-
           <Text style={styles.dangerButtonText}>
             Reset System Data
           </Text>
@@ -215,15 +209,7 @@ export default function ResetSystemCard({
                 onPress={handleResetSystem}
                 disabled={resetting}
               >
-                <MaterialIcons
-                  name={
-                    resetting
-                      ? "hourglass-empty"
-                      : "delete-forever"
-                  }
-                  size={19}
-                  color="#fff"
-                />
+                
 
                 <Text style={styles.dangerButtonText}>
                   {resetting

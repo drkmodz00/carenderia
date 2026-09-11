@@ -1,374 +1,424 @@
 import { StyleSheet } from "react-native";
 import { COLORS } from "@/styles/admin/theme";
 
-export const cashPaymentModalStyles =
-  StyleSheet.create({
-    keyboardContainer: {
-      flex: 1,
-    },
+export const cashPaymentModalStyles = StyleSheet.create({
+  keyboardContainer: {
+    flex: 1,
+  },
 
-    overlay: {
-      flex: 1,
-      backgroundColor: "rgba(0, 0, 0, 0.65)",
-      alignItems: "center",
-      justifyContent: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 20,
-    },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.65)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
 
-    overlayShort: {
-      paddingVertical: 10,
-    },
+  overlayShort: {
+    paddingVertical: 6,
+  },
 
-    modal: {
-      width: "100%",
-      maxWidth: 460,
-      backgroundColor: COLORS.card,
-      borderRadius: 22,
-      borderWidth: 1,
-      borderColor: COLORS.border,
-      padding: 20,
-    },
+  modal: {
+    width: "100%",
+    maxWidth: 460,
+    maxHeight: "96%",
+    backgroundColor: COLORS.card,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 16,
+    overflow: "hidden",
+  },
 
-    modalTablet: {
-      maxWidth: 520,
-      padding: 24,
-      borderRadius: 24,
-    },
+  modalTablet: {
+    maxWidth: 520,
+    maxHeight: "92%",
+    padding: 24,
+    borderRadius: 24,
+  },
 
-    modalShort: {
-      padding: 15,
-      borderRadius: 18,
-    },
+  modalShort: {
+    maxHeight: "98%",
+    padding: 11,
+    borderRadius: 16,
+  },
 
-    modalVeryShort: {
-      padding: 12,
-      borderRadius: 16,
-    },
+  modalVeryShort: {
+    maxHeight: "99%",
+    padding: 9,
+    borderRadius: 14,
+  },
 
-    header: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginBottom: 18,
-    },
+  /* =====================================================
+     HEADER
+  ===================================================== */
 
-    headerShort: {
-      marginBottom: 10,
-    },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+    flexShrink: 0,
+  },
 
-    headerTextWrap: {
-      flex: 1,
-      minWidth: 0,
-    },
+  headerShort: {
+    marginBottom: 7,
+  },
 
-    titleRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 8,
-    },
+  headerTextWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
 
-    title: {
-      color: COLORS.text,
-      fontSize: 18,
-      fontWeight: "900",
-    },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    minWidth: 0,
+  },
 
-    titleShort: {
-      fontSize: 16,
-    },
+  title: {
+    color: COLORS.text,
+    fontSize: 18,
+    fontWeight: "900",
+    flexShrink: 1,
+  },
 
-    subtitle: {
-      color: COLORS.muted,
-      fontSize: 12,
-      marginTop: 3,
-    },
+  titleShort: {
+    fontSize: 15,
+  },
 
-    subtitleShort: {
-      fontSize: 10,
-      marginTop: 1,
-    },
+  subtitle: {
+    color: COLORS.muted,
+    fontSize: 11,
+    marginTop: 2,
+  },
 
-    closeButton: {
-      width: 34,
-      height: 34,
-      borderRadius: 17,
-      backgroundColor: COLORS.cardAlt,
-      borderWidth: 1,
-      borderColor: COLORS.borderLight,
-      alignItems: "center",
-      justifyContent: "center",
-      marginLeft: 12,
-    },
+  subtitleShort: {
+    fontSize: 9,
+    marginTop: 0,
+  },
 
-    closeButtonShort: {
-      width: 30,
-      height: 30,
-      borderRadius: 15,
-    },
+  closeButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: COLORS.cardAlt,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 10,
+    flexShrink: 0,
+  },
 
-    closeText: {
-      color: COLORS.muted,
-      fontSize: 25,
-      fontWeight: "400",
-      lineHeight: 27,
-    },
+  closeButtonShort: {
+    width: 29,
+    height: 29,
+    borderRadius: 15,
+  },
 
-    amountGrid: {
-      width: "100%",
-      gap: 10,
-      marginBottom: 16,
-    },
+  closeText: {
+    color: COLORS.muted,
+    fontSize: 23,
+    fontWeight: "400",
+    lineHeight: 25,
+  },
 
-    amountGridTablet: {
-      flexDirection: "row",
-      alignItems: "stretch",
-    },
+  /* =====================================================
+     AMOUNT SUMMARY
 
-    amountGridShort: {
-      gap: 6,
-      marginBottom: 10,
-    },
+     IMPORTANT:
+     Keep all three boxes in one row on mobile.
+     This prevents the summary from consuming the
+     entire vertical space of a phone.
+  ===================================================== */
 
-    totalBox: {
-      flex: 1,
-      backgroundColor: COLORS.primaryMuted,
-      borderRadius: 14,
-      borderWidth: 1,
-      borderColor: COLORS.primary,
-      paddingHorizontal: 15,
-      paddingVertical: 13,
-    },
+  amountGrid: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 6,
+    marginBottom: 10,
+    flexShrink: 0,
+  },
 
-    cashBox: {
-      flex: 1,
-      backgroundColor: COLORS.cardAlt,
-      borderRadius: 14,
-      borderWidth: 1,
-      borderColor: COLORS.border,
-      paddingHorizontal: 15,
-      paddingVertical: 13,
-    },
+  amountGridTablet: {
+    gap: 10,
+    marginBottom: 14,
+  },
 
-    cashBoxValid: {
-      borderColor: COLORS.primary,
-      backgroundColor: COLORS.primaryMuted,
-    },
+  amountGridShort: {
+    gap: 4,
+    marginBottom: 7,
+  },
 
-    changeBox: {
-      flex: 1,
-      backgroundColor: COLORS.card,
-      borderRadius: 14,
-      borderWidth: 1,
-      borderColor: COLORS.border,
-      paddingHorizontal: 15,
-      paddingVertical: 13,
-      justifyContent: "center",
-    },
+  totalBox: {
+    flex: 1,
+    minWidth: 0,
+    backgroundColor: COLORS.primaryMuted,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    justifyContent: "center",
+    overflow: "hidden",
+  },
 
-    amountBoxShort: {
-      paddingHorizontal: 11,
-      paddingVertical: 8,
-      borderRadius: 11,
-    },
+  cashBox: {
+    flex: 1,
+    minWidth: 0,
+    backgroundColor: COLORS.cardAlt,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    justifyContent: "center",
+    overflow: "hidden",
+  },
 
-    totalLabel: {
-      color: COLORS.muted,
-      fontSize: 10,
-      fontWeight: "700",
-      textTransform: "uppercase",
-      letterSpacing: 0.5,
-      marginBottom: 4,
-    },
+  cashBoxValid: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primaryMuted,
+  },
 
-    cashLabel: {
-      color: COLORS.muted,
-      fontSize: 10,
-      fontWeight: "700",
-      textTransform: "uppercase",
-      letterSpacing: 0.5,
-      marginBottom: 4,
-    },
+  changeBox: {
+    flex: 1,
+    minWidth: 0,
+    backgroundColor: COLORS.card,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    justifyContent: "center",
+    overflow: "hidden",
+  },
 
-    totalValue: {
-      color: COLORS.primary,
-      fontSize: 22,
-      fontWeight: "900",
-    },
+  amountBoxShort: {
+    paddingHorizontal: 6,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
 
-    cashValue: {
-      color: COLORS.text,
-      fontSize: 22,
-      fontWeight: "900",
-    },
+  totalLabel: {
+    color: COLORS.muted,
+    fontSize: 8,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.25,
+    marginBottom: 2,
+  },
 
-    amountValueShort: {
-      fontSize: 18,
-    },
+  cashLabel: {
+    color: COLORS.muted,
+    fontSize: 8,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.25,
+    marginBottom: 2,
+  },
 
-    changeRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-    },
+  totalValue: {
+    color: COLORS.primary,
+    fontSize: 17,
+    fontWeight: "900",
+  },
 
-    changeLabel: {
-      color: COLORS.muted,
-      fontSize: 12,
-      fontWeight: "700",
-    },
+  cashValue: {
+    color: COLORS.text,
+    fontSize: 17,
+    fontWeight: "900",
+  },
 
-    changeValue: {
-      color: COLORS.primary,
-      fontSize: 20,
-      fontWeight: "900",
-    },
+  amountValueShort: {
+    fontSize: 14,
+  },
 
-    changeValueEmpty: {
-      color: COLORS.mutedLight,
-    },
+  changeRow: {
+    flexDirection: "column",
+    alignItems: "flex-start",
+    justifyContent: "center",
+  },
 
-    changeValueShort: {
-      fontSize: 17,
-    },
+  changeLabel: {
+    color: COLORS.muted,
+    fontSize: 8,
+    fontWeight: "700",
+    marginBottom: 2,
+  },
 
-    quickLabel: {
-      color: COLORS.muted,
-      fontSize: 11,
-      fontWeight: "700",
-      marginBottom: 8,
-    },
+  changeValue: {
+    color: COLORS.primary,
+    fontSize: 16,
+    fontWeight: "900",
+  },
 
-    quickLabelShort: {
-      fontSize: 10,
-      marginBottom: 5,
-    },
+  changeValueEmpty: {
+    color: COLORS.mutedLight,
+  },
 
-    quickRow: {
-      flexDirection: "row",
-      gap: 8,
-      marginBottom: 14,
-    },
+  changeValueShort: {
+    fontSize: 14,
+  },
 
-    quickRowShort: {
-      gap: 5,
-      marginBottom: 8,
-    },
+  /* =====================================================
+     QUICK VALUE
+  ===================================================== */
 
-    quickButton: {
-      flex: 1,
-      minHeight: 40,
-      borderRadius: 11,
-      backgroundColor: COLORS.cardAlt,
-      borderWidth: 1,
-      borderColor: COLORS.border,
-      alignItems: "center",
-      justifyContent: "center",
-      paddingHorizontal: 8,
-    },
+  quickLabel: {
+    color: COLORS.muted,
+    fontSize: 10,
+    fontWeight: "700",
+    marginBottom: 5,
+    flexShrink: 0,
+  },
 
-    quickButtonShort: {
-      minHeight: 32,
-      borderRadius: 8,
-      paddingHorizontal: 5,
-    },
+  quickLabelShort: {
+    fontSize: 9,
+    marginBottom: 3,
+  },
 
-    quickButtonText: {
-      color: COLORS.text,
-      fontSize: 12,
-      fontWeight: "800",
-    },
+  quickRow: {
+    flexDirection: "row",
+    gap: 6,
+    marginBottom: 9,
+    flexShrink: 0,
+  },
 
-    quickButtonTextShort: {
-      fontSize: 10,
-    },
+  quickRowShort: {
+    gap: 4,
+    marginBottom: 6,
+  },
 
-    keypad: {
-      width: "100%",
-      gap: 8,
-      marginBottom: 16,
-    },
+  quickButton: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 34,
+    borderRadius: 9,
+    backgroundColor: COLORS.cardAlt,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+  },
 
-    keypadShort: {
-      gap: 5,
-      marginBottom: 9,
-    },
+  quickButtonShort: {
+    minHeight: 29,
+    borderRadius: 7,
+    paddingHorizontal: 2,
+  },
 
-    keypadRow: {
-      flexDirection: "row",
-      gap: 8,
-    },
+  quickButtonText: {
+    color: COLORS.text,
+    fontSize: 11,
+    fontWeight: "800",
+  },
 
-    keypadRowShort: {
-      gap: 5,
-    },
+  quickButtonTextShort: {
+    fontSize: 9,
+  },
 
-    keypadButton: {
-      flex: 1,
-      height: 50,
-      borderRadius: 12,
-      backgroundColor: COLORS.cardAlt,
-      borderWidth: 1,
-      borderColor: COLORS.border,
-      alignItems: "center",
-      justifyContent: "center",
-    },
+  /* =====================================================
+     KEYPAD
+  ===================================================== */
 
-    keypadButtonShort: {
-      height: 38,
-      borderRadius: 9,
-    },
+  keypad: {
+    width: "100%",
+    gap: 6,
+    marginBottom: 10,
+    flexShrink: 0,
+  },
 
-    keypadBackspace: {
-      backgroundColor: COLORS.card,
-      borderColor: COLORS.borderLight,
-    },
+  keypadShort: {
+    gap: 4,
+    marginBottom: 6,
+  },
 
-    keypadText: {
-      color: COLORS.text,
-      fontSize: 18,
-      fontWeight: "800",
-    },
+  keypadRow: {
+    flexDirection: "row",
+    gap: 6,
+  },
 
-    keypadTextShort: {
-      fontSize: 15,
-    },
+  keypadRowShort: {
+    gap: 4,
+  },
 
-    backspaceText: {
-      color: COLORS.muted,
-      fontSize: 20,
-    },
+  keypadButton: {
+    flex: 1,
+    height: 43,
+    borderRadius: 10,
+    backgroundColor: COLORS.cardAlt,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 
-    confirmButton: {
-      width: "100%",
-      height: 50,
-      borderRadius: 13,
-      backgroundColor: COLORS.primary,
-      alignItems: "center",
-      justifyContent: "center",
-    },
+  keypadButtonShort: {
+    height: 34,
+    borderRadius: 8,
+  },
 
-    confirmButtonShort: {
-      height: 42,
-      borderRadius: 10,
-    },
+  keypadBackspace: {
+    backgroundColor: COLORS.card,
+    borderColor: COLORS.borderLight,
+  },
 
-    confirmButtonDisabled: {
-      backgroundColor: COLORS.primaryDisabled,
-    },
+  keypadText: {
+    color: COLORS.text,
+    fontSize: 17,
+    fontWeight: "800",
+  },
 
-    confirmText: {
-      color: COLORS.text,
-      fontSize: 14,
-      fontWeight: "900",
-      letterSpacing: 0.2,
-    },
+  keypadTextShort: {
+    fontSize: 14,
+  },
 
-    confirmTextShort: {
-      fontSize: 12,
-    },
+  backspaceText: {
+    color: COLORS.muted,
+    fontSize: 19,
+  },
 
-    confirmTextDisabled: {
-      opacity: 0.7,
-    },
-  });
+  /* =====================================================
+     CONFIRM
+  ===================================================== */
+
+  confirmButton: {
+    width: "100%",
+    height: 46,
+    borderRadius: 11,
+    backgroundColor: COLORS.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+
+  confirmButtonShort: {
+    height: 38,
+    borderRadius: 9,
+  },
+
+  confirmButtonDisabled: {
+    backgroundColor: COLORS.primaryDisabled,
+  },
+
+  confirmText: {
+    color: COLORS.text,
+    fontSize: 13,
+    fontWeight: "900",
+    letterSpacing: 0.2,
+  },
+
+  confirmTextShort: {
+    fontSize: 11,
+  },
+
+  confirmTextDisabled: {
+    opacity: 0.7,
+  },
+});

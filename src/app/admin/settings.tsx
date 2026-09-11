@@ -120,6 +120,9 @@ export default function SettingsScreen() {
     "Settings saved successfully.",
   );
 
+  const [savingSettings, setSavingSettings] = useState(false);
+  
+
   // =====================================================
   // LOADING
   // =====================================================
@@ -209,7 +212,11 @@ export default function SettingsScreen() {
   // =====================================================
 
   const handleSaveSettings = async () => {
+    if (savingSettings) return;
+
     try {
+      setSavingSettings(true);
+
       if (newPassword && newPassword !== confirmPassword) {
         Alert.alert("Password Error", "Passwords do not match.");
         return;
@@ -228,8 +235,17 @@ export default function SettingsScreen() {
         error: userError,
       } = await supabase.auth.getUser();
 
-      if (userError || !user) {
-        Alert.alert("Error", "No authenticated user found.");
+      if (userError) {
+        console.error("Get authenticated user error: ", userError);
+
+        Alert.alert("Save Failed", userError.message);
+        return;
+      }
+
+      if (!user) {
+        Alert.alert(
+          "Save Failed", "No authenticated user found",
+        );
         return;
       }
 
@@ -724,10 +740,37 @@ export default function SettingsScreen() {
 
       <View style={styles.saveBar}>
         <Pressable
-          style={[styles.primaryButton, styles.saveBarButton]}
+          style={[
+            styles.primaryButton,
+            styles.saveBarButton,
+            savingSettings && { opacity: 0.6},
+          ]}
           onPress={handleSaveSettings}
+          disabled={savingSettings}
         >
-          <Text style={styles.primaryButtonText}>Save Changes</Text>
+          {savingSettings ? (
+            <View 
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+              }}
+            >
+              <ActivityIndicator
+                size="small"
+                color="#FFFFF"
+              />
+
+              <Text style={styles.primaryButtonText} >
+                Saving...
+              </Text>
+            </View>
+          ) : (
+            <Text style={styles.primaryButtonText}>
+              Save Changes
+            </Text>
+          )}
         </Pressable>
       </View>
 

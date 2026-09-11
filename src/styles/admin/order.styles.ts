@@ -11,36 +11,61 @@ import {
 // ORDER STYLES
 // =====================================================
 
-export const createOrderStyles = (
-  isTablet: boolean,
-  numColumns: number
-) => {
+type OrderStyleOptions = {
+  width: number;
+  height: number;
+};
+
+export const createOrderStyles = ({
+  width,
+  height,
+}: OrderStyleOptions) => {
+  // ===================================================
+  // RESPONSIVE BREAKPOINTS
+  // ===================================================
+
+  const isPhone = width < 768;
+  const isTablet = width >= 768 && width < 1024;
+  const isLargeTablet = width >= 1024 && width < 1200;
+  const isDesktop = width >= 1200;
+
+  const isTabletLayout =
+    isTablet || isLargeTablet || isDesktop;
+
+  // ===================================================
+  // COLUMN COUNT
+  // ===================================================
+
+  const numColumns = isPhone
+    ? 2
+    : isTablet
+      ? 3
+      : 4;
+
   // ===================================================
   // COMPACT RESPONSIVE VALUES
   // ===================================================
 
-  const horizontalPadding = isTablet ? 14 : 12;
-  const menuPadding = isTablet ? 16 : 10;
+  const horizontalPadding = isTabletLayout ? 14 : 12;
+  const menuPadding = isTabletLayout ? 16 : 10;
   const gridGap = 8;
 
-  const pageTitleSize = isTablet ? 20 : 17;
-  const pageHintSize = isTablet ? 12 : 10;
+  const pageTitleSize = isTabletLayout ? 20 : 17;
+  const pageHintSize = isTabletLayout ? 12 : 10;
 
-  const foodNameSize = isTablet ? 14 : 12;
-  const foodPriceSize = isTablet ? 14 : 12;
+  const foodNameSize = isTabletLayout ? 14 : 12;
+  const foodPriceSize = isTabletLayout ? 14 : 12;
 
   // ===================================================
   // MENU CARD WIDTH
   // ===================================================
 
   const cardBasis =
-    numColumns === 1
-      ? "100%"
-      : numColumns === 2
-        ? "48%"
-        : numColumns === 3
-          ? "31.5%"
-          : "23.5%";
+    numColumns === 2
+      ? "48%"
+      : numColumns === 3
+        ? "31.5%"
+        : "23.5%";
 
   return StyleSheet.create({
     // =================================================
@@ -55,6 +80,7 @@ export const createOrderStyles = (
     },
 
     centered: {
+      flex: 1,
       justifyContent: "center",
       alignItems: "center",
     },
@@ -71,8 +97,8 @@ export const createOrderStyles = (
 
     pageHeader: {
       paddingHorizontal: PAGE_PADDING,
-      paddingTop: isTablet ? 10 : 8,
-      paddingBottom: isTablet ? 10 : 8,
+      paddingTop: isTabletLayout ? 10 : 8,
+      paddingBottom: isTabletLayout ? 10 : 8,
 
       borderBottomWidth: 1,
       borderBottomColor: COLORS.border,
@@ -86,7 +112,7 @@ export const createOrderStyles = (
       color: COLORS.text,
 
       fontSize: pageTitleSize,
-      lineHeight: isTablet ? 23 : 20,
+      lineHeight: isTabletLayout ? 23 : 20,
 
       fontWeight: "800",
 
@@ -111,7 +137,9 @@ export const createOrderStyles = (
     mainRow: {
       flex: 1,
 
-      flexDirection: isTablet ? "row" : "column",
+      flexDirection: isTabletLayout
+        ? "row"
+        : "column",
 
       minHeight: 0,
       minWidth: 0,
@@ -135,7 +163,7 @@ export const createOrderStyles = (
     // =================================================
 
     categoryScroll: {
-      maxHeight: isTablet ? 54 : 50,
+      maxHeight: isTabletLayout ? 54 : 50,
 
       backgroundColor: COLORS.bg,
 
@@ -145,7 +173,6 @@ export const createOrderStyles = (
 
     categoryContent: {
       paddingHorizontal: PAGE_PADDING,
-
       paddingVertical: 7,
 
       gap: 7,
@@ -156,7 +183,9 @@ export const createOrderStyles = (
     categoryTab: {
       minHeight: 32,
 
-      paddingHorizontal: isTablet ? 14 : 12,
+      paddingHorizontal: isTabletLayout
+        ? 14
+        : 12,
 
       borderRadius: 16,
 
@@ -206,14 +235,15 @@ export const createOrderStyles = (
 
       paddingTop: 8,
 
-      paddingBottom: isTablet ? 80 : 90,
+      paddingBottom: isTabletLayout
+        ? 80
+        : 90,
 
       flexDirection: "row",
 
       flexWrap: "wrap",
 
-      justifyContent:
-        numColumns === 1 ? "flex-start" : "space-between",
+      justifyContent: "space-between",
 
       columnGap: gridGap,
 
@@ -276,7 +306,9 @@ export const createOrderStyles = (
     foodImageWrap: {
       width: "100%",
 
-      aspectRatio: isTablet ? 1.25 : 1.1,
+      aspectRatio: isTabletLayout
+        ? 1.25
+        : 1.1,
 
       backgroundColor: COLORS.panel,
 
@@ -299,7 +331,9 @@ export const createOrderStyles = (
     },
 
     foodIcon: {
-      fontSize: isTablet ? 28 : 24,
+      fontSize: isTabletLayout
+        ? 28
+        : 24,
     },
 
     // =================================================
@@ -312,7 +346,8 @@ export const createOrderStyles = (
       top: 6,
       right: 6,
 
-      backgroundColor: COLORS.primaryDisabled,
+      backgroundColor:
+        COLORS.primaryDisabled,
 
       borderRadius: 7,
 
@@ -396,11 +431,7 @@ export const createOrderStyles = (
     // ORDER PANEL
     // =================================================
 
-    // =================================================
-    // ORDER PANEL
-    // =================================================
-
-    orderPanel: isTablet
+    orderPanel: isTabletLayout
       ? {
           width: 340,
 
@@ -420,18 +451,21 @@ export const createOrderStyles = (
       : {
           display: "none",
         },
+
     // =================================================
     // ORDER HEADER
     // =================================================
 
     orderPanelHeader: {
-      paddingHorizontal: horizontalPadding,
+      paddingHorizontal:
+        horizontalPadding,
 
       paddingTop: 9,
       paddingBottom: 9,
 
       borderBottomWidth: 1,
-      borderBottomColor: COLORS.borderLight,
+      borderBottomColor:
+        COLORS.borderLight,
 
       flexShrink: 0,
     },
@@ -439,7 +473,9 @@ export const createOrderStyles = (
     orderPanelTitle: {
       color: COLORS.text,
 
-      fontSize: isTablet ? 17 : 16,
+      fontSize: isTabletLayout
+        ? 17
+        : 16,
 
       lineHeight: 20,
 
@@ -488,12 +524,14 @@ export const createOrderStyles = (
     // =================================================
 
     orderTypeSection: {
-      paddingHorizontal: horizontalPadding,
+      paddingHorizontal:
+        horizontalPadding,
 
       paddingVertical: 7,
 
       borderBottomWidth: 1,
-      borderBottomColor: COLORS.borderLight,
+      borderBottomColor:
+        COLORS.borderLight,
 
       flexShrink: 0,
     },
@@ -575,7 +613,9 @@ export const createOrderStyles = (
     },
 
     emptyCartIcon: {
-      fontSize: isTablet ? 36 : 32,
+      fontSize: isTabletLayout
+        ? 36
+        : 32,
 
       opacity: 0.35,
 
@@ -610,7 +650,6 @@ export const createOrderStyles = (
       flex: 1,
 
       minHeight: 0,
-
       minWidth: 0,
     },
 
@@ -619,12 +658,14 @@ export const createOrderStyles = (
 
       alignItems: "center",
 
-      paddingHorizontal: horizontalPadding,
+      paddingHorizontal:
+        horizontalPadding,
 
       paddingVertical: 5,
 
       borderBottomWidth: 1,
-      borderBottomColor: COLORS.border,
+      borderBottomColor:
+        COLORS.border,
 
       minWidth: 0,
 
@@ -754,7 +795,8 @@ export const createOrderStyles = (
     // =================================================
 
     orderFooter: {
-      paddingHorizontal: horizontalPadding,
+      paddingHorizontal:
+        horizontalPadding,
 
       paddingTop: 6,
 
@@ -858,7 +900,8 @@ export const createOrderStyles = (
     },
 
     saveOrderButtonDisabled: {
-      backgroundColor: COLORS.primaryDisabled,
+      backgroundColor:
+        COLORS.primaryDisabled,
     },
 
     saveOrderButtonText: {
